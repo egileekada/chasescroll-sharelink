@@ -1,31 +1,39 @@
 'use client';
 import httpService from '@/services/httpService';
 import { URLS } from '@/services/urls';
-import { Box, Button, Container, Flex, Heading, HStack, Skeleton, VStack, Menu, Portal } from '@chakra-ui/react';
+import { Box, Button, Container, Flex, Heading, HStack, Skeleton, VStack, Menu, Portal, Avatar } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import { Image, Text } from "@chakra-ui/react"
 import React from 'react'
 import { AxiosResponse } from 'axios';
 import { PaginatedResponse } from '@/models/PaginatedResponse';
-import { IEventType } from '@/models/Event';
+import { IEventTicket, IEventType, IProductTypeData } from '@/models/Event';
 import { RESOURCE_URL } from '@/constants';
 import { ArrowLeft, ArrowLeft2, Location, Calendar, Calendar1, ArrowDown2 } from 'iconsax-reactjs';
 import ChasescrollBox from '@/components/Custom/ChasescrollBox';
+import MapComponent from '@/components/Custom/MapComponent';
 import { capitalizeFLetter } from '@/utils/capitalizeLetter';
 import { useRouter } from 'next/navigation'
 import { DateTime } from 'luxon';
 import { formatNumber } from '@/utils/formatNumber';
 import Head from 'next/head';
+import { useSetAtom } from 'jotai';
+import { activeTicketAtom } from '@/states/activeTicket';
+import TicketPurchaseModal from '@/components/Custom/modals/TicketPurchaseModal';
+import { toaster } from "@/components/ui/toaster"
 
 
 function Event({ id }: { id: string }) {
     const router = useRouter();
 
     const [event, setEvent] = React.useState<IEventType | null>(null);
-    const [ticketTyppe, setTicketType] = React.useState<string | null>(null)
+    const [ticketType, setTicketType] = React.useState<string | null>(null);
+    const [tickets, setTickets] = React.useState<IEventTicket[]>([]);
+    const [showModal, setShowModal] = React.useState(false);
+    const setActiveTicket = useSetAtom(activeTicketAtom);
 
     const { isLoading, data, isError, error } = useQuery<AxiosResponse<PaginatedResponse<IEventType>>>({
-        queryKey: ['get-external-events'],
+        queryKey: ['get-external-events', id],
         queryFn: () => httpService.get(`${URLS.event}/events`, {
             params: {
                 id
@@ -33,14 +41,30 @@ function Event({ id }: { id: string }) {
         })
     });
 
+    const ticketsQuery = useQuery<AxiosResponse<PaginatedResponse<IEventTicket>>>({
+        queryKey: ['get-event-tickets', id],
+        queryFn: () => httpService.get(`${URLS.event}/get-event-tickets-no-auth`, {
+            params: {
+                eventID: id
+            }
+        })
+    });
+
     React.useEffect(() => {
         if (!isLoading && !isError && data?.data) {
-            console.log(data?.data);
             const item: PaginatedResponse<IEventType> = data?.data;
             setEvent(item?.content[0]);
             setTicketType(item?.content[0].productTypeData[0].ticketType);
         }
-    }, [data, isError, isLoading])
+    }, [data, isError, isLoading]);
+
+    React.useEffect(() => {
+        if (!ticketsQuery.isLoading && !ticketsQuery.isError && ticketsQuery.data?.data) {
+            console.log(ticketsQuery.data?.data);
+            const item: PaginatedResponse<IEventTicket> = ticketsQuery.data?.data;
+            setTickets(item?.content);
+        }
+    }, [ticketsQuery.isLoading, ticketsQuery.isError, ticketsQuery.data]);
 
     // Dynamically update the page title when event data loads
     React.useEffect(() => {
@@ -50,8 +74,30 @@ function Event({ id }: { id: string }) {
             document.title = 'Chasescroll | Event';
         }
     }, [event?.eventName]);
+
+    // functions
+    const handleTicketType = React.useCallback((): IProductTypeData => {
+        return (event as IEventType)?.productTypeData?.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
+    }, [ticketType]);
+
+    const handlePayment = React.useCallback(() => {
+        const activeTicket = tickets.filter((item) => item.ticketType === ticketType)[0];
+        if (activeTicket) {
+            setActiveTicket(activeTicket);
+            setShowModal(true);
+            return;
+        } else {
+            toaster.create({
+                title: 'Error',
+                description: 'No ticket found for this ticket type',
+                type: 'error',
+            });
+        }
+    }, [ticketType, tickets])
+
     return (
         <Box w="full" h="full" p={6}>
+            <TicketPurchaseModal isOpen={showModal} onClose={() => setShowModal(false)} />
             <Head>
                 <title>Chasescroll | {event?.eventName || 'Event'}</title>
             </Head>
@@ -70,15 +116,45 @@ function Event({ id }: { id: string }) {
                                 <Image w="full" h="full" objectFit="cover" src={(RESOURCE_URL as string) + (event?.currentPicUrl as string)} />
                             </Box>
 
-                            <HStack w="40%" h="40px" borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
+                            <HStack w="auto" h="40px" borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
                                 <Location size={25} variant='Outline' color="blue" />
                                 <Text>{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
                             </HStack>
 
                             <Heading fontSize={'16px'} mt="20px">Location and surrounding</Heading>
 
-                            <Button variant={'solid'} width="auto" height="45px" mt='20px' borderRadius={'full'} color="white" bgColor="primaryColor">Direction</Button>
-                            <Box w='full' h="200px" mt='20px' borderRadius={'16px'} bgColor="gray.100"></Box>
+                            <Button
+                                variant={'solid'}
+                                width="auto"
+                                height="45px"
+                                mt='20px'
+                                borderRadius={'full'}
+                                color="white"
+                                bgColor="primaryColor"
+                                onClick={() => {
+                                    if (event?.location?.latlng) {
+                                        const [lat, lng] = event.location.latlng.split(' ');
+                                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                                    }
+                                }}
+                                disabled={!event?.location?.latlng}
+                            >
+                                Direction
+                            </Button>
+                            <Box height={'20px'} />
+                            {event?.location?.latlng ? (
+                                <MapComponent
+                                    lat={parseFloat(event.location.latlng.split(' ')[0])}
+                                    lng={parseFloat(event.location.latlng.split(' ')[1])}
+                                    width="100%"
+                                    height="200px"
+                                    zoom={15}
+                                    borderRadius="16px"
+                                    markerTitle={event?.eventName || 'Event Location'}
+                                />
+                            ) : (
+                                <Box w='full' h="200px" mt='20px' borderRadius={'16px'} bgColor="gray.100"></Box>
+                            )}
                         </Box>
 
                         <Box flex={1} h="full">
@@ -88,9 +164,17 @@ function Event({ id }: { id: string }) {
                                 <Text fontSize={'14px'} mt="0px">{event?.eventDescription}</Text>
                             </VStack>
 
-                            <HStack w="full" h="auto" borderRadius={"full"} p={2} bgColor="gray.100" mt='20px' alignItems={'center'}>
-                                <ChasescrollBox width='50px' height='50px' borderRadius='25px'></ChasescrollBox>
-                                <Text fontFamily={'sans-serif'} fontWeight={500} fontSize={'16px'}>{capitalizeFLetter(event?.createdBy?.firstName)} {capitalizeFLetter(event?.createdBy?.lastName)}</Text>
+                            <HStack w="full" h="auto" borderRadius={"full"} p={2} bgColor="gray.100" mt='20px' alignItems={'center'} spaceX={2}>
+                                <ChasescrollBox width='50px' height='50px' borderRadius='25px'>
+                                    <Avatar.Root width={'full'} height={'full'}>
+                                        <Avatar.Fallback name={`${event?.createdBy?.firstName} ${event?.createdBy?.lastName}`} />
+                                        <Avatar.Image src={`${RESOURCE_URL}${event?.createdBy?.data?.imgMain?.value}`} />
+                                    </Avatar.Root>
+                                </ChasescrollBox>
+                                <VStack spaceX={0} spaceY={-2} alignItems={'flex-start'}>
+                                    <Text fontFamily={'sans-serif'} fontWeight={500} fontSize={'16px'}>{capitalizeFLetter(event?.createdBy?.firstName)} {capitalizeFLetter(event?.createdBy?.lastName)}</Text>
+                                    <Text fontFamily={'sans-serif'} fontWeight={300} fontSize={'14px'}>{capitalizeFLetter(event?.createdBy?.username)}</Text>
+                                </VStack>
                             </HStack>
 
                             <VStack alignItems={'flex-start'} mt='20px' spaceY={2} w="50%">
@@ -115,7 +199,7 @@ function Event({ id }: { id: string }) {
                                 <Menu.Root>
                                     <Menu.Trigger asChild>
                                         <Flex justifyContent={'center'} alignItems="center" bgColor={'gray.100'} borderRadius={'16px'} w="full" h="50px" spaceX={4}>
-                                            <Text>{event?.productTypeData[0].ticketType} {formatNumber(event?.productTypeData[0].ticketPrice)}</Text>
+                                            <Text>{handleTicketType()?.ticketType} {formatNumber(handleTicketType()?.ticketPrice)}</Text>
                                             {(event?.productTypeData as [])?.length > 1 && (
                                                 <ArrowDown2 size={20} color="blue" variant='Bold' />
                                             )}
@@ -125,14 +209,14 @@ function Event({ id }: { id: string }) {
                                         <Menu.Positioner>
                                             <Menu.Content w="full">
                                                 {event?.productTypeData.map((item, index) => (
-                                                    <Menu.Item value={item.ticketType} key={index}>{item.ticketType} {formatNumber(item.ticketPrice)}</Menu.Item>
+                                                    <Menu.Item onClick={() => setTicketType(item.ticketType)} value={item.ticketType} key={index}>{item.ticketType} {formatNumber(item.ticketPrice)}</Menu.Item>
                                                 ))}
                                             </Menu.Content>
                                         </Menu.Positioner>
                                     </Portal>
                                 </Menu.Root>
 
-                                <Button w="full" h="60px" borderRadius={'full'} bgColor="chasescrollBlue" color="white">Buy Ticket</Button>
+                                <Button onClick={handlePayment} w="full" h="60px" borderRadius={'full'} bgColor="chasescrollBlue" color="white">Buy Ticket</Button>
 
                             </VStack>
                         </Box>
@@ -158,3 +242,5 @@ function Event({ id }: { id: string }) {
 }
 
 export default Event
+
+// https://chasescroll-next-app-test.vercel.app/event/686680485e09794522864d54

@@ -78,3 +78,22 @@ export interface IProductTypeData {
     startDate?: string | number,
     startTime?: string | number
 }
+
+export interface IEventTicket {
+    barcodeImage: string;
+    boughtPrice: number;
+    createdBy: IUser;
+    createdDate: number;
+    event: IEventType;
+    expirationDate: number | null;
+    id: string;
+    index: number;
+    isDeleted: boolean;
+    lastModifiedBy: IUser;
+    lastModifiedDate: number;
+    price: number;
+    sale: number | null;
+    scanTimeStamp: number | null;
+    ticketType: string;
+    ticketUsed: number;
+}
