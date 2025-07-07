@@ -36,6 +36,7 @@ const ReusableExternalListCard = React.forwardRef<HTMLDivElement, IProps>(
                     transform: 'scale(1.05)',
                     zIndex: 1000,
                 }}
+                zIndex={999}
             >
                 {type === 'EVENT' && <EventCard event={event as IEventType} />}
                 {type === 'RENTAL' && <RentalCard rental={rental as IRental} />}

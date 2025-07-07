@@ -1,4 +1,4 @@
-import Yup from 'yup';
+import * as Yup from 'yup';
 
 const accountCreationSchema = Yup.object({
     firstName: Yup.string().required('First name is required'),

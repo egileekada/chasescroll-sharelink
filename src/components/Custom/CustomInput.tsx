@@ -3,7 +3,7 @@ import React from 'react'
 import CustomText from './CustomText'
 import { useFormikContext } from 'formik';
 import { Eye, EyeSlash } from 'iconsax-reactjs';
-import { Input } from '@/components/ui/input'
+import { Input } from '@chakra-ui/react'
 
 interface IProps {
     name: string;
@@ -33,9 +33,14 @@ function CustomInput({ name, label, isPassword = false }: IProps) {
                     setIsActive(false);
                     handleBlur(e);
                 }}
-                width='100%'
+                width='full'
                 height={'60px'}
                 color="black"
+                borderWidth='2px'
+                borderColor="#E5E5E5"
+                bgColor="#F5F5F5"
+                borderRadius={"full"}
+                mt="10px"
                 onClick={() => setIsActive(true)}
             />
             {errors[name] && touched[name] && (

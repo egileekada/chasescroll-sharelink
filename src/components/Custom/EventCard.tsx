@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation'
 function EventCard({ event }: { event: IEventType }) {
     const router = useRouter();
     return (
-        <Box onClick={() => router.push(`/share/event?id=${event?.id}`)} cursor='pointer' w='full' h='auto' _hover={{ bg: 'transparent' }} borderWidth={'1px'} borderColor={'gray.200'} overflow={'hidden'} borderRadius={'16px'}>
+        <Box onClick={() => router.push(`/share/event?id=${event?.id}`)} cursor='pointer' w='full' h='auto' borderWidth={'1px'} borderColor={'gray.200'} overflow={'hidden'} borderRadius={'16px'} bgColor="white">
             <Box w='full' h='250px' bg='gray.200' borderRadius='0px' position='relative' overflow='hidden'>
                 <Image
                     w='full'

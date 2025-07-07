@@ -17,20 +17,31 @@ import { useRouter } from 'next/navigation'
 import { DateTime } from 'luxon';
 import { formatNumber } from '@/utils/formatNumber';
 import Head from 'next/head';
-import { useSetAtom } from 'jotai';
-import { activeTicketAtom } from '@/states/activeTicket';
+import { atom, useSetAtom } from 'jotai';
+import { activeEventAtom, activeTicketAtom } from '@/states/activeTicket';
 import TicketPurchaseModal from '@/components/Custom/modals/TicketPurchaseModal';
 import { toaster } from "@/components/ui/toaster"
+import { useSession } from 'next-auth/react'
 
 
+export const currentIdAtom = atom<string | null>(null);
 function Event({ id }: { id: string }) {
     const router = useRouter();
+    const setCurrentId = useSetAtom(currentIdAtom);
+    const session = useSession();
 
+    React.useEffect(() => {
+        console.log('the session');
+        console.log(session);
+    }, [session.data])
+
+    setCurrentId(id);
     const [event, setEvent] = React.useState<IEventType | null>(null);
     const [ticketType, setTicketType] = React.useState<string | null>(null);
-    const [tickets, setTickets] = React.useState<IEventTicket[]>([]);
+    const [tickets, setTickets] = React.useState<IProductTypeData[]>([]);
     const [showModal, setShowModal] = React.useState(false);
     const setActiveTicket = useSetAtom(activeTicketAtom);
+    const setActiveEvent = useSetAtom(activeEventAtom);
 
     const { isLoading, data, isError, error } = useQuery<AxiosResponse<PaginatedResponse<IEventType>>>({
         queryKey: ['get-external-events', id],
@@ -55,16 +66,9 @@ function Event({ id }: { id: string }) {
             const item: PaginatedResponse<IEventType> = data?.data;
             setEvent(item?.content[0]);
             setTicketType(item?.content[0].productTypeData[0].ticketType);
+            setTickets(item.content[0].productTypeData)
         }
     }, [data, isError, isLoading]);
-
-    React.useEffect(() => {
-        if (!ticketsQuery.isLoading && !ticketsQuery.isError && ticketsQuery.data?.data) {
-            console.log(ticketsQuery.data?.data);
-            const item: PaginatedResponse<IEventTicket> = ticketsQuery.data?.data;
-            setTickets(item?.content);
-        }
-    }, [ticketsQuery.isLoading, ticketsQuery.isError, ticketsQuery.data]);
 
     // Dynamically update the page title when event data loads
     React.useEffect(() => {
@@ -85,6 +89,7 @@ function Event({ id }: { id: string }) {
         if (activeTicket) {
             setActiveTicket(activeTicket);
             setShowModal(true);
+            setActiveEvent(event);
             return;
         } else {
             toaster.create({
@@ -157,22 +162,22 @@ function Event({ id }: { id: string }) {
                             )}
                         </Box>
 
-                        <Box flex={1} h="full">
-                            <Heading>{event?.eventName}</Heading>
-                            <VStack mt='20px' w="full" px="4" alignItems={'flex-start'} bgColor='gray.100' p={4} spaceY={0} borderRadius={'16px'}>
-                                <Heading fontSize={'16px'}>Event details</Heading>
-                                <Text fontSize={'14px'} mt="0px">{event?.eventDescription}</Text>
+                        <Box flex={1} h="full" borderWidth='1px' borderColor="gray.200" p="20px" borderRadius={'16px'}>
+                            <Heading fontSize={'24px'}>{event?.eventName}</Heading>
+                            <VStack mt='20px' w="full" alignItems={'flex-start'} spaceY={0} borderRadius={'16px'}>
+                                <Heading fontSize={'20px'}>Event details</Heading>
+                                <Text fontSize={'16px'} mt="0px">{event?.eventDescription}</Text>
                             </VStack>
 
-                            <HStack w="full" h="auto" borderRadius={"full"} p={2} bgColor="gray.100" mt='20px' alignItems={'center'} spaceX={2}>
-                                <ChasescrollBox width='50px' height='50px' borderRadius='25px'>
-                                    <Avatar.Root width={'full'} height={'full'}>
+                            <HStack w="full" h="90px" p={2} borderTopWidth={'1px'} borderTopColor={'gray.200'} borderBottomWidth={'1px'} borderBottomColor={'gray.200'} mt='20px' alignItems={'center'} spaceX={2}>
+                                <ChasescrollBox width='50px' height='50px' borderRadius='10px'>
+                                    <Avatar.Root width={'full'} height={'full'} borderWidth="1px" borderColor="#233DF3">
                                         <Avatar.Fallback name={`${event?.createdBy?.firstName} ${event?.createdBy?.lastName}`} />
                                         <Avatar.Image src={`${RESOURCE_URL}${event?.createdBy?.data?.imgMain?.value}`} />
                                     </Avatar.Root>
                                 </ChasescrollBox>
                                 <VStack spaceX={0} spaceY={-2} alignItems={'flex-start'}>
-                                    <Text fontFamily={'sans-serif'} fontWeight={500} fontSize={'16px'}>{capitalizeFLetter(event?.createdBy?.firstName)} {capitalizeFLetter(event?.createdBy?.lastName)}</Text>
+                                    <Text fontFamily={'sans-serif'} fontWeight={700} fontSize={'16px'}>{capitalizeFLetter(event?.createdBy?.firstName)} {capitalizeFLetter(event?.createdBy?.lastName)}</Text>
                                     <Text fontFamily={'sans-serif'} fontWeight={300} fontSize={'14px'}>{capitalizeFLetter(event?.createdBy?.username)}</Text>
                                 </VStack>
                             </HStack>

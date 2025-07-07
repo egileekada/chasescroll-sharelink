@@ -1,0 +1,24 @@
+@font-face {
+    font-family: 'DM-Bold';
+    src: url(../../public/fonts/DMSans_18pt-Bold.ttf);
+}
+
+@font-face {
+    font-family: 'DM-ExtraBold';
+    src: url(../../public/fonts/DMSans_18pt-ExtraBold.ttf);
+}
+
+@font-face {
+    font-family: 'DM-Medium';
+    src: url(../../public/fonts/DMSans_18pt-Medium.ttf);
+}
+
+@font-face {
+    font-family: 'DM-Regular';
+    src: url(../../public/fonts/DMSans_18pt-Regular.ttf);
+}
+
+@font-face {
+    font-family: 'DM-Light';
+    src: url(../../public/fonts/DMSans_18pt-Light.ttf);
+}

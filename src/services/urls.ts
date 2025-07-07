@@ -3,6 +3,7 @@ export const URLS = {
     fundraiser: '/fund-raiser',
     service: '/business-service',
     rental: '/rental',
-    product: '/products'
+    product: '/products',
+    auth: '/auth'
 }
 

@@ -39,6 +39,9 @@ const config = defineConfig({
         },
         tokens: {
             colors: {
+                error: {
+                    value: 'red'
+                },
                 primaryColor: {
                     value: COLORS.COLORS.chasescrollBlue,
                 },
