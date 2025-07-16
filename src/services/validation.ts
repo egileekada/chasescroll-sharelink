@@ -6,6 +6,20 @@ const accountCreationSchema = Yup.object({
     email: Yup.string().email('Invalid email').required('Email is required')
 })
 
+const loginSchema = Yup.object({
+    username: Yup.string().required('Email is required'),
+    password: Yup.string().required('Password is required'),
+})
+
+const addressValidationSchema = Yup.object({
+    state: Yup.string().required('State is required'),
+    lga: Yup.string().required('City is required'),
+    address: Yup.string().required('Address is required'),
+    phone: Yup.string().required('Phone number is required'),
+})
+
 export {
-    accountCreationSchema
+    accountCreationSchema,
+    loginSchema,
+    addressValidationSchema
 }

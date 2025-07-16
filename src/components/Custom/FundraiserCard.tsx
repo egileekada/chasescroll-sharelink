@@ -7,14 +7,17 @@ import ChasescrollBox from './ChasescrollBox';
 import { formatNumber } from '@/utils/formatNumber';
 import { IDonationList } from '@/models/donation';
 import { ProgressCircle } from "@chakra-ui/react"
+import { useRouter } from 'next/navigation';
 
 interface IProps {
     fundraiser: IDonationList;
 }
 
 function FundraiserCard({ fundraiser }: IProps) {
+    const router = useRouter();
+
     return (
-        <Box cursor='pointer' w='full' h='auto' borderWidth={'1px'} borderColor={'gray.200'} _hover={{ bg: 'transparent' }} overflow={'hidden'} borderRadius={'16px'}>
+        <Box onClick={() => router.push(`/share/fundraiser?id=${fundraiser?.id}`)} cursor='pointer' w='full' h='auto' borderWidth={'1px'} borderColor={'gray.200'} _hover={{ bg: 'transparent' }} overflow={'hidden'} borderRadius={'16px'}>
             <Box w='full' h='250px' bg='gray.200' borderRadius='0px' position='relative' overflow='hidden'>
                 <Image
                     w='full'

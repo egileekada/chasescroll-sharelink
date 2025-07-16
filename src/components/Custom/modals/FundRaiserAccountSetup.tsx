@@ -34,6 +34,15 @@ import { usePaystackPayment } from 'react-paystack';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
 import PaymentButton from '../PaymentButton'
 import { IUser } from '@/models/User'
+import { activeFundRaiserAtom, donationAmountAtom } from '@/states/activeFundraiser'
+
+export interface ICustomOrderDto {
+    seller: string;
+    price: number;
+    currency: 'NGN';
+    orderType: 'DONATION' | 'PPRODUCT';
+    typeID: string;
+}
 
 interface Props {
     params: {
@@ -45,18 +54,13 @@ interface Props {
 }
 
 
-function AccountSetup() {
+function FundRaiserAccountSetup() {
 
     const [step, setStep] = useAtom(ticketurchaseStepAtom);
-    const [currentUrl, setCurrentUrl] = useAtom(currentUrlAtom);
-    const [ticket, setTicket] = useAtom(activeTicketAtom);
-    const [event, setActiveEvent] = useAtom(activeEventAtom);
-    const [quantity, setQuantity] = useAtom(ticketCountAtom);
-    const [canPay, setCanPay] = useAtom(canPayAtom)
+    const [activeFundRaider, setActiveFundRaiser] = useAtom(activeFundRaiserAtom);
+    const [amount, setAmount] = useAtom(donationAmountAtom);
+    const [canPay, setCanPay] = useAtom(canPayAtom);
     const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
-    const [createTicketIsLoading, setCreateTicketIsLoading] = React.useState(false)
-    const setCreatedTicket = useSetAtom(createdTicketAtom)
-    const currentId = useAtomValue(currentIdAtom);
 
     const [token, setToken] = React.useState(() => localStorage.getItem(STORAGE_KEYS.token));
     const [userId, setUserId] = React.useState(() => localStorage.getItem(STORAGE_KEYS.USER_ID));
@@ -78,10 +82,22 @@ function AccountSetup() {
         },
         onSubmit: (data) => {
             if (isLoggedIn) {
-                createTicket({
-                    eventID: event?.id as string,
-                    ticketType: ticket?.ticketType as string,
-                    numberOfTickets: quantity,
+                // check the amount
+                if (amount === 0) {
+                    toaster.create({
+                        title: 'Amount is required',
+                        description: 'Please enter an amount',
+                        type: 'error',
+                    })
+                    return;
+                }
+                // create customorder
+                createCustomOrder.mutate({
+                    seller: activeFundRaider?.createdBy?.userId || '',
+                    price: amount,
+                    currency: 'NGN',
+                    orderType: 'DONATION',
+                    typeID: activeFundRaider?.id || ''
                 })
                 return;
             } else {
@@ -113,24 +129,22 @@ function AccountSetup() {
         }
     }, [token, userId, status])
 
-    const createTicket = async (data: { eventID: string, ticketType: string, numberOfTickets: number }) => {
-        setCreateTicketIsLoading(true);
-        try {
-
-            const res = await httpService.post(`${URLS.event}/create-ticket`, data);
-            const json: ITicketCreatedModel = res.data;
-            setCreatedTicket(json);
-            if (res?.data) {
-                setCanPay(true);
-                setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderId, amount: json.content?.orderTotal * 100 });
-                return;
-            }
-            // you can call this function anything
-            setCreateTicketIsLoading(false);
-        } catch (error) {
-            console.log(error)
+    const createCustomOrder = useMutation({
+        mutationFn: (data: ICustomOrderDto) => httpService.post(`${URLS.payments}/createCustomOrder`, data),
+        onError: (error) => {
+            console.log(error);
+        },
+        onSuccess: (data) => {
+            const item: ITicketCreatedModel = data?.data;
+            setPaystackDetails({
+                amount: item?.content?.orderTotal * 100,
+                email: userDetails?.email as string,
+                reference: item?.content?.orderCode,
+            });
+            setCanPay(true);
+            console.log('CUSTOM ORDER CREATED', data?.data);
         }
-    }
+    })
 
     const getPublicProfile = useMutation({
         mutationFn: (data: any) => httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${data}`),
@@ -140,7 +154,6 @@ function AccountSetup() {
             console.log(`User details`, details);
             localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
             setUserDetails(details);
-            // setCanPay(true);
         },
     })
 
@@ -181,18 +194,22 @@ function AccountSetup() {
             console.log('data', data?.data);
             if (data?.data['stackTrace']) {
                 // save everything in local storage
-                localStorage.setItem(STORAGE_KEYS.EVENT, JSON.stringify(event));
-                localStorage.setItem(STORAGE_KEYS.ACTIVE_TICKET, JSON.stringify(ticket));
-                localStorage.setItem(STORAGE_KEYS.QUANTITY, quantity.toString());
                 localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
                 setStep((prev) => prev + 1);
                 alert('You already have an account');
             } else {
-                setUserId(data?.data?.user_id);
-                setToken(data?.data?.access_token);
+                setUserId(data?.data?.id);
+                setToken(data?.data?.token);
                 localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-                createTicket({ eventID: event?.id as string, ticketType: ticket?.ticketType as string, numberOfTickets: quantity });
+                createCustomOrder.mutate({
+                    seller: activeFundRaider?.createdBy?.userId || '',
+                    price: amount,
+                    currency: 'NGN',
+                    orderType: 'DONATION',
+                    typeID: activeFundRaider?.id || ''
+                })
+
             }
         }
     });
@@ -214,7 +231,6 @@ function AccountSetup() {
                         </IconButton>
                         <VStack align="start" spaceY={0}>
                             <Text fontSize="xl" fontWeight="bold">Checkout</Text>
-                            <Text fontSize="sm" color="gray.500">Time left 23:21</Text>
                         </VStack>
                     </HStack>
 
@@ -223,31 +239,30 @@ function AccountSetup() {
                         {/* Event Info */}
                         <HStack mb={8} p={4} borderRadius="lg" borderWidth="1px" borderColor={'lightgrey'}>
                             <Image
-                                src={RESOURCE_URL + '/' + event?.currentPicUrl || "/images/tech-event.jpg"}
-                                alt={event?.eventName}
+                                src={RESOURCE_URL + '/' + activeFundRaider?.bannerImage || "/images/tech-event.jpg"}
                                 w="120px"
                                 h="120px"
                                 objectFit="cover"
                                 borderRadius="md"
                             />
                             <VStack align="start" spaceY={1} flex="1">
-                                <Text fontWeight="semibold">{event?.eventName || "Tech Submit"}</Text>
+                                <Text fontWeight="semibold">{activeFundRaider?.name || "Tech Submit"}</Text>
                                 <Text fontSize="sm" color="gray.600">
-                                    {event?.startDate ? new Date(event.startDate).toLocaleString('en-US', {
+                                    {new Date(activeFundRaider?.endDate).toLocaleString('en-US', {
                                         weekday: 'short',
                                         month: 'short',
                                         day: 'numeric',
                                         hour: 'numeric',
                                         minute: '2-digit',
                                         hour12: true
-                                    }) : "Thu, Aug 14 • 7:00 pm"}
+                                    })}
                                 </Text>
                                 <Text fontSize="sm" color="gray.600">
-                                    NGN {ticket ? formatNumber((ticket.ticketPrice as number) * quantity) : "24000"}
+                                    FundRaiser Goal - NGN {formatNumber((activeFundRaider?.goal as number))}
                                 </Text>
                                 <HStack>
-                                    <Text fontSize="xs" color="gray.500">Ticket Selected</Text>
-                                    <Badge colorScheme="red" fontSize="xs">{ticket?.ticketType}</Badge>
+                                    <Text fontSize="xs" color="gray.500">Donations So far</Text>
+                                    <Badge colorScheme="red" fontSize="xs">{formatNumber((activeFundRaider?.total as number))}</Badge>
                                 </HStack>
                             </VStack>
 
@@ -257,8 +272,25 @@ function AccountSetup() {
                         {!canPay && (
                             <VStack align="start" spaceY={6} mb={8}>
 
+                                <Box w="full">
+                                    <Text>Donation Amount</Text>
+                                    <Input
+                                        type="number"
+                                        value={amount}
+                                        onChange={(e) => setAmount(Number(e.target.value))}
+                                        width='full'
+                                        height={'60px'}
+                                        color="black"
+                                        borderWidth='2px'
+                                        borderColor={"#E5E5E5"}
+                                        bgColor="#F5F5F5"
+                                        borderRadius={"full"}
+                                        mt="10px"
+                                    />
+                                </Box>
 
                                 <HStack spaceX={4} w="full">
+
                                     <Box w="full">
                                         <CustomInput name="firstName" label='First Name' isPassword={false} />
                                     </Box>
@@ -284,7 +316,7 @@ function AccountSetup() {
                                     size="lg"
                                     borderRadius="full"
                                     px={8}
-                                    loading={isPending || createTicketIsLoading || googleAuth.isPending || getPublicProfile.isPending}
+                                    loading={isPending || createCustomOrder.isPending || googleAuth.isPending || getPublicProfile.isPending}
                                     type={'submit'}
                                 >
                                     Confirm Details
@@ -322,8 +354,7 @@ function AccountSetup() {
                     {/* Event Image */}
                     <Box w="100%" h="300px" overflow="hidden">
                         <Image
-                            src={RESOURCE_URL + '/' + event?.currentPicUrl || "/images/tech-event.jpg"}
-                            alt={event?.eventName}
+                            src={RESOURCE_URL + '/' + activeFundRaider?.bannerImage || "/images/tech-event.jpg"}
                             w="100%"
                             h="300px"
                             objectFit="cover"
@@ -333,18 +364,14 @@ function AccountSetup() {
                     {/* Order Summary */}
                     <Box p={6}>
                         <Text fontSize="lg" fontWeight="bold" mb={4}>
-                            Order summary
+                            Donation summary
                         </Text>
 
                         <VStack spaceY={3} align="stretch">
                             <Flex justify="space-between">
-                                <Text>{quantity} x {ticket?.ticketType}</Text>
-                                <Text fontWeight="semibold">NGN {formatNumber((ticket?.ticketPrice as number) * quantity)}</Text>
+                                <Text>Amount</Text>
+                                <Text fontWeight="semibold">NGN {formatNumber(amount)}</Text>
                             </Flex>
-                            {/* <Flex justify="space-between">
-                                <Text>1 x VIP</Text>
-                                <Text fontWeight="semibold">NGN 3000</Text>
-                            </Flex> */}
                         </VStack>
                     </Box>
                 </Box>
@@ -353,4 +380,4 @@ function AccountSetup() {
     )
 }
 
-export default AccountSetup
+export default FundRaiserAccountSetup

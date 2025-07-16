@@ -25,7 +25,7 @@ const ReusableExternalListCard = React.forwardRef<HTMLDivElement, IProps>(
             <Box
                 ref={ref}
                 w='auto'
-                minH={'409px'}
+                h="509px"
                 borderWidth={'0px'}
                 borderColor={'gray.200'}
                 mb={10}

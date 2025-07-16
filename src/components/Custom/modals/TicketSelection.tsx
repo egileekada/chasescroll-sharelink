@@ -1,103 +1,291 @@
-import { RESOURCE_URL } from '@/constants'
-import { textLimit } from '@/utils/textlimiter'
-import { Box, Button, Flex, HStack, VStack, Image, Text } from '@chakra-ui/react'
-import { formatNumber } from '@/utils/formatNumber'
-import { Minus, Add } from 'iconsax-reactjs'
-import React from 'react'
-import ChasescrollBox from '../ChasescrollBox'
-import { useAtom } from 'jotai'
-import { activeEventAtom, activeTicketAtom } from '@/states/activeTicket'
-import { toaster } from '@/components/ui/toaster'
-import { ticketCountAtom, ticketurchaseStepAtom } from './TicketPurchaseModal'
+import React, { useState } from 'react';
+import {
+    Box,
+    Button,
+    Flex,
+    Text,
+    Image,
+    VStack,
+    HStack,
+    IconButton,
+    Badge,
+} from '@chakra-ui/react';
+import { Add, Minus } from 'iconsax-reactjs';
+import { useAtom, useSetAtom } from 'jotai';
+import { activeEventAtom, activeTicketAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
+import { IProductTypeData } from '@/models/Event';
+import { toaster } from '@/components/ui/toaster';
+import { formatNumber } from '@/utils/formatNumber';
+import CustomText from '../CustomText';
 
-function TicketSelection() {
-    const [ticketCount, setTicketCount] = useAtom(ticketCountAtom);
+interface TicketType {
+    id: string;
+    name: string;
+    price: number;
+    currency: string;
+    endDate: string;
+    endTime: string;
+    available: number;
+}
+
+interface TicketSelectionProps {
+    eventTitle?: string;
+    eventDate?: string;
+    eventImage?: string;
+}
+
+const TicketSelection: React.FC<TicketSelectionProps> = ({
+    eventTitle = "Tech Submit",
+    eventDate = "Aug 13, 2025 11:00 PM",
+    eventImage = "/images/tech-event.jpg"
+}) => {
+
+    const [event, setActiveEvent] = useAtom(activeEventAtom);
     const [activeTicket, setActiveTicket] = useAtom(activeTicketAtom);
-    const [activeEvent, setActiveEvent] = useAtom(activeEventAtom);
-    const [step, setStep] = useAtom(ticketurchaseStepAtom);
+    const setStep = useSetAtom(ticketurchaseStepAtom);
+    const [quantity, setQuantity] = useAtom(ticketCountAtom)
 
-    const handleAddition = () => {
-        const maxBuy = activeTicket?.maxTicketBuy;
-        if (maxBuy === ticketCount) {
-            toaster.create({
-                title: 'warning',
-                description: `You can not buy more than ${maxBuy} ticket`,
-                type: 'error',
-            })
+
+    const increment = (ticketType: string) => {
+        if (activeTicket === null) {
+            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
+            setActiveTicket(ticket);
+
+            if (quantity + 1 > (ticket.maxTicketBuy as number)) {
+                toaster.create({
+                    title: 'Error',
+                    description: `You can only buy ${ticket.maxTicketBuy} tickets`,
+                    type: 'error',
+                });
+                return;
+            }
+            setQuantity((prev) => prev + 1);
         } else {
-            setTicketCount((prev) => prev + 1);
+            // check the current active ticket
+            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
+            if (ticket.ticketType !== activeTicket.ticketType) {
+                setActiveTicket(ticket);
+                if (quantity + 1 > (ticket.maxTicketBuy as number)) {
+                    toaster.create({
+                        title: 'Error',
+                        description: `You can only buy ${ticket.maxTicketBuy} tickets`,
+                        type: 'error',
+                    });
+                    return;
+                }
+                setQuantity(1);
+            } else {
+                if (quantity + 1 > (ticket.maxTicketBuy as number)) {
+                    toaster.create({
+                        title: 'Error',
+                        description: `You can only buy ${ticket.maxTicketBuy} tickets`,
+                        type: 'error',
+                    });
+                    return;
+                }
+                setQuantity((prev) => prev + 1);
+            }
         }
     }
 
-    const handleSubtraction = () => {
-        if (ticketCount === 1) {
-            toaster.create({
-                title: 'warning',
-                description: `You need to buy at least 1 ticket`,
-                type: 'error',
-            })
+    const decrement = (ticketType: string) => {
+        if (activeTicket === null) {
+            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
+            setActiveTicket(ticket);
+
+            if (quantity === 1) {
+                toaster.create({
+                    title: 'Error',
+                    description: `You must buy at least one ticket`,
+                    type: 'error',
+                });
+                return;
+            }
+            setQuantity((prev) => prev - 1);
         } else {
-            setTicketCount((prev) => prev - 1);
+            // check the current active ticket
+            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
+            if (ticket.ticketType !== activeTicket.ticketType) {
+                setActiveTicket(ticket);
+                if (quantity === 1) {
+                    toaster.create({
+                        title: 'Error',
+                        description: `You must buy at least one ticket`,
+                        type: 'error',
+                    });
+                    return;
+                }
+                setQuantity(1);
+            } else {
+                if (quantity === 1) {
+                    toaster.create({
+                        title: 'Error',
+                        description: `You must buy at least one ticket`,
+                        type: 'error',
+                    });
+                    return;
+                }
+                setQuantity((prev) => prev - 1);
+            }
         }
     }
 
     const handleNext = () => {
+        if (activeTicket === null) {
+            toaster.create({
+                title: 'Error',
+                description: 'You need to select a ticket to continue',
+                type: 'error',
+                closable: true,
+            });
+            return;
+        }
         setStep((prev) => prev + 1);
     }
 
     return (
-        <Box w='full' h="full">
-            <HStack w="full" h="150px" bgColor="gray.100" borderRadius={'16px'} p="2">
-                <ChasescrollBox width="40%" height="120px" borderRadius='20px'>
-                    <Image src={RESOURCE_URL + (activeEvent?.currentPicUrl as string)} w="full" h="full" objectFit="cover" />
-                </ChasescrollBox>
-                <VStack alignItems={'flex-start'} w="60%">
-                    <Text fontSize="18px" fontWeight="600" color={'black'} >{activeEvent?.eventName}</Text>
-                    <Text fontSize="16px" fontWeight="400" color={'black'} >{(activeEvent?.eventDescription?.length as number) > 70 ? textLimit(activeEvent?.eventDescription as string, 70) : activeEvent?.eventDescription}</Text>
-                    <Text fontSize="12px" color="primaryColor" fontFamily={'body'} >{(activeEvent?.location?.locationDetails?.length as number) > 40 ? textLimit(activeEvent?.location?.locationDetails as string, 40) + '...' : activeEvent?.location?.locationDetails}</Text>
-                </VStack>
-            </HStack>
+        <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
 
-            <VStack w="full" h="100px" borderRadius={'16px'} borderWidth={'1px'} borderColor={'gray.200'} mt='20px' justifyContent={'center'} alignItems={'center'}>
-                <Text fontSize={'16px'} fontWeight={'200'} color='black'>Number of tickets</Text>
-                <HStack w="34%" alignItems={'center'} justifyContent={'space-between'}>
-                    <Flex onClick={() => handleSubtraction()} w="40px" h="40px" borderRadius={'13px'} justifyContent={'center'} alignItems={'center'} borderWidth={'2px'} borderColor="gray.200" cursor='pointer'>
-                        <Minus size="25px" variant='Outline' />
-                    </Flex>
-                    <Text fontSize={'16px'} fontWeight={600}>{ticketCount}</Text>
-                    <Flex onClick={() => handleAddition()} w="40px" h="40px" borderRadius={'13px'} justifyContent={'center'} alignItems={'center'} borderWidth={'2px'} borderColor="gray.200" cursor='pointer'>
-                        <Add size="25px" variant='Outline' />
-                    </Flex>
-                </HStack>
-            </VStack>
+            <Flex w="full">
 
-            <HStack w="full" justifyContent={'space-between'} alignItems={'center'} mt='20px'>
-                <Text>{activeTicket?.ticketType} [{ticketCount}]</Text>
-            </HStack>
 
-            <HStack w="full" justifyContent={'space-between'} alignItems={'center'} mt='20px'>
-                <Text>Ticket Price</Text>
-                <Text>{formatNumber((activeTicket?.ticketPrice as number) * ticketCount)}</Text>
-            </HStack>
+                {/* Right Side - Ticket Selection */}
+                <Box flex="0.55" overflowY={'auto'}>
+                    <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb="20px" pb="10px" pt="20px">
+                        <CustomText type='HEADER' fontSize={'20px'} text={event?.eventName as string} width={'auto'} color={'black'} />
+                        <CustomText type='MEDIUM' text={new Date(event?.startDate).toLocaleDateString()} width={'auto'} />
+                    </VStack>
+                    <VStack spaceY={6} w="full" p={8}>
+                        {/* Ticket Types */}
+                        <VStack spaceY={4} w="full" h="auto">
+                            {event?.productTypeData?.map((ticket) => {
 
-            <HStack w="full" justifyContent={'space-between'} alignItems={'center'} mt='20px'>
-                <Text>Service Fee</Text>
-                <Text>{formatNumber(60)}</Text>
-            </HStack>
+                                return (
+                                    <Box
+                                        key={ticket.ticketType}
+                                        w="full"
+                                        border="1px solid"
+                                        borderRadius="lg"
+                                        p={4}
+                                        bg={activeTicket?.ticketType === ticket.ticketType ? "blue.50" : "white"}
+                                        borderWidth={activeTicket?.ticketType === ticket.ticketType ? "2px" : "1px"}
+                                        borderStyle={activeTicket?.ticketType === ticket.ticketType ? "solid" : "solid"}
+                                        borderColor={activeTicket?.ticketType === ticket.ticketType ? "blue.400" : "gray.200"}
+                                    >
+                                        <Flex justify="space-between" align="center">
+                                            <Box flex="1">
+                                                <HStack spaceX={3} mb={2}>
+                                                    <Text fontSize="lg" fontWeight="semibold" color={activeTicket?.ticketType === ticket.ticketType ? 'black' : 'grey'}>
+                                                        {ticket.ticketType}
+                                                    </Text>
 
-            <HStack w="full" justifyContent={'space-between'} alignItems={'center'} mt='20px'>
-                <Text>Processing Fee</Text>
-                <Text>{formatNumber(163.35)}</Text>
-            </HStack>
+                                                </HStack>
+                                                <Text fontSize="sm" mb={2} color={activeTicket?.ticketType === ticket.ticketType ? 'grey' : 'lightgrey'} >
+                                                    Ticket Available for this Event
+                                                </Text>
+                                            </Box>
 
-            <HStack w="full" justifyContent={'space-between'} alignItems={'center'} mt='20px'>
-                <Text>Total</Text>
-                <Text>{formatNumber(((activeTicket?.ticketPrice as number) * ticketCount) + 163.35 + 60)}</Text>
-            </HStack>
+                                            <HStack spaceX={1}>
+                                                <IconButton
+                                                    aria-label="Decrease quantity"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    borderRadius="full"
+                                                    disabled={quantity === 0}
+                                                    onClick={() => decrement(ticket.ticketType)}
+                                                >
+                                                    <Minus size="16" />
+                                                </IconButton>
 
-            <Button w="full" h="50px" borderRadius={'full'} bgColor="primaryColor" color="white" mt="20px" onClick={() => handleNext()}>Next</Button>
+                                                <Text fontSize="lg" fontWeight="semibold" color={activeTicket?.ticketType === ticket.ticketType ? 'black' : 'grey'} >
+                                                    {activeTicket?.ticketType === ticket.ticketType ? quantity : 0}
+                                                </Text>
+
+                                                <IconButton
+                                                    aria-label="Increase quantity"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    borderRadius="full"
+                                                    onClick={() => increment(ticket.ticketType)}
+                                                >
+                                                    <Add size="16px" />
+                                                </IconButton>
+                                            </HStack>
+                                        </Flex>
+                                    </Box>
+                                );
+                            })}
+
+                            <Button
+                                bgColor="primaryColor"
+                                size="lg"
+                                w="100%"
+                                borderRadius="full"
+                                onClick={() => handleNext()}
+                                disabled={activeTicket === null}
+                                _disabled={{
+                                    bg: "gray.300",
+                                    color: "gray.500",
+                                    cursor: "not-allowed"
+                                }}
+                            >
+                                Get Ticket
+                            </Button>
+                        </VStack>
+
+
+
+
+                    </VStack>
+                </Box>
+
+                {/* Left Side - Event Image */}
+                <Box flex="0.45" position="relative" bgColor="whitesmoke">
+                    <Box w="100%" h="200px" overflow={'hidden'}>
+                        <Image
+                            src={eventImage}
+                            alt={eventTitle}
+                            w="100%"
+                            h="200px"
+                            objectFit="cover"
+
+                        />
+                    </Box>
+
+                    {/* Order Summary */}
+                    {activeTicket !== null && (
+                        <Box p="20px">
+                            {/* <Divider mb={4} /> */}
+                            <Text fontSize="lg" fontWeight="bold" mb={4}>
+                                Order summary
+                            </Text>
+
+                            <VStack spaceY={3} align="stretch">
+                                <Flex justify="space-between">
+                                    <Text>
+                                        {quantity} x {activeTicket.ticketType}
+                                    </Text>
+                                    <Text fontWeight="semibold">
+                                        {formatNumber((activeTicket.ticketPrice as number) * quantity)}
+                                    </Text>
+                                </Flex>
+
+                                {/* <Divider /> */}
+
+                                <Flex justify="space-between" fontSize="lg" fontWeight="bold">
+                                    <Text>Total</Text>
+                                    <Text>
+                                        NGN {formatNumber((activeTicket.ticketPrice as number) * quantity)}
+                                    </Text>
+                                </Flex>
+                            </VStack>
+                        </Box>
+                    )}
+
+                </Box>
+            </Flex>
         </Box>
-    )
-}
+    );
+};
 
-export default TicketSelection
+export default TicketSelection;

@@ -27,13 +27,23 @@ import { ArrowLeft, CloseSquare, Edit } from 'iconsax-reactjs'
 import { formatNumber } from '@/utils/formatNumber'
 import { RESOURCE_URL } from '@/constants'
 import useForm from '@/hooks/useForm'
-import { accountCreationSchema } from '@/services/validation'
+import { accountCreationSchema, addressValidationSchema } from '@/services/validation'
 import CustomInput from '../CustomInput'
 import { STORAGE_KEYS } from '@/utils/StorageKeys'
 import { usePaystackPayment } from 'react-paystack';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
 import PaymentButton from '../PaymentButton'
 import { IUser } from '@/models/User'
+import { activeFundRaiserAtom, donationAmountAtom } from '@/states/activeFundraiser'
+import { activeProductAtom, activeProductQuantityAtom } from '@/states/activeProduct'
+
+export interface ICustomOrderDto {
+    seller: string;
+    price: number;
+    currency: 'NGN';
+    orderType: 'DONATION' | 'ORDERS';
+    typeID: string;
+}
 
 interface Props {
     params: {
@@ -45,18 +55,14 @@ interface Props {
 }
 
 
-function AccountSetup() {
+function ProductAddressPage() {
 
     const [step, setStep] = useAtom(ticketurchaseStepAtom);
-    const [currentUrl, setCurrentUrl] = useAtom(currentUrlAtom);
-    const [ticket, setTicket] = useAtom(activeTicketAtom);
-    const [event, setActiveEvent] = useAtom(activeEventAtom);
-    const [quantity, setQuantity] = useAtom(ticketCountAtom);
-    const [canPay, setCanPay] = useAtom(canPayAtom)
+    const [activeFundRaider, setActiveFundRaiser] = useAtom(activeFundRaiserAtom);
+    const [amount, setAmount] = useAtom(activeProductQuantityAtom);
+    const [canPay, setCanPay] = useAtom(canPayAtom);
     const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
-    const [createTicketIsLoading, setCreateTicketIsLoading] = React.useState(false)
-    const setCreatedTicket = useSetAtom(createdTicketAtom)
-    const currentId = useAtomValue(currentIdAtom);
+    const [product, setProduct] = useAtom(activeProductAtom)
 
     const [token, setToken] = React.useState(() => localStorage.getItem(STORAGE_KEYS.token));
     const [userId, setUserId] = React.useState(() => localStorage.getItem(STORAGE_KEYS.USER_ID));
@@ -72,40 +78,17 @@ function AccountSetup() {
 
     const { renderForm, values, setFieldValue, setValues } = useForm({
         defaultValues: {
-            firstName: userDetails?.firstName || '',
-            lastName: userDetails?.lastName || '',
-            email: userDetails?.email || ''
+            state: '',
+            lga: '',
+            address: '',
+            phone: '',
         },
         onSubmit: (data) => {
-            if (isLoggedIn) {
-                createTicket({
-                    eventID: event?.id as string,
-                    ticketType: ticket?.ticketType as string,
-                    numberOfTickets: quantity,
-                })
-                return;
-            } else {
-                checkEmailMutation(data);
-            }
+            createAddress.mutate(data);
         },
-        validationSchema: accountCreationSchema,
+        validationSchema: addressValidationSchema,
     });
 
-    React.useEffect(() => {
-        if (status === 'authenticated') {
-            // LOGIN USER
-            const idToken = session.token?.idToken;
-            googleAuth.mutate(idToken);
-        }
-    }, [status])
-
-    React.useEffect(() => {
-        if (userDetails) {
-            setFieldValue('firstName', userDetails?.firstName || '', true).then();
-            setFieldValue('lastName', userDetails?.lastName || '', true).then();
-            setFieldValue('email', userDetails?.email || '', true).then();
-        }
-    }, [userDetails])
 
     React.useEffect(() => {
         if (token !== null && userId !== null) {
@@ -113,41 +96,33 @@ function AccountSetup() {
         }
     }, [token, userId, status])
 
-    const createTicket = async (data: { eventID: string, ticketType: string, numberOfTickets: number }) => {
-        setCreateTicketIsLoading(true);
-        try {
-
-            const res = await httpService.post(`${URLS.event}/create-ticket`, data);
-            const json: ITicketCreatedModel = res.data;
-            setCreatedTicket(json);
-            if (res?.data) {
-                setCanPay(true);
-                setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderId, amount: json.content?.orderTotal * 100 });
-                return;
-            }
-            // you can call this function anything
-            setCreateTicketIsLoading(false);
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    const getPublicProfile = useMutation({
-        mutationFn: (data: any) => httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${data}`),
-        onError: (error) => { },
-        onSuccess: (data) => {
-            const details: IUser = data?.data;
-            console.log(`User details`, details);
-            localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
-            setUserDetails(details);
-            // setCanPay(true);
+    const createCustomOrder = useMutation({
+        mutationFn: (data: ICustomOrderDto) => httpService.post(`${URLS.payments}/createCustomOrder`, data),
+        onError: (error) => {
+            console.log(error);
         },
+        onSuccess: (data) => {
+            const item: ITicketCreatedModel = data?.data;
+            setPaystackDetails({
+                amount: item?.content?.orderTotal * 100,
+                email: userDetails?.email as string,
+                reference: item?.content?.orderCode,
+            });
+            setCanPay(true);
+            console.log('CUSTOM ORDER CREATED', data?.data);
+        }
     })
 
-    const googleAuth = useMutation({
-        mutationFn: async (data: any) => httpService.get(`${URLS.auth}/signinWithCredentials`, {
-            headers: {
-                Authorization: `Bearer ${data}`
+    const createAddress = useMutation({
+        mutationFn: async (data: { state: string, phone: string, lga: string, address: string }) => httpService.post(`${URLS.address}/create`, {
+            state: data.state,
+            lga: data?.lga,
+            userId: userDetails?.userId,
+            isDefault: true,
+            location: {
+                phone: data.phone,
+                address: data?.address,
+                state: data.state,
             }
         }),
         onError: (error) => {
@@ -158,44 +133,48 @@ function AccountSetup() {
             })
         },
         onSuccess: (data) => {
-            console.log('Login successful', data?.data);
-            localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-            localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
-            localStorage.setItem(STORAGE_KEYS.refreshToken, data?.data?.refresh_token);
-            const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
-            getPublicProfile.mutate(user_id);
+            console.log(data?.data);
+            createOrder.mutate({
+                addressId: data?.data?.id,
+                productId: product?.id as string,
+                quantity: amount,
+                total: (product?.price as number) * amount as number,
+                userId: userDetails?.userId as string,
+                vendorId: product?.createdBy?.userId as string,
+
+            })
         }
     });
 
-    const { mutate: checkEmailMutation, isPending } = useMutation({
-        mutationFn: async (data: any) => httpService.post(`${URLS.auth}/temporary-signup`, data),
+    const createOrder = useMutation({
+        mutationFn: async (data: { productId: string, quantity: number, total: number, userId: string, vendorId: string, addressId: string }) => httpService.post(`${URLS.order}/create`, {
+            productId: data.productId,
+            quantity: data.quantity,
+            total: data.total,
+            userId: data.userId,
+            vendorId: data.vendorId,
+            addressId: data.addressId,
+        }),
         onError: (error) => {
             toaster.create({
-                title: 'An error occured',
-                description: error?.message,
+                title: 'Login failed',
+                description: error?.message || 'Invalid credentials',
                 type: 'error',
-            });
-            // setStep((prev) => prev + 1);
+            })
         },
         onSuccess: (data) => {
-            console.log('data', data?.data);
-            if (data?.data['stackTrace']) {
-                // save everything in local storage
-                localStorage.setItem(STORAGE_KEYS.EVENT, JSON.stringify(event));
-                localStorage.setItem(STORAGE_KEYS.ACTIVE_TICKET, JSON.stringify(ticket));
-                localStorage.setItem(STORAGE_KEYS.QUANTITY, quantity.toString());
-                localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
-                setStep((prev) => prev + 1);
-                alert('You already have an account');
-            } else {
-                setUserId(data?.data?.user_id);
-                setToken(data?.data?.access_token);
-                localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
-                localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-                createTicket({ eventID: event?.id as string, ticketType: ticket?.ticketType as string, numberOfTickets: quantity });
-            }
+            console.log(data?.data);
+            createCustomOrder.mutate({
+                currency: 'NGN',
+                orderType: 'ORDERS',
+                typeID: data?.data?.id,
+                price: data?.data?.total,
+                seller: product?.createdBy?.userId as string,
+            })
         }
     });
+
+
 
     return renderForm(
         <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
@@ -214,7 +193,6 @@ function AccountSetup() {
                         </IconButton>
                         <VStack align="start" spaceY={0}>
                             <Text fontSize="xl" fontWeight="bold">Checkout</Text>
-                            <Text fontSize="sm" color="gray.500">Time left 23:21</Text>
                         </VStack>
                     </HStack>
 
@@ -223,31 +201,28 @@ function AccountSetup() {
                         {/* Event Info */}
                         <HStack mb={8} p={4} borderRadius="lg" borderWidth="1px" borderColor={'lightgrey'}>
                             <Image
-                                src={RESOURCE_URL + '/' + event?.currentPicUrl || "/images/tech-event.jpg"}
-                                alt={event?.eventName}
+                                src={RESOURCE_URL + '/' + product?.images[0] || "/images/tech-event.jpg"}
                                 w="120px"
                                 h="120px"
                                 objectFit="cover"
                                 borderRadius="md"
                             />
                             <VStack align="start" spaceY={1} flex="1">
-                                <Text fontWeight="semibold">{event?.eventName || "Tech Submit"}</Text>
+                                <Text fontWeight="semibold">{product?.name || "Tech Submit"}</Text>
                                 <Text fontSize="sm" color="gray.600">
-                                    {event?.startDate ? new Date(event.startDate).toLocaleString('en-US', {
+                                    {new Date(product?.createdDate as number).toLocaleString('en-US', {
                                         weekday: 'short',
                                         month: 'short',
                                         day: 'numeric',
                                         hour: 'numeric',
                                         minute: '2-digit',
                                         hour12: true
-                                    }) : "Thu, Aug 14 • 7:00 pm"}
+                                    })}
                                 </Text>
-                                <Text fontSize="sm" color="gray.600">
-                                    NGN {ticket ? formatNumber((ticket.ticketPrice as number) * quantity) : "24000"}
-                                </Text>
+
                                 <HStack>
-                                    <Text fontSize="xs" color="gray.500">Ticket Selected</Text>
-                                    <Badge colorScheme="red" fontSize="xs">{ticket?.ticketType}</Badge>
+                                    <Text fontSize="xs" color="gray.500">Price</Text>
+                                    <Badge colorScheme="red" fontSize="xs">{formatNumber((product?.price as number))}</Badge>
                                 </HStack>
                             </VStack>
 
@@ -257,19 +232,28 @@ function AccountSetup() {
                         {!canPay && (
                             <VStack align="start" spaceY={6} mb={8}>
 
+                                <Flex spaceX={4} w="full">
 
-                                <HStack spaceX={4} w="full">
                                     <Box w="full">
-                                        <CustomInput name="firstName" label='First Name' isPassword={false} />
+                                        <CustomInput name="state" label='State' isPassword={false} />
                                     </Box>
 
                                     <Box w="full">
-                                        <CustomInput name="lastName" label='Last Name' isPassword={false} />
+                                        <CustomInput name="lga" label='Lga' isPassword={false} />
                                     </Box>
-                                </HStack>
-                                <Box w="full">
-                                    <CustomInput name="email" label='Email' isPassword={false} />
-                                </Box>
+                                </Flex>
+
+                                <Flex spaceX={4} w="full">
+
+                                    <Box w="full">
+                                        <CustomInput name="address" label='Address' isPassword={false} />
+                                    </Box>
+
+                                    <Box w="full">
+                                        <CustomInput name="phone" label='Phone umber' isPassword={false} />
+                                    </Box>
+                                </Flex>
+
 
                             </VStack>
                         )}
@@ -284,10 +268,10 @@ function AccountSetup() {
                                     size="lg"
                                     borderRadius="full"
                                     px={8}
-                                    loading={isPending || createTicketIsLoading || googleAuth.isPending || getPublicProfile.isPending}
+                                    loading={createCustomOrder.isPending || createOrder.isPending || createAddress.isPending}
                                     type={'submit'}
                                 >
-                                    Confirm Details
+                                    Save Address
                                 </Button>
                             )}
                             {canPay && (
@@ -322,8 +306,7 @@ function AccountSetup() {
                     {/* Event Image */}
                     <Box w="100%" h="300px" overflow="hidden">
                         <Image
-                            src={RESOURCE_URL + '/' + event?.currentPicUrl || "/images/tech-event.jpg"}
-                            alt={event?.eventName}
+                            src={RESOURCE_URL + '/' + product?.images[0] || "/images/tech-event.jpg"}
                             w="100%"
                             h="300px"
                             objectFit="cover"
@@ -333,18 +316,26 @@ function AccountSetup() {
                     {/* Order Summary */}
                     <Box p={6}>
                         <Text fontSize="lg" fontWeight="bold" mb={4}>
-                            Order summary
+                            Order Summary
                         </Text>
 
                         <VStack spaceY={3} align="stretch">
                             <Flex justify="space-between">
-                                <Text>{quantity} x {ticket?.ticketType}</Text>
-                                <Text fontWeight="semibold">NGN {formatNumber((ticket?.ticketPrice as number) * quantity)}</Text>
+                                <Text>Product Name</Text>
+                                <Text fontWeight="semibold">{product?.name}</Text>
                             </Flex>
-                            {/* <Flex justify="space-between">
-                                <Text>1 x VIP</Text>
-                                <Text fontWeight="semibold">NGN 3000</Text>
-                            </Flex> */}
+                            <Flex justify="space-between">
+                                <Text>Quantity</Text>
+                                <Text fontWeight="semibold">{amount}</Text>
+                            </Flex>
+                            <Flex justify="space-between">
+                                <Text>Amount</Text>
+                                <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * amount)}</Text>
+                            </Flex>
+                            <Flex justify="space-between" borderTopWidth={'1px'} borderTopColor={'lightgrey'} pt="10px">
+                                <Text>Total</Text>
+                                <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * amount)}</Text>
+                            </Flex>
                         </VStack>
                     </Box>
                 </Box>
@@ -353,4 +344,4 @@ function AccountSetup() {
     )
 }
 
-export default AccountSetup
+export default ProductAddressPage;

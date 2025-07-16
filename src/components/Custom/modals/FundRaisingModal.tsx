@@ -10,6 +10,7 @@ import LoginModal from './LoginModal';
 import { currentIdAtom } from '@/views/share/Event';
 import TicketPurchaseSuccessModal from './TicketPurchaseSuccessModal';
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
+import FundRaiserAccountSetup from './FundRaiserAccountSetup';
 
 const titles = [
     'Select Tickets',
@@ -22,7 +23,7 @@ interface IProps {
     type: 'EVENT' | 'FUNDRAISER' | 'PRODUCT'
 }
 
-function TicketPurchaseModal({ isOpen, onClose }: IProps) {
+function FundRaiserModal({ isOpen, onClose }: IProps) {
 
     const [quantity, setQuantity] = useAtom(ticketCountAtom)
     const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
@@ -32,8 +33,6 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
     const createdTicket = useAtomValue(createdTicketAtom);
 
     React.useEffect(() => {
-
-
         setQuantity(() => {
             const quantity = localStorage.getItem(STORAGE_KEYS.TICKET_COUNT);
             return quantity ? Number(quantity) : 1;
@@ -60,10 +59,7 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                     <Dialog.Content borderRadius={'16px'} bgColor="white" p="0">
                         <Dialog.Body p="0px">
                             {currentStep === 1 && (
-                                <TicketSelection eventTitle={event?.eventName} eventDate={event?.startDate} eventImage={`${RESOURCE_URL}/${event?.currentPicUrl}`} />
-                            )}
-                            {currentStep === 2 && (
-                                <AccountSetup />
+                                <FundRaiserAccountSetup />
                             )}
                             {currentStep === 3 && (
                                 <LoginModal
@@ -84,6 +80,7 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                                         setActiveTicket(null);
                                         onClose();
                                     }}
+                                    type='FUNDRAISER'
                                 />
                             )}
                         </Dialog.Body>
@@ -97,4 +94,4 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
     )
 }
 
-export default TicketPurchaseModal
+export default FundRaiserModal;

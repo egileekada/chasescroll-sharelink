@@ -24,21 +24,21 @@ export default async function handler(
     try {
         // Method 1: Get session on server-side
         const session = await getServerSession(req, res, authOptions);
-        
+
         if (!session) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
 
         // Method 2: Get JWT token directly (alternative approach)
-        const token = await getToken({ 
-            req, 
-            secret: process.env.NEXTAUTH_SECRET 
+        const token = await getToken({
+            req,
+            secret: process.env.NEXTAUTH_SECRET
         });
 
         console.log('Server-side session tokens:', {
             accessToken: session.token?.accessToken,
             idToken: session.token?.idToken,
-            refreshToken: session.token?.refeshToken
+            refreshToken: session.token?.refreshToken
         });
 
         console.log('Server-side JWT token:', {
@@ -76,7 +76,7 @@ export default async function handler(
                 if (userInfoResponse.ok) {
                     const userInfo = await userInfoResponse.json();
                     console.log('Google user info:', userInfo);
-                    
+
                     // You can store this user info in your database
                     // await updateUserProfile(session.user.id, userInfo);
                 }
@@ -85,15 +85,14 @@ export default async function handler(
             }
         }
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Tokens processed successfully',
-            userId: session.user?.id,
             email: session.user?.email
         });
 
     } catch (error) {
         console.error('Error processing tokens:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error'
         });

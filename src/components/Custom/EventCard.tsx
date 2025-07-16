@@ -1,7 +1,4 @@
 import React from 'react'
-import { IBuisness } from '@/models/Business';
-import { IDonationGroupData } from '@/models/donation';
-import { IProduct, IRental } from '@/models/product';
 import ChasescrollBox from './ChasescrollBox';
 import { Location } from 'iconsax-reactjs';
 import { IEventType } from '@/models/Event';

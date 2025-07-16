@@ -1,7 +1,7 @@
 import { IUser } from "./User"
 
 
-interface IAddress {
+export interface IAddress {
     "id": string,
     "createdDate": number,
     "lastModifiedBy": any,
@@ -86,13 +86,13 @@ export interface IProduct {
     "outOfStock": boolean,
     "hasDiscount": boolean,
     "discountPrice": number,
-    "published": boolean, 
+    "published": boolean,
     color: Array<{
         label: string,
         color: string
     }>,
     size: Array<string>,
-    hasBought :  false;
+    hasBought: false;
     hasReviewed: false;
     rating: number
     "location": {
@@ -123,7 +123,7 @@ export interface IRental {
     "creator": IUser,
     "name": string,
     "description": string,
-    hasBought :  false;
+    hasBought: false;
     hasReviewed: false;
     "category": string,
     rating: number
@@ -147,11 +147,11 @@ export interface IRental {
     frequency: string
 }
 
-export interface ITag { 
+export interface ITag {
     "category": string,
     "description": string,
     "type": "RENTAL" | "SERVICE"
-} 
+}
 
 export interface IOrder {
     "id": string,

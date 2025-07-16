@@ -9,14 +9,17 @@ import { formatNumber } from '@/utils/formatNumber';
 import { Location, Star } from 'iconsax-reactjs';
 import { IService } from '@/models/Service';
 import { IProduct } from '@/models/product';
+import { useRouter } from 'next/navigation';
 
 interface IProps {
     service: IProduct;
 }
 
 function ProductCard({ service }: IProps) {
+    const router = useRouter();
+
     return (
-        <Box cursor='pointer' w='full' h='auto' borderWidth={'1px'} borderColor={'gray.200'} _hover={{ bg: 'transparent' }} overflow={'hidden'} borderRadius={'16px'}>
+        <Box onClick={() => router.push(`/share/product?id=${service?.id}`)} cursor='pointer' w='full' h='auto' borderWidth={'1px'} borderColor={'gray.200'} _hover={{ bg: 'transparent' }} overflow={'hidden'} borderRadius={'16px'}>
             <Box w='full' h='250px' bg='gray.200' borderRadius='0px' position='relative' overflow='hidden'>
                 <Image
                     w='full'

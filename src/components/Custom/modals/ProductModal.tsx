@@ -10,6 +10,10 @@ import LoginModal from './LoginModal';
 import { currentIdAtom } from '@/views/share/Event';
 import TicketPurchaseSuccessModal from './TicketPurchaseSuccessModal';
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
+import FundRaiserAccountSetup from './FundRaiserAccountSetup';
+import ProductReviewPage from './ProductReviewPage';
+import ProductAddressPage from './ProductAddressPage';
+import ProductSuccessPage from './ProductSuccessPage';
 
 const titles = [
     'Select Tickets',
@@ -22,7 +26,7 @@ interface IProps {
     type: 'EVENT' | 'FUNDRAISER' | 'PRODUCT'
 }
 
-function TicketPurchaseModal({ isOpen, onClose }: IProps) {
+function ProductModal({ isOpen, onClose }: IProps) {
 
     const [quantity, setQuantity] = useAtom(ticketCountAtom)
     const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
@@ -32,8 +36,6 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
     const createdTicket = useAtomValue(createdTicketAtom);
 
     React.useEffect(() => {
-
-
         setQuantity(() => {
             const quantity = localStorage.getItem(STORAGE_KEYS.TICKET_COUNT);
             return quantity ? Number(quantity) : 1;
@@ -60,10 +62,10 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                     <Dialog.Content borderRadius={'16px'} bgColor="white" p="0">
                         <Dialog.Body p="0px">
                             {currentStep === 1 && (
-                                <TicketSelection eventTitle={event?.eventName} eventDate={event?.startDate} eventImage={`${RESOURCE_URL}/${event?.currentPicUrl}`} />
+                                <ProductReviewPage />
                             )}
                             {currentStep === 2 && (
-                                <AccountSetup />
+                                <ProductAddressPage />
                             )}
                             {currentStep === 3 && (
                                 <LoginModal
@@ -73,7 +75,7 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                                     }} />
                             )}
                             {currentStep === 4 && (
-                                <TicketPurchaseSuccessModal
+                                <ProductSuccessPage
                                     email={createdTicket?.content?.buyer?.email}
                                     orderNumber={createdTicket?.content?.orderCode}
                                     onClose={() => {
@@ -84,6 +86,7 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                                         setActiveTicket(null);
                                         onClose();
                                     }}
+                                    type='FUNDRAISER'
                                 />
                             )}
                         </Dialog.Body>
@@ -97,4 +100,4 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
     )
 }
 
-export default TicketPurchaseModal
+export default ProductModal;

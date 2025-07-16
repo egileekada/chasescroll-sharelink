@@ -45,6 +45,7 @@ function Event({ userId }: { userId: string }) {
                 fontSize='4xl'
                 fontWeight='extrabold'
                 letterSpacing='tight'
+                color={'black'}
             >
                 Events
             </Text>

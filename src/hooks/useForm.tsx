@@ -13,9 +13,12 @@ function useForm({ defaultValues, validationSchema, onSubmit }: IProps) {
         initialValues: defaultValues,
         validationSchema: validationSchema,
         onSubmit: (data) => onSubmit(data),
+        enableReinitialize: true,
+        validateOnMount: true,
+        validateOnChange: true
     });
 
-    const { handleSubmit, dirty, errors, setFieldValue, isValid, touched } = formik;
+    const { handleSubmit, dirty, errors, setFieldValue, isValid, touched, values, setValues } = formik;
 
     const renderForm = (children: JSX.Element) => (
         <FormikProvider value={formik}>
@@ -30,7 +33,9 @@ function useForm({ defaultValues, validationSchema, onSubmit }: IProps) {
         errors,
         setFieldValue,
         isValid,
-        touched
+        touched,
+        values,
+        setValues
     }
 }
 

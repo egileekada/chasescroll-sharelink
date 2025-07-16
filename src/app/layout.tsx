@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./Providers";
-import { Grid, Image } from "@chakra-ui/react";
+import { Box, Grid, Image } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import SessionProvider from "@/components/Custom/SessionProvider";
 import { GoogleAuthProvider } from "@/components/Custom/GoogleProvider";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   return (
     <html lang="en" suppressHydrationWarning style={{ backgroundColor: 'white' }}>
       <head>
@@ -61,7 +62,7 @@ export default async function RootLayout({
         <Providers>
           <GoogleAuthProvider>
             <SessionProvider session={session}>
-              <Grid templateColumns={["repeat(2, 1fr)", "repeat(2, 1fr)", "repeat(3, 1fr)", "repeat(4, 1fr)"]} bgColor={"white"} opacity={"100%"} pos={"absolute"} inset={"0px"} w={"full"} h={"full"} overflow={"hidden"} >
+              {/* <Grid templateColumns={["repeat(2, 1fr)", "repeat(2, 1fr)", "repeat(3, 1fr)", "repeat(4, 1fr)"]} bgColor={"white"} opacity={"100%"} pos={"absolute"} inset={"0px"} w={"full"} h={"full"} overflow={"hidden"} >
                 <Image src='/bg.png' alt='bg' w={"full"} h={"full"} objectFit={"contain"} opacity={"40%"} />
                 <Image src='/bg.png' alt='bg' w={"full"} h={"full"} objectFit={"contain"} opacity={"40%"} />
                 <Image src='/bg.png' alt='bg' w={"full"} h={"full"} objectFit={"contain"} opacity={"40%"} />
@@ -74,8 +75,10 @@ export default async function RootLayout({
                 <Image src='/bg.png' alt='bg' w={"full"} h={"full"} objectFit={"contain"} opacity={"40%"} />
                 <Image src='/bg.png' alt='bg' w={"full"} h={"full"} objectFit={"contain"} opacity={"40%"} />
                 <Image src='/bg.png' alt='bg' w={"full"} h={"full"} objectFit={"contain"} opacity={"40%"} />
-              </Grid>
-              {children}
+              </Grid> */}
+              <Box w="full" h="screen">
+                {children}
+              </Box>
             </SessionProvider>
           </GoogleAuthProvider>
         </Providers>

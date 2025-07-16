@@ -1,3 +1,6 @@
+import CustomText from '@/components/Custom/CustomText'
+import { capitalizeFLetter } from '@/utils/capitalizeLetter'
+import { Box, Text } from '@chakra-ui/react'
 import { notFound } from 'next/navigation'
 // THIS PAGE HAS TO BE SERVER RENDERED
 
@@ -50,8 +53,8 @@ export default async function ExternalPage({ params, searchParams }: Props) {
 
 
     return (
-        <div className="w-full h-full">
+        <Box w="full" h="full">
             {Content}
-        </div>
+        </Box>
     )
 }

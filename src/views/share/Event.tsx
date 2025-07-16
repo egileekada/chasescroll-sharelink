@@ -17,31 +17,29 @@ import { useRouter } from 'next/navigation'
 import { DateTime } from 'luxon';
 import { formatNumber } from '@/utils/formatNumber';
 import Head from 'next/head';
-import { atom, useSetAtom } from 'jotai';
-import { activeEventAtom, activeTicketAtom } from '@/states/activeTicket';
+import { atom, useAtom, useSetAtom } from 'jotai';
+import { activeEventAtom, activeTicketAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
 import TicketPurchaseModal from '@/components/Custom/modals/TicketPurchaseModal';
 import { toaster } from "@/components/ui/toaster"
-import { useSession } from 'next-auth/react'
+import { STORAGE_KEYS } from '@/utils/StorageKeys';
+
 
 
 export const currentIdAtom = atom<string | null>(null);
+export const showTicketModalAtom = atom(false);
 function Event({ id }: { id: string }) {
     const router = useRouter();
     const setCurrentId = useSetAtom(currentIdAtom);
-    const session = useSession();
-
-    React.useEffect(() => {
-        console.log('the session');
-        console.log(session);
-    }, [session.data])
 
     setCurrentId(id);
     const [event, setEvent] = React.useState<IEventType | null>(null);
     const [ticketType, setTicketType] = React.useState<string | null>(null);
     const [tickets, setTickets] = React.useState<IProductTypeData[]>([]);
-    const [showModal, setShowModal] = React.useState(false);
+    const [showModal, setShowModal] = useAtom(showTicketModalAtom);
     const setActiveTicket = useSetAtom(activeTicketAtom);
     const setActiveEvent = useSetAtom(activeEventAtom);
+    const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
+
 
     const { isLoading, data, isError, error } = useQuery<AxiosResponse<PaginatedResponse<IEventType>>>({
         queryKey: ['get-external-events', id],
@@ -52,21 +50,33 @@ function Event({ id }: { id: string }) {
         })
     });
 
-    const ticketsQuery = useQuery<AxiosResponse<PaginatedResponse<IEventTicket>>>({
-        queryKey: ['get-event-tickets', id],
-        queryFn: () => httpService.get(`${URLS.event}/get-event-tickets-no-auth`, {
-            params: {
-                eventID: id
+    React.useEffect(() => {
+        // INITIALIZE VALUES IF THEY EXIST
+        const step = localStorage.getItem(STORAGE_KEYS.CURRENT_STEP);
+
+        if (step) {
+            setCurrentStep(() => {
+                return step ? Number(step) : 1;
+            });
+
+            if (Number(step) > 1) {
+                setShowModal(true);
             }
-        })
-    });
+        }
+
+
+    }, [])
 
     React.useEffect(() => {
         if (!isLoading && !isError && data?.data) {
             const item: PaginatedResponse<IEventType> = data?.data;
             setEvent(item?.content[0]);
             setTicketType(item?.content[0].productTypeData[0].ticketType);
-            setTickets(item.content[0].productTypeData)
+            setTickets(item.content[0].productTypeData);
+
+            // set atoms
+            setActiveTicket(item?.content[0].productTypeData[0]);
+            setActiveEvent(item?.content[0]);
         }
     }, [data, isError, isLoading]);
 
@@ -102,7 +112,7 @@ function Event({ id }: { id: string }) {
 
     return (
         <Box w="full" h="full" p={6}>
-            <TicketPurchaseModal isOpen={showModal} onClose={() => setShowModal(false)} />
+            <TicketPurchaseModal isOpen={showModal} onClose={() => setShowModal(false)} type='EVENT' />
             <Head>
                 <title>Chasescroll | {event?.eventName || 'Event'}</title>
             </Head>
@@ -115,8 +125,8 @@ function Event({ id }: { id: string }) {
                     )}
                 </HStack>
                 {!isLoading && !isError && data?.data && (
-                    <Flex w='full' h="full" spaceX={6} mt="10px">
-                        <Box flex={1} h="full">
+                    <Flex w='full' h="full" spaceX={6} mt="10px" direction={['column', 'column', 'row', 'row']}>
+                        <Box flex={1} h="full" mb={['20px', '20px', '0px', '0px']}>
                             <Box width={'full'} h="500px" mb="10xp" borderWidth={'1px'} borderColor="gray.200" borderRadius={'16px'} overflow={'hidden'}>
                                 <Image w="full" h="full" objectFit="cover" src={(RESOURCE_URL as string) + (event?.currentPicUrl as string)} />
                             </Box>

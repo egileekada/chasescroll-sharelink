@@ -31,7 +31,7 @@ export const useGoogleTokens = (): UseGoogleTokensReturn => {
             return {
                 accessToken: sessionData.token.accessToken,
                 idToken: sessionData.token.idToken,
-                refreshToken: sessionData.token.refeshToken
+                refreshToken: sessionData.token.refreshToken
             };
         }
         return null;

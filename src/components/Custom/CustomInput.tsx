@@ -3,7 +3,7 @@ import React from 'react'
 import CustomText from './CustomText'
 import { useFormikContext } from 'formik';
 import { Eye, EyeSlash } from 'iconsax-reactjs';
-import { Input } from '@chakra-ui/react'
+import { Input, InputGroup } from '@chakra-ui/react'
 
 interface IProps {
     name: string;
@@ -14,7 +14,7 @@ interface IProps {
 function CustomInput({ name, label, isPassword = false }: IProps) {
     const [isActive, setIsActive] = React.useState(false)
     const [showPassword, setShowPassword] = React.useState(false);
-    const { handleBlur, handleChange, errors, touched } = useFormikContext<any>();
+    const { handleBlur, handleChange, errors, touched, values } = useFormikContext<any>();
 
     React.useEffect(() => {
         console.log(errors);
@@ -22,29 +22,45 @@ function CustomInput({ name, label, isPassword = false }: IProps) {
 
     // colors
     return (
-        <div className='w-full flex items-start'>
+        <div className='w-full flex flex-col items-start'>
             <CustomText type='REGULAR' fontSize='14' text={label} color="black" />
-            <Input
-                type={isPassword ? showPassword ? 'text' : 'password' : 'text'}
-                name={name}
-                id={name}
-                onChange={handleChange}
-                onBlur={(e) => {
-                    setIsActive(false);
-                    handleBlur(e);
-                }}
-                width='full'
-                height={'60px'}
-                color="black"
-                borderWidth='2px'
-                borderColor="#E5E5E5"
-                bgColor="#F5F5F5"
-                borderRadius={"full"}
-                mt="10px"
-                onClick={() => setIsActive(true)}
-            />
+            <div className='relative w-full'>
+                <InputGroup endElement={isPassword && (
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 mt-1"
+                        style={{ zIndex: 10 }}
+                    >
+                        {showPassword ? <EyeSlash size="20" color="#666" /> : <Eye size="20" color="#666" />}
+                    </button>
+                )}>
+                    <Input
+                        type={isPassword ? showPassword ? 'text' : 'password' : 'text'}
+                        name={name}
+                        id={name}
+                        value={values[name] || ''}
+                        onChange={handleChange}
+                        onBlur={(e) => {
+                            setIsActive(false);
+                            handleBlur(e);
+                        }}
+                        width='full'
+                        height={'60px'}
+                        color="black"
+                        borderWidth='2px'
+                        borderColor={errors[name] && touched[name] ? "red.300" : "#E5E5E5"}
+                        bgColor="#F5F5F5"
+                        borderRadius={"full"}
+                        mt="10px"
+                        onClick={() => setIsActive(true)}
+                        pr={isPassword ? "50px" : "16px"}
+
+                    />
+                </InputGroup>
+            </div>
             {errors[name] && touched[name] && (
-                <CustomText type="LIGHT" fontSize='12px' text={errors[name as string] as string} color="error" />
+                <CustomText type="LIGHT" fontSize='12px' text={errors[name as string] as string} color="red" />
             )}
         </div>
     )
