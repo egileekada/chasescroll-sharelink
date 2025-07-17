@@ -138,7 +138,7 @@ function Fundraiser({ id }: { id: string }) {
                 )}
 
                 {isLoading && (
-                    <Flex w='full' h="full" spaceX={5} mt="10px">
+                    <Flex w='full' h="full" spaceX={6} mt="10px">
                         <Box flex={1} h="full">
                             <Skeleton w="full" h="500px" borderRadius={'16px'} mb='10px' />
                             <Skeleton w="full" h="150px" mb="5px" borderRadius={'16px'} />
