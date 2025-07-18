@@ -12,7 +12,7 @@ import { RESOURCE_URL } from '@/constants'
 import ChasescrollBox from '@/components/Custom/ChasescrollBox'
 import { DateTime } from 'luxon'
 import { capitalizeFLetter } from '@/utils/capitalizeLetter'
-import TicketSelection from '@/components/Custom/modals/TicketSelection'
+import TicketSelection from '@/components/Custom/modals/TicketPurchaseModal/TicketSelection'
 
 interface Props {
     params: {

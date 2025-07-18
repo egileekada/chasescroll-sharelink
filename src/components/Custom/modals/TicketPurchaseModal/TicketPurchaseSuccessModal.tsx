@@ -58,20 +58,6 @@ function TicketPurchaseSuccessModal({
             overflow="hidden"
             position="relative"
         >
-            {/* Close Button */}
-            <IconButton
-                aria-label="Close"
-                position="absolute"
-                top={4}
-                right={4}
-                zIndex={10}
-                variant="ghost"
-                color="gray.600"
-                onClick={onClose}
-                _hover={{ bg: "gray.100" }}
-            >
-                <CloseSquare size="24" />
-            </IconButton>
 
             <Box p={8}>
                 {/* Success Header */}

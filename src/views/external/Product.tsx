@@ -47,26 +47,30 @@ function Product({ userId }: { userId: string }) {
                 Products
             </Text>
 
-            <Grid
-                w='full'
-                h='full'
-                templateColumns='repeat(4, 1fr)'
-                gap={4}
-                mt={10}
-            >
-                {!isLoading && !isError && events?.length > 0 && events.map((item, index) => (
-                    <ReusableExternalListCard type='PRODUCT' key={index.toString()} product={item} />
-                ))}
-                {isLoading && [1, 2, 3, 4, 5, 6].map((item) => (
-                    <Skeleton width={'full'} height={'509px'} borderRadius={'16px'} />
-                ))}
-                {!isLoading && isError && (
-                    <Flex w='full' h='full' flexDir={'column'} alignItems={'center'} justifyContent={'center'}>
-                        <Image src="/Error.png" w="150px" h="150px" />
-                        <Text fontFamily={'heading'} fontSize={'20px'} color="black" textAlign={'center'}>An Error Occured</Text>
-                    </Flex>
-                )}
-            </Grid>
+            {!isLoading && isError && (
+                <Flex w='full' h='full' flexDir={'column'} alignItems={'center'} justifyContent={'center'}>
+                    <Image src="/Error.png" w="150px" h="150px" />
+                    <Text fontFamily={'heading'} fontSize={'20px'} color="black" textAlign={'center'}>An Error Occured</Text>
+                </Flex>
+            )}
+
+            {!isError && (
+                <Grid
+                    w='full'
+                    h='full'
+                    templateColumns={['repeat(1, 1fr)', 'repeat(1, 1fr)', 'repeat(4, 1fr)', 'repeat(4, 1fr)']}
+                    gap={4}
+                    mt={10}
+                >
+                    {!isLoading && !isError && events?.length > 0 && events.map((item, index) => (
+                        <ReusableExternalListCard type='EVENT' key={index.toString()} product={item} />
+                    ))}
+                    {isLoading && [1, 2, 3, 4, 5, 6].map((item, index) => (
+                        <Skeleton width={'full'} height={'509px'} borderRadius={'16px'} key={index.toString()} />
+                    ))}
+
+                </Grid>
+            )}
         </Box>
     )
 }

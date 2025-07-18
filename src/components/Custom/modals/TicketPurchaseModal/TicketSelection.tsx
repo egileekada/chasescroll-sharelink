@@ -16,17 +16,8 @@ import { activeEventAtom, activeTicketAtom, ticketCountAtom, ticketurchaseStepAt
 import { IProductTypeData } from '@/models/Event';
 import { toaster } from '@/components/ui/toaster';
 import { formatNumber } from '@/utils/formatNumber';
-import CustomText from '../CustomText';
+import CustomText from '../../CustomText';
 
-interface TicketType {
-    id: string;
-    name: string;
-    price: number;
-    currency: string;
-    endDate: string;
-    endTime: string;
-    available: number;
-}
 
 interface TicketSelectionProps {
     eventTitle?: string;
@@ -146,18 +137,27 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     return (
         <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
 
-            <Flex w="full">
+            <Flex w="full" flexDirection={['column', 'column', 'row', 'row']}>
 
 
                 {/* Right Side - Ticket Selection */}
                 <Box flex="0.55" overflowY={'auto'}>
-                    <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb="20px" pb="10px" pt="20px">
+                    <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb={["0px", "0px", "20px", "20px"]} pb="10px" pt="20px">
                         <CustomText type='HEADER' fontSize={'20px'} text={event?.eventName as string} width={'auto'} color={'black'} />
-                        <CustomText type='MEDIUM' text={new Date(event?.startDate).toLocaleDateString()} width={'auto'} />
                     </VStack>
-                    <VStack spaceY={6} w="full" p={8}>
+                    <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 8, 8]}>
+                        <Box w="100%" h="200px" overflow={'hidden'} display={['block', 'block', 'none', 'none']}>
+                            <Image
+                                src={eventImage}
+                                alt={eventTitle}
+                                w="100%"
+                                h="200px"
+                                objectFit="cover"
+
+                            />
+                        </Box>
                         {/* Ticket Types */}
-                        <VStack spaceY={4} w="full" h="auto">
+                        <VStack spaceY={4} px={['10px', '10px', '0px', '0px']} w="full" h="auto">
                             {event?.productTypeData?.map((ticket) => {
 
                                 return (
@@ -220,6 +220,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                 bgColor="primaryColor"
                                 size="lg"
                                 w="100%"
+                                h="60px"
                                 borderRadius="full"
                                 onClick={() => handleNext()}
                                 disabled={activeTicket === null}
@@ -228,6 +229,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                     color: "gray.500",
                                     cursor: "not-allowed"
                                 }}
+                                display={['none', 'none', 'block', 'block']}
                             >
                                 Get Ticket
                             </Button>
@@ -241,7 +243,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
 
                 {/* Left Side - Event Image */}
                 <Box flex="0.45" position="relative" bgColor="whitesmoke">
-                    <Box w="100%" h="200px" overflow={'hidden'}>
+                    <Box w="100%" h="200px" overflow={'hidden'} display={['none', 'none', 'block', 'block']}>
                         <Image
                             src={eventImage}
                             alt={eventTitle}
@@ -279,6 +281,25 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                     </Text>
                                 </Flex>
                             </VStack>
+
+                            <Button
+                                bgColor="primaryColor"
+                                size="lg"
+                                w="100%"
+                                h="60px"
+                                borderRadius="full"
+                                onClick={() => handleNext()}
+                                disabled={activeTicket === null}
+                                _disabled={{
+                                    bg: "gray.300",
+                                    color: "gray.500",
+                                    cursor: "not-allowed"
+                                }}
+                                display={['block', 'block', 'none', 'none']}
+                                mt="20px"
+                            >
+                                Get Ticket
+                            </Button>
                         </Box>
                     )}
 

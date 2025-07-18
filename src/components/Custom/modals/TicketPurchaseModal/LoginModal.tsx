@@ -15,7 +15,7 @@ import { URLS } from '@/services/urls'
 import { toaster } from '@/components/ui/toaster'
 import useForm from '@/hooks/useForm'
 import { loginSchema } from '@/services/validation'
-import CustomInput from '../CustomInput'
+import CustomInput from '../../CustomInput'
 import { STORAGE_KEYS } from '@/utils/StorageKeys'
 import { canPayAtom, ticketurchaseStepAtom } from '@/states/activeTicket'
 import { useAtom } from 'jotai'
@@ -96,6 +96,7 @@ function LoginModal({ onLoggedIn, callbackUrl }: { onLoggedIn: () => void, callb
             localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
             localStorage.setItem(STORAGE_KEYS.refreshToken, data?.data?.refresh_token);
             const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
+            localStorage.setItem(STORAGE_KEYS.GOOGLE_AUTH, 'GOOGLE');
             getPublicProfile.mutate(user_id);
         }
     });
@@ -110,6 +111,10 @@ function LoginModal({ onLoggedIn, callbackUrl }: { onLoggedIn: () => void, callb
             const result = await signIn('google', {
                 callbackUrl,
             });
+
+            if (result?.ok) {
+                localStorage.setItem(STORAGE_KEYS.GOOGLE_AUTH, 'GOOGLE');
+            }
         } catch (error) {
             toaster.create({
                 title: 'An error occurred',

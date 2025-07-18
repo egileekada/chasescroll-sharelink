@@ -54,20 +54,23 @@ function Fundraiser({ userId }: { userId: string }) {
                 </Flex>
             )}
 
-            <Grid
-                w='full'
-                h='full'
-                templateColumns='repeat(4, 1fr)'
-                gap={4}
-                mt={10}
-            >
-                {!isLoading && !isError && events?.length > 0 && events.map((item, index) => (
-                    <ReusableExternalListCard type='FUNDRAISER' key={index.toString()} fundraiser={item} />
-                ))}
-                {isLoading && [1, 2, 3, 4, 5, 6].map((item) => (
-                    <Skeleton width={'full'} height={'509px'} borderRadius={'16px'} />
-                ))}
-            </Grid>
+            {!isError && (
+                <Grid
+                    w='full'
+                    h='full'
+                    templateColumns={['repeat(1, 1fr)', 'repeat(1, 1fr)', 'repeat(4, 1fr)', 'repeat(4, 1fr)']}
+                    gap={4}
+                    mt={10}
+                >
+                    {!isLoading && !isError && events?.length > 0 && events.map((item, index) => (
+                        <ReusableExternalListCard type='EVENT' key={index.toString()} fundraiser={item} />
+                    ))}
+                    {isLoading && [1, 2, 3, 4, 5, 6].map((item, index) => (
+                        <Skeleton width={'full'} height={'509px'} borderRadius={'16px'} key={index.toString()} />
+                    ))}
+
+                </Grid>
+            )}
 
         </Box>
     )

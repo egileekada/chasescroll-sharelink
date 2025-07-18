@@ -15,16 +15,20 @@ import { capitalizeFLetter } from '@/utils/capitalizeLetter';
 import { ArrowLeft2, Calendar1, ArrowDown2 } from 'iconsax-reactjs';
 import { DateTime } from 'luxon';
 import CustomText from '@/components/Custom/CustomText';
-import { useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { activeFundRaiserAtom } from '@/states/activeFundraiser';
 import FundRaiserModal from '@/components/Custom/modals/FundRaisingModal';
 import { formatNumber } from '@/utils/formatNumber';
+import { STORAGE_KEYS } from '@/utils/StorageKeys';
+import { ticketurchaseStepAtom } from '@/states/activeTicket';
 
 function Fundraiser({ id }: { id: string }) {
 
     const router = useRouter();
     const session = useSession();
     const setFundRaiser = useSetAtom(activeFundRaiserAtom);
+    const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
+
 
     const [event, setEvent] = React.useState<IDonationList | null>(null);
     const [showModal, setShowModal] = React.useState(false);
@@ -38,6 +42,20 @@ function Fundraiser({ id }: { id: string }) {
             }
         })
     })
+
+    React.useEffect(() => {
+        // INITIALIZE VALUES IF THEY EXIST
+        const step = localStorage.getItem(STORAGE_KEYS.CURRENT_STEP);
+        if (step) {
+            setCurrentStep(() => {
+                return step ? Number(step) : 1;
+            });
+
+            if (Number(step) > 1) {
+                setShowModal(true);
+            }
+        }
+    }, [])
 
     React.useEffect(() => {
         if (!isLoading && !isError && data?.data) {
