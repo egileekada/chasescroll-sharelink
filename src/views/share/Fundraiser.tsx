@@ -17,7 +17,7 @@ import { DateTime } from 'luxon';
 import CustomText from '@/components/Custom/CustomText';
 import { useAtom, useSetAtom } from 'jotai';
 import { activeFundRaiserAtom } from '@/states/activeFundraiser';
-import FundRaiserModal from '@/components/Custom/modals/FundRaisingModal';
+import FundRaiserModal from '@/components/Custom/modals/FundRaiserModal/Index';
 import { formatNumber } from '@/utils/formatNumber';
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
 import { ticketurchaseStepAtom } from '@/states/activeTicket';
@@ -75,12 +75,12 @@ function Fundraiser({ id }: { id: string }) {
     }, [event?.name]);
 
     return (
-        <Box w="full" h="full" p={6}>
+        <Box w="full" h="full" p={['0px', '0px', 6, 6]}>
             <FundRaiserModal isOpen={showModal} onClose={() => setShowModal(false)} type='FUNDRAISER' />
             <Head>
                 <title>Fundraiser | {event?.name || 'Event'}</title>
             </Head>
-            <Container maxW={['100%', '100%', '70%', '70%']}>
+            <Container maxW={['100%', '100%', '70%', '70%']} p="10px">
                 <HStack alignItems={'center'} mb='20px'>
                     <ArrowLeft2 onClick={() => router.back()} cursor={'pointer'} variant='Outline' size='30px' />
                     <Heading>Fundraising</Heading>
@@ -156,7 +156,7 @@ function Fundraiser({ id }: { id: string }) {
                 )}
 
                 {isLoading && (
-                    <Flex w='full' h="full" spaceX={6} mt="10px">
+                    <Flex w='full' h="full" spaceX={[0, 0, 6, 6]} mt="10px" flexDirection={['column', 'column', 'row', 'row']}>
                         <Box flex={1} h="full">
                             <Skeleton w="full" h="500px" borderRadius={'16px'} mb='10px' />
                             <Skeleton w="full" h="150px" mb="5px" borderRadius={'16px'} />
@@ -164,7 +164,6 @@ function Fundraiser({ id }: { id: string }) {
                         <Box flex={1} h="full">
                             <Skeleton w="full" h="50px" mb="5px" borderRadius={'8px'} />
                             <Skeleton w="full" h="50px" mb="5px" borderRadius={'8px'} />
-
                         </Box>
                     </Flex>
                 )}

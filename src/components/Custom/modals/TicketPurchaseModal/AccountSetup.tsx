@@ -92,7 +92,9 @@ function AccountSetup() {
                 })
                 return;
             } else if (googleAuthUsed) {
-
+                // LOGIN USER
+                const idToken = session?.token?.idToken;
+                googleAuth.mutate(idToken);
             } else {
                 checkEmailMutation(data);
             }

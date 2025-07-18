@@ -7,32 +7,26 @@ import {
     Flex,
     Text,
     Input,
-    Checkbox,
     Badge,
     IconButton
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import CustomText from '../CustomText'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useMutation } from '@tanstack/react-query'
 import httpService from '@/services/httpService'
 import { URLS } from '@/services/urls'
 import { toaster } from '@/components/ui/toaster'
 import { signIn, useSession, getSession } from 'next-auth/react';
-import { getToken } from 'next-auth/jwt';
-import { currentIdAtom, showTicketModalAtom } from '@/views/share/Event'
-import { useGoogleTokens } from '@/hooks/useGoogleTokens';
 import { activeEventAtom, activeTicketAtom, canPayAtom, createdTicketAtom, currentUrlAtom, paystackDetailsAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket'
 import { ArrowLeft, CloseSquare, Edit } from 'iconsax-reactjs'
 import { formatNumber } from '@/utils/formatNumber'
 import { RESOURCE_URL } from '@/constants'
 import useForm from '@/hooks/useForm'
 import { accountCreationSchema } from '@/services/validation'
-import CustomInput from '../CustomInput'
+import CustomInput from '../../CustomInput'
 import { STORAGE_KEYS } from '@/utils/StorageKeys'
-import { usePaystackPayment } from 'react-paystack';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
-import PaymentButton from '../PaymentButton'
+import PaymentButton from '../../PaymentButton'
 import { IUser } from '@/models/User'
 import { activeFundRaiserAtom, donationAmountAtom } from '@/states/activeFundraiser'
 
@@ -70,6 +64,8 @@ function FundRaiserAccountSetup() {
         const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
         return token !== null && user_id !== null;
     });
+    const [googleAuthUsed, setGoogleAuthUsed] = React.useState(() => localStorage.getItem(STORAGE_KEYS.GOOGLE_AUTH))
+
 
     const { data: session, status } = useSession();
 
@@ -100,7 +96,12 @@ function FundRaiserAccountSetup() {
                     typeID: activeFundRaider?.id || ''
                 })
                 return;
-            } else {
+            } else if (googleAuthUsed) {
+                // login with google
+                const idToken = session?.token?.idToken;
+                googleAuth.mutate(idToken);
+            }
+            else {
                 checkEmailMutation(data);
             }
         },
@@ -108,12 +109,12 @@ function FundRaiserAccountSetup() {
     });
 
     React.useEffect(() => {
-        if (status === 'authenticated') {
+        if (googleAuthUsed) {
             // LOGIN USER
-            const idToken = session.token?.idToken;
+            const idToken = session?.token?.idToken;
             googleAuth.mutate(idToken);
         }
-    }, [status])
+    }, [googleAuthUsed])
 
     React.useEffect(() => {
         if (userDetails) {
@@ -146,14 +147,42 @@ function FundRaiserAccountSetup() {
         }
     })
 
+    const createDonation = useMutation({
+        mutationFn: (data: { userID: string, fundRaiserID: string, amount: number }) => httpService.post(`${URLS.donation}/create-donation`, data),
+        onError: (error) => {
+            toaster.create({
+                title: 'An Error occured',
+                description: error?.message,
+                type: 'error',
+            });
+        },
+        onSuccess: (data) => {
+            toaster.create({
+                title: 'Success',
+                description: 'Donation created successfully',
+                type: 'success',
+            });
+            setStep(3);
+        },
+    })
+
     const getPublicProfile = useMutation({
         mutationFn: (data: any) => httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${data}`),
         onError: (error) => { },
         onSuccess: (data) => {
             const details: IUser = data?.data;
             console.log(`User details`, details);
+            setUserDetails(details)
             localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
             setUserDetails(details);
+            setIsLoggedIn(true);
+            createCustomOrder.mutate({
+                seller: activeFundRaider?.createdBy?.userId || '',
+                price: amount,
+                currency: 'NGN',
+                orderType: 'DONATION',
+                typeID: activeFundRaider?.id || ''
+            })
         },
     })
 
@@ -195,20 +224,21 @@ function FundRaiserAccountSetup() {
             if (data?.data['stackTrace']) {
                 // save everything in local storage
                 localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
-                setStep((prev) => prev + 1);
-                alert('You already have an account');
+                localStorage.setItem(STORAGE_KEYS.DONATION_AMOUNT, amount.toString());
+                localStorage.setItem(STORAGE_KEYS.DONATION_DETAILS, JSON.stringify(activeFundRaider))
+                setStep(2);
+                toaster.create({
+                    title: 'Alert!',
+                    description: data?.data?.message,
+                    type: 'info',
+                });
+                return;
             } else {
-                setUserId(data?.data?.id);
-                setToken(data?.data?.token);
+                setUserId(data?.data?.user_id);
+                setToken(data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-                createCustomOrder.mutate({
-                    seller: activeFundRaider?.createdBy?.userId || '',
-                    price: amount,
-                    currency: 'NGN',
-                    orderType: 'DONATION',
-                    typeID: activeFundRaider?.id || ''
-                })
+                getPublicProfile.mutate(data?.data?.user_id)
 
             }
         }
@@ -218,17 +248,17 @@ function FundRaiserAccountSetup() {
         <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
             <Flex w="full">
                 {/* Left Side - Checkout Form */}
-                <Box flex="0.6">
+                <Box flex={[1, 1, "0.6", "0.6"]}>
                     {/* Header */}
                     <HStack mb={6} borderBottomWidth={'1px'} spaceX={6} borderBottomColor={'lightgrey'} p="10px">
-                        <IconButton
+                        {/* <IconButton
                             aria-label="Go back"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setStep((prev) => prev - 1)}
+                            onClick={() => }
                         >
                             <ArrowLeft size="20" />
-                        </IconButton>
+                        </IconButton> */}
                         <VStack align="start" spaceY={0}>
                             <Text fontSize="xl" fontWeight="bold">Checkout</Text>
                         </VStack>
@@ -270,7 +300,7 @@ function FundRaiserAccountSetup() {
 
                         {/* Contact Information */}
                         {!canPay && (
-                            <VStack align="start" spaceY={6} mb={8}>
+                            <VStack align="start" spaceY={[3, 3, 6, 6]} mb={8}>
 
                                 <Box w="full">
                                     <Text>Donation Amount</Text>
@@ -287,9 +317,10 @@ function FundRaiserAccountSetup() {
                                         borderRadius={"full"}
                                         mt="10px"
                                     />
+                                    <Text fontWeight="semibold" display={['block', 'block', 'none', 'none']} mt="10px">NGN {formatNumber(amount)}</Text>
                                 </Box>
 
-                                <HStack spaceX={4} w="full">
+                                <Flex flexDir={['column', 'column', 'row', 'row']} spaceX={[0, 0, 4, 4]} spaceY={[3, 3, 0, 0]} w="full">
 
                                     <Box w="full">
                                         <CustomInput name="firstName" label='First Name' isPassword={false} />
@@ -298,7 +329,7 @@ function FundRaiserAccountSetup() {
                                     <Box w="full">
                                         <CustomInput name="lastName" label='Last Name' isPassword={false} />
                                     </Box>
-                                </HStack>
+                                </Flex>
                                 <Box w="full">
                                     <CustomInput name="email" label='Email' isPassword={false} />
                                 </Box>
@@ -327,6 +358,8 @@ function FundRaiserAccountSetup() {
                                     reference={paystackDetails?.reference as string}
                                     email={paystackDetails?.email as string}
                                     amount={paystackDetails?.amount as number}
+                                    isLoading={createDonation?.isPending}
+                                    onSucces={() => createDonation.mutate({ userID: userDetails?.userId as string, amount: amount, fundRaiserID: activeFundRaider?.id as string })}
                                     text={'Pay'}
                                 />
                             )}
@@ -336,7 +369,7 @@ function FundRaiserAccountSetup() {
                 </Box>
 
                 {/* Right Side - Event Image & Order Summary */}
-                <Box flex="0.4" position="relative" bgColor="whitesmoke">
+                <Box flex="0.4" position="relative" bgColor="whitesmoke" display={['none', 'none', 'block', 'block']}>
                     {/* Close Button */}
                     <IconButton
                         aria-label="Close"

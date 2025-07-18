@@ -12,9 +12,10 @@ interface IProps {
     textColor?: string;
     text: string;
     onSucces?: () => void;
+    isLoading?: boolean
 }
 
-function PaymentButton({ reference, email, amount, bgColor = 'green', textColor = 'white', text, onSucces }: IProps) {
+function PaymentButton({ reference, email, amount, bgColor = 'green', textColor = 'white', text, onSucces, isLoading = false }: IProps) {
     const config = {
         reference,
         amount,
@@ -53,7 +54,7 @@ function PaymentButton({ reference, email, amount, bgColor = 'green', textColor 
 
     }, [config, email, reference, amount])
     return (
-        <Button w="full" h="60px" borderRadius={'full'} onClick={handlePayment} bgColor={bgColor} color={textColor}>
+        <Button w="full" h="60px" borderRadius={'full'} onClick={handlePayment} bgColor={bgColor} color={textColor} loading={isLoading}>
             {text}
         </Button>
     )

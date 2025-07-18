@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
     USER_DETAILS: 'USER_DETAILS',
     QUANTITY: 'Quantity',
     CURRENT_STEP: 'Current_Step',
+    DONATION_DETAILS: 'Donation_details',
     DONATION_AMOUNT: 'Donation_amount',
     PRODUCT: 'Product',
     PRODUCT_QUANTITY: 'Product_Quantity',
