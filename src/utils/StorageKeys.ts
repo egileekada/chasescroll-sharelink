@@ -16,4 +16,5 @@ export const STORAGE_KEYS = {
     PRODUCT: 'Product',
     PRODUCT_QUANTITY: 'Product_Quantity',
     ADDRESS: 'Address',
+    GOOGLE_AUTH: 'GOOGLE_AUTH',
 }

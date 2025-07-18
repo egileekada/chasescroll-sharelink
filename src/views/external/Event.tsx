@@ -61,7 +61,7 @@ function Event({ userId }: { userId: string }) {
                 <Grid
                     w='full'
                     h='full'
-                    templateColumns='repeat(4, 1fr)'
+                    templateColumns={['repeat(1, 1fr)', 'repeat(1, 1fr)', 'repeat(4, 1fr)', 'repeat(4, 1fr)']}
                     gap={4}
                     mt={10}
                 >

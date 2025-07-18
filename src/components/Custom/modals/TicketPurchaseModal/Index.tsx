@@ -32,8 +32,6 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
     const createdTicket = useAtomValue(createdTicketAtom);
 
     React.useEffect(() => {
-
-
         setQuantity(() => {
             const quantity = localStorage.getItem(STORAGE_KEYS.TICKET_COUNT);
             return quantity ? Number(quantity) : 1;
@@ -52,6 +50,9 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
 
     return (
         <Dialog.Root lazyMount open={isOpen} onOpenChange={() => {
+            setCurrentStep(1);
+            setQuantity(1);
+            localStorage.clear()
             onClose();
         }} size={currentStep === 3 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false}>
             <Portal>
@@ -87,7 +88,7 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                                 />
                             )}
                         </Dialog.Body>
-                        <Dialog.CloseTrigger top="0" insetEnd="-12" asChild>
+                        <Dialog.CloseTrigger asChild>
                             <CloseButton bg="black" color={'white'} size="sm" />
                         </Dialog.CloseTrigger>
                     </Dialog.Content>

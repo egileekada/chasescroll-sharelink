@@ -12,7 +12,7 @@ import {
     IconButton
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import CustomText from '../CustomText'
+import CustomText from '../../CustomText'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useMutation } from '@tanstack/react-query'
 import httpService from '@/services/httpService'
@@ -28,11 +28,11 @@ import { formatNumber } from '@/utils/formatNumber'
 import { RESOURCE_URL } from '@/constants'
 import useForm from '@/hooks/useForm'
 import { accountCreationSchema } from '@/services/validation'
-import CustomInput from '../CustomInput'
+import CustomInput from '../../CustomInput'
 import { STORAGE_KEYS } from '@/utils/StorageKeys'
 import { usePaystackPayment } from 'react-paystack';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
-import PaymentButton from '../PaymentButton'
+import PaymentButton from '../../PaymentButton'
 import { IUser } from '@/models/User'
 
 interface Props {
@@ -66,9 +66,16 @@ function AccountSetup() {
         const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
         return token !== null && user_id !== null;
     });
+    const [googleAuthUsed, setGoogleAuthUsed] = React.useState(() => {
+        const googleUsed = localStorage.getItem(STORAGE_KEYS.GOOGLE_AUTH);
+        if (googleUsed) {
+            return true;
+        } else {
+            return false;
+        }
+    })
 
     const { data: session, status } = useSession();
-
 
     const { renderForm, values, setFieldValue, setValues } = useForm({
         defaultValues: {
@@ -84,6 +91,8 @@ function AccountSetup() {
                     numberOfTickets: quantity,
                 })
                 return;
+            } else if (googleAuthUsed) {
+
             } else {
                 checkEmailMutation(data);
             }
@@ -92,12 +101,12 @@ function AccountSetup() {
     });
 
     React.useEffect(() => {
-        if (status === 'authenticated') {
+        if (googleAuthUsed) {
             // LOGIN USER
-            const idToken = session.token?.idToken;
+            const idToken = session?.token?.idToken;
             googleAuth.mutate(idToken);
         }
-    }, [status])
+    }, [googleAuthUsed])
 
     React.useEffect(() => {
         if (userDetails) {
@@ -119,11 +128,29 @@ function AccountSetup() {
 
             const res = await httpService.post(`${URLS.event}/create-ticket`, data);
             const json: ITicketCreatedModel = res.data;
+
+            console.log(json);
             setCreatedTicket(json);
             if (res?.data) {
+                if (!json.content) {
+                    toaster.create({
+                        title: 'An error occured',
+                        description: json?.message,
+                        type: 'error',
+                    });
+                    setCreateTicketIsLoading(false);
+                    return;
+
+                }
                 setCanPay(true);
                 setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderId, amount: json.content?.orderTotal * 100 });
                 return;
+            } else {
+                toaster.create({
+                    title: 'An error occured',
+                    description: 'Failed to create ticket',
+                    type: 'error',
+                });
             }
             // you can call this function anything
             setCreateTicketIsLoading(false);
@@ -186,7 +213,11 @@ function AccountSetup() {
                 localStorage.setItem(STORAGE_KEYS.QUANTITY, quantity.toString());
                 localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
                 setStep((prev) => prev + 1);
-                alert('You already have an account');
+                toaster.create({
+                    title: 'Alert!',
+                    description: data?.data?.message,
+                    type: 'warn',
+                })
             } else {
                 setUserId(data?.data?.user_id);
                 setToken(data?.data?.access_token);
@@ -199,7 +230,7 @@ function AccountSetup() {
 
     return renderForm(
         <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
-            <Flex w="full">
+            <Flex w="full" flexDir={['column', 'column', 'row', 'row']}>
                 {/* Left Side - Checkout Form */}
                 <Box flex="0.6">
                     {/* Header */}
@@ -214,11 +245,11 @@ function AccountSetup() {
                         </IconButton>
                         <VStack align="start" spaceY={0}>
                             <Text fontSize="xl" fontWeight="bold">Checkout</Text>
-                            <Text fontSize="sm" color="gray.500">Time left 23:21</Text>
                         </VStack>
                     </HStack>
 
-                    <Box p="20px">
+                    <Box p={["10px", "10px", "20px", "20px"]}>
+
 
                         {/* Event Info */}
                         <HStack mb={8} p={4} borderRadius="lg" borderWidth="1px" borderColor={'lightgrey'}>
@@ -255,18 +286,18 @@ function AccountSetup() {
 
                         {/* Contact Information */}
                         {!canPay && (
-                            <VStack align="start" spaceY={6} mb={8}>
+                            <VStack align="start" spaceY={[0, 0, 6, 6]} mb={8}>
 
 
-                                <HStack spaceX={4} w="full">
+                                <Flex spaceX={[0, 0, 4, 4]} w="full" flexDir={['column', 'column', 'row', 'row']}>
                                     <Box w="full">
                                         <CustomInput name="firstName" label='First Name' isPassword={false} />
                                     </Box>
 
-                                    <Box w="full">
+                                    <Box w="full" mt={['10px', '10px', '0px', '0px']}>
                                         <CustomInput name="lastName" label='Last Name' isPassword={false} />
                                     </Box>
-                                </HStack>
+                                </Flex>
                                 <Box w="full">
                                     <CustomInput name="email" label='Email' isPassword={false} />
                                 </Box>
@@ -304,20 +335,8 @@ function AccountSetup() {
                 </Box>
 
                 {/* Right Side - Event Image & Order Summary */}
-                <Box flex="0.4" position="relative" bgColor="whitesmoke">
-                    {/* Close Button */}
-                    <IconButton
-                        aria-label="Close"
-                        position="absolute"
-                        top={4}
-                        right={4}
-                        zIndex={10}
-                        variant="ghost"
-                        color="white"
-                        _hover={{ bg: "blackAlpha.600" }}
-                    >
-                        <CloseSquare size="24" />
-                    </IconButton>
+                <Box flex="0.4" position="relative" bgColor="whitesmoke" display={['none', 'none', 'block', 'block']}>
+
 
                     {/* Event Image */}
                     <Box w="100%" h="300px" overflow="hidden">

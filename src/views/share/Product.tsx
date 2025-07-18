@@ -21,6 +21,7 @@ import { Location } from 'iconsax-reactjs';
 import { toaster } from '@/components/ui/toaster';
 import ProductModal from '@/components/Custom/modals/ProductModal';
 import { activeProductAtom, activeProductQuantityAtom } from '@/states/activeProduct';
+import { ticketurchaseStepAtom } from '@/states/activeTicket';
 
 function Product({ id }: { id: string }) {
 
@@ -31,7 +32,8 @@ function Product({ id }: { id: string }) {
 
     setCurrentId(id);
     const [event, setEvent] = useAtom(activeProductAtom);
-    const [quantity, setQuantity] = useAtom(activeProductQuantityAtom)
+    const [quantity, setQuantity] = useAtom(activeProductQuantityAtom);
+    const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
     const [showModal, setShowModal] = React.useState(false);
 
     const { isLoading, data, isError, error } = useQuery({
@@ -42,6 +44,20 @@ function Product({ id }: { id: string }) {
             }
         })
     });
+
+    React.useEffect(() => {
+        // INITIALIZE VALUES IF THEY EXIST
+        const step = localStorage.getItem(STORAGE_KEYS.CURRENT_STEP);
+        if (step) {
+            setCurrentStep(() => {
+                return step ? Number(step) : 1;
+            });
+
+            if (Number(step) > 1) {
+                setShowModal(true);
+            }
+        }
+    }, [])
 
     React.useEffect(() => {
         if (!isLoading && !isError && data?.data) {
