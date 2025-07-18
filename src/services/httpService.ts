@@ -1,11 +1,11 @@
 import axios, { AxiosError } from 'axios';
 
 const httpService = axios.create({
-    baseURL: `${process.env.NEXT_PUBLIC_BASE_URL}`,
+    baseURL: `https://test-api.chasescroll.com/`,
 });
 
 export const unsecureHttpService = axios.create({
-    baseURL: `${process.env.NEXT_PUBLIC_BASE_URL}`,
+    baseURL: `https://test-api.chasescroll.com/`,
 })
 
 unsecureHttpService.interceptors.response.use((data) => {

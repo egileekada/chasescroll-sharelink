@@ -4,7 +4,7 @@ import { IDonationList } from '@/models/donation';
 import { PaginatedResponse } from '@/models/PaginatedResponse';
 import httpService from '@/services/httpService';
 import { URLS } from '@/services/urls';
-import { Box, Grid, Skeleton, Text } from '@chakra-ui/react';
+import { Box, Flex, Grid, Skeleton, Text, Image } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import { uniqBy } from 'lodash';
 import React from 'react'
@@ -46,6 +46,13 @@ function Fundraiser({ userId }: { userId: string }) {
             >
                 FundRaisers
             </Text>
+
+            {!isLoading && isError && (
+                <Flex w='full' h='full' flexDir={'column'} alignItems={'center'} justifyContent={'center'}>
+                    <Image src="/Error.png" w="150px" h="150px" />
+                    <Text fontFamily={'heading'} fontSize={'20px'} color="black" textAlign={'center'}>An Error Occured</Text>
+                </Flex>
+            )}
 
             <Grid
                 w='full'
