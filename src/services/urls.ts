@@ -8,6 +8,7 @@ export const URLS = {
     payments: '/payments',
     address: '/addresses',
     order: '/orders',
+    donation: '/donation',
 
     LOGIN: '/auth/signin',
     SIGNUP: '/auth/signup',

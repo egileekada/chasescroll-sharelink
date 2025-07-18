@@ -63,7 +63,7 @@ function Product({ userId }: { userId: string }) {
                     mt={10}
                 >
                     {!isLoading && !isError && events?.length > 0 && events.map((item, index) => (
-                        <ReusableExternalListCard type='EVENT' key={index.toString()} product={item} />
+                        <ReusableExternalListCard type='PRODUCT' key={index.toString()} product={item} />
                     ))}
                     {isLoading && [1, 2, 3, 4, 5, 6].map((item, index) => (
                         <Skeleton width={'full'} height={'509px'} borderRadius={'16px'} key={index.toString()} />

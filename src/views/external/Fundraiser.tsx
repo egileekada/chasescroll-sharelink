@@ -63,7 +63,7 @@ function Fundraiser({ userId }: { userId: string }) {
                     mt={10}
                 >
                     {!isLoading && !isError && events?.length > 0 && events.map((item, index) => (
-                        <ReusableExternalListCard type='EVENT' key={index.toString()} fundraiser={item} />
+                        <ReusableExternalListCard type='FUNDRAISER' key={index.toString()} fundraiser={item} />
                     ))}
                     {isLoading && [1, 2, 3, 4, 5, 6].map((item, index) => (
                         <Skeleton width={'full'} height={'509px'} borderRadius={'16px'} key={index.toString()} />
