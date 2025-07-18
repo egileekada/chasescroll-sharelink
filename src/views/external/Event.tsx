@@ -51,7 +51,7 @@ function Event({ userId }: { userId: string }) {
             </Text>
 
             {!isLoading && isError && (
-                <Flex w='full' h='full' flexDir={'column'} alignItems={'center'} justifyContent={'center'} bg='red'>
+                <Flex w='full' h='full' flexDir={'column'} alignItems={'center'} justifyContent={'center'}>
                     <Image src="/Error.png" w="150px" h="150px" />
                     <Text fontFamily={'heading'} fontSize={'20px'} color="black" textAlign={'center'}>An Error Occured</Text>
                 </Flex>

@@ -4,7 +4,7 @@ import { PaginatedResponse } from '@/models/PaginatedResponse';
 import { IProduct } from '@/models/product';
 import httpService from '@/services/httpService';
 import { URLS } from '@/services/urls';
-import { Skeleton, Box, Text, Grid } from '@chakra-ui/react';
+import { Skeleton, Box, Text, Grid, Flex, Image } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import { uniqBy } from 'lodash';
 import React from 'react'
@@ -60,6 +60,12 @@ function Product({ userId }: { userId: string }) {
                 {isLoading && [1, 2, 3, 4, 5, 6].map((item) => (
                     <Skeleton width={'full'} height={'509px'} borderRadius={'16px'} />
                 ))}
+                {!isLoading && isError && (
+                    <Flex w='full' h='full' flexDir={'column'} alignItems={'center'} justifyContent={'center'}>
+                        <Image src="/Error.png" w="150px" h="150px" />
+                        <Text fontFamily={'heading'} fontSize={'20px'} color="black" textAlign={'center'}>An Error Occured</Text>
+                    </Flex>
+                )}
             </Grid>
         </Box>
     )
