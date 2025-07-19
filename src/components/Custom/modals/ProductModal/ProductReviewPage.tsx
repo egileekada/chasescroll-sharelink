@@ -12,7 +12,7 @@ import {
     IconButton
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import CustomText from '../CustomText'
+import CustomText from '../../CustomText'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useMutation } from '@tanstack/react-query'
 import httpService from '@/services/httpService'
@@ -28,11 +28,11 @@ import { formatNumber } from '@/utils/formatNumber'
 import { RESOURCE_URL } from '@/constants'
 import useForm from '@/hooks/useForm'
 import { accountCreationSchema } from '@/services/validation'
-import CustomInput from '../CustomInput'
+import CustomInput from '../../CustomInput'
 import { STORAGE_KEYS } from '@/utils/StorageKeys'
 import { usePaystackPayment } from 'react-paystack';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
-import PaymentButton from '../PaymentButton'
+import PaymentButton from '../../PaymentButton'
 import { IUser } from '@/models/User'
 import { activeFundRaiserAtom, donationAmountAtom } from '@/states/activeFundraiser'
 import { activeProductAtom, activeProductQuantityAtom } from '@/states/activeProduct'
@@ -58,7 +58,6 @@ interface Props {
 function ProductReviewPage() {
 
     const [step, setStep] = useAtom(ticketurchaseStepAtom);
-    const [activeFundRaider, setActiveFundRaiser] = useAtom(activeFundRaiserAtom);
     const [amount, setAmount] = useAtom(activeProductQuantityAtom);
     const [canPay, setCanPay] = useAtom(canPayAtom);
     const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
@@ -72,6 +71,8 @@ function ProductReviewPage() {
         const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
         return token !== null && user_id !== null;
     });
+    const [googleAuthUsed, setGoogleAuthUsed] = React.useState(() => localStorage.getItem(STORAGE_KEYS.GOOGLE_AUTH))
+
 
     const { data: session, status } = useSession();
 
@@ -84,9 +85,17 @@ function ProductReviewPage() {
         },
         onSubmit: (data) => {
             if (isLoggedIn) {
+                localStorage.setItem(STORAGE_KEYS.PRODUCT, JSON.stringify(product));
+                localStorage.setItem(STORAGE_KEYS.PRODUCT_QUANTITY, String(amount));
                 setStep(2);
                 return;
+            } else if (googleAuthUsed) {
+                // login with google
+                const idToken = session?.token?.idToken;
+                googleAuth.mutate(idToken);
             } else {
+                localStorage.setItem(STORAGE_KEYS.PRODUCT, JSON.stringify(product));
+                localStorage.setItem(STORAGE_KEYS.PRODUCT_QUANTITY, String(amount));
                 checkEmailMutation(data);
             }
         },
@@ -181,8 +190,12 @@ function ProductReviewPage() {
             if (data?.data['stackTrace']) {
                 // save everything in local storage
                 localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
-                setStep((prev) => prev + 1);
-                alert('You already have an account');
+                toaster.create({
+                    title: 'Infor',
+                    description: data?.data?.message,
+                    type: 'info',
+                });
+                setStep((prev) => prev + 2);
             } else {
                 setUserId(data?.data?.id);
                 setToken(data?.data?.token);
@@ -196,11 +209,11 @@ function ProductReviewPage() {
 
     return renderForm(
         <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
-            <Flex w="full">
+            <Flex w="full" flexDir={['column', 'column', 'row', 'row']}>
                 {/* Left Side - Checkout Form */}
                 <Box flex="0.6">
                     {/* Header */}
-                    <HStack mb={6} borderBottomWidth={'1px'} spaceX={6} borderBottomColor={'lightgrey'} p="10px">
+                    <HStack mb={[0, 0, 6, 6]} borderBottomWidth={'1px'} spaceX={6} borderBottomColor={'lightgrey'} p="10px">
                         <IconButton
                             aria-label="Go back"
                             variant="ghost"
@@ -214,10 +227,11 @@ function ProductReviewPage() {
                         </VStack>
                     </HStack>
 
-                    <Box p="20px">
+                    <Box p="20px" display={['none', 'none', 'block', 'block']}>
 
                         {/* Event Info */}
-                        <HStack mb={8} p={4} borderRadius="lg" borderWidth="1px" borderColor={'lightgrey'}>
+                        <HStack mb={8} p={4} borderRadius="lg" borderWidth="1px" borderColor={'lightgrey'} display={['none', 'none', 'flex', 'flex']}>
+
                             <Image
                                 src={RESOURCE_URL + '/' + product?.images[0] || "/images/tech-event.jpg"}
                                 w="120px"
@@ -246,71 +260,60 @@ function ProductReviewPage() {
 
                         </HStack>
 
-                        {/* Contact Information */}
-                        {!canPay && (
-                            <VStack align="start" spaceY={6} mb={8}>
-
-                                <HStack spaceX={4} w="full">
-
-                                    <Box w="full">
-                                        <CustomInput name="firstName" label='First Name' isPassword={false} />
-                                    </Box>
-
-                                    <Box w="full">
-                                        <CustomInput name="lastName" label='Last Name' isPassword={false} />
-                                    </Box>
-                                </HStack>
-                                <Box w="full">
-                                    <CustomInput name="email" label='Email' isPassword={false} />
-                                </Box>
-
-                            </VStack>
-                        )}
-
-                        {/* Footer */}
-                        <HStack justify="space-between" align="center">
+                        <Box display={['none', 'none', 'block', 'block']}>
+                            {/* Contact Information */}
                             {!canPay && (
-                                <Button
-                                    w="full"
-                                    h="60px"
-                                    bgColor="primaryColor"
-                                    size="lg"
-                                    borderRadius="full"
-                                    px={8}
-                                    loading={isPending || createCustomOrder.isPending || googleAuth.isPending || getPublicProfile.isPending}
-                                    type={'submit'}
-                                >
-                                    Confirm Details
-                                </Button>
+                                <VStack align="start" spaceY={6} mb={8}>
+
+                                    <HStack spaceX={4} w="full">
+
+                                        <Box w="full">
+                                            <CustomInput name="firstName" label='First Name' isPassword={false} />
+                                        </Box>
+
+                                        <Box w="full">
+                                            <CustomInput name="lastName" label='Last Name' isPassword={false} />
+                                        </Box>
+                                    </HStack>
+                                    <Box w="full">
+                                        <CustomInput name="email" label='Email' isPassword={false} />
+                                    </Box>
+
+                                </VStack>
                             )}
-                            {canPay && (
-                                <PaymentButton
-                                    reference={paystackDetails?.reference as string}
-                                    email={paystackDetails?.email as string}
-                                    amount={paystackDetails?.amount as number}
-                                    text={'Pay'}
-                                />
-                            )}
-                        </HStack>
+
+                            {/* Footer */}
+                            <HStack justify="space-between" align="center">
+                                {!canPay && (
+                                    <Button
+                                        w="full"
+                                        h="60px"
+                                        bgColor="primaryColor"
+                                        size="lg"
+                                        borderRadius="full"
+                                        px={8}
+                                        loading={isPending || createCustomOrder.isPending || googleAuth.isPending || getPublicProfile.isPending}
+                                        type={'submit'}
+                                    >
+                                        Confirm Details
+                                    </Button>
+                                )}
+                                {canPay && (
+                                    <PaymentButton
+                                        reference={paystackDetails?.reference as string}
+                                        email={paystackDetails?.email as string}
+                                        amount={paystackDetails?.amount as number}
+                                        text={'Pay'}
+                                    />
+                                )}
+                            </HStack>
+                        </Box>
 
                     </Box>
                 </Box>
 
                 {/* Right Side - Event Image & Order Summary */}
                 <Box flex="0.4" position="relative" bgColor="whitesmoke">
-                    {/* Close Button */}
-                    <IconButton
-                        aria-label="Close"
-                        position="absolute"
-                        top={4}
-                        right={4}
-                        zIndex={10}
-                        variant="ghost"
-                        color="white"
-                        _hover={{ bg: "blackAlpha.600" }}
-                    >
-                        <CloseSquare size="24" />
-                    </IconButton>
 
                     {/* Event Image */}
                     <Box w="100%" h="300px" overflow="hidden">
@@ -346,6 +349,55 @@ function ProductReviewPage() {
                                 <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * amount)}</Text>
                             </Flex>
                         </VStack>
+
+                        <Box display={['block', 'block', 'none', 'none']} mt="20px" borderTopWidth={'1px'} borderTopColor={'lightgrey'} pt="20px">
+                            {/* Contact Information */}
+                            {!canPay && (
+                                <VStack align="start" spaceY={6} mb={8}>
+
+                                    <HStack spaceX={4} w="full">
+
+                                        <Box w="full">
+                                            <CustomInput name="firstName" label='First Name' isPassword={false} />
+                                        </Box>
+
+                                        <Box w="full">
+                                            <CustomInput name="lastName" label='Last Name' isPassword={false} />
+                                        </Box>
+                                    </HStack>
+                                    <Box w="full">
+                                        <CustomInput name="email" label='Email' isPassword={false} />
+                                    </Box>
+
+                                </VStack>
+                            )}
+
+                            {/* Footer */}
+                            <HStack justify="space-between" align="center">
+                                {!canPay && (
+                                    <Button
+                                        w="full"
+                                        h="60px"
+                                        bgColor="primaryColor"
+                                        size="lg"
+                                        borderRadius="full"
+                                        px={8}
+                                        loading={isPending || createCustomOrder.isPending || googleAuth.isPending || getPublicProfile.isPending}
+                                        type={'submit'}
+                                    >
+                                        Confirm Details
+                                    </Button>
+                                )}
+                                {canPay && (
+                                    <PaymentButton
+                                        reference={paystackDetails?.reference as string}
+                                        email={paystackDetails?.email as string}
+                                        amount={paystackDetails?.amount as number}
+                                        text={'Pay'}
+                                    />
+                                )}
+                            </HStack>
+                        </Box>
                     </Box>
                 </Box>
             </Flex>

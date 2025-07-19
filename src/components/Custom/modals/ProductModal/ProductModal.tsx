@@ -1,13 +1,13 @@
-import { activeEventAtom, activeTicketAtom, canPayAtom, createdTicketAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
+import { activeEventAtom, activeTicketAtom, createdTicketAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
 import { Dialog, Portal, CloseButton } from '@chakra-ui/react';
-import { atom, useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React from 'react'
 import LoginModal from '../TicketPurchaseModal/LoginModal';
 import { currentIdAtom } from '@/views/share/Event';
-import TicketPurchaseSuccessModal from '../TicketPurchaseModal/TicketPurchaseSuccessModal';
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
-import FundRaiserAccountSetup from './FundRaiserAccountSetup';
-import { activeFundRaiserAtom, donationAmountAtom } from '@/states/activeFundraiser';
+import ProductReviewPage from './ProductReviewPage';
+import ProductAddressPage from './ProductAddressPage';
+import ProductSuccessPage from './ProductSuccessPage';
 
 const titles = [
     'Select Tickets',
@@ -20,7 +20,7 @@ interface IProps {
     type: 'EVENT' | 'FUNDRAISER' | 'PRODUCT'
 }
 
-function FundRaiserModal({ isOpen, onClose }: IProps) {
+function ProductModal({ isOpen, onClose }: IProps) {
 
     const [quantity, setQuantity] = useAtom(ticketCountAtom)
     const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
@@ -28,37 +28,16 @@ function FundRaiserModal({ isOpen, onClose }: IProps) {
     const [activeTicket, setActiveTicket] = useAtom(activeTicketAtom);
     const currentId = useAtomValue(currentIdAtom);
     const createdTicket = useAtomValue(createdTicketAtom);
-    const [activeFundRaider, setActiveFundRaiser] = useAtom(activeFundRaiserAtom);
-    const [amount, setAmount] = useAtom(donationAmountAtom);
-    const [canPay, setCanPay] = useAtom(canPayAtom);
 
     React.useEffect(() => {
-        setActiveFundRaiser(() => {
-            const data = localStorage.getItem(STORAGE_KEYS.DONATION_DETAILS);
-            if (data) {
-                return JSON.parse(data);
-            } else {
-                return null;
-            }
-        });
-
-        setAmount(() => {
-            const data = localStorage.getItem(STORAGE_KEYS.DONATION_AMOUNT);
-            if (data) {
-                return Number(data);
-            } else {
-                return 0;
-            }
+        setQuantity(() => {
+            const quantity = localStorage.getItem(STORAGE_KEYS.TICKET_COUNT);
+            return quantity ? Number(quantity) : 1;
         })
     }, [])
 
     return (
         <Dialog.Root lazyMount open={isOpen} onOpenChange={() => {
-            setCurrentStep(1);
-            setActiveFundRaiser(null)
-            setAmount(0)
-            setCanPay(false);
-            localStorage.clear()
             onClose();
         }} size={currentStep === 3 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false}>
             <Portal>
@@ -67,17 +46,20 @@ function FundRaiserModal({ isOpen, onClose }: IProps) {
                     <Dialog.Content borderRadius={'16px'} bgColor="white" p="0">
                         <Dialog.Body p="0px">
                             {currentStep === 1 && (
-                                <FundRaiserAccountSetup />
+                                <ProductReviewPage />
                             )}
                             {currentStep === 2 && (
-                                <LoginModal
-                                    callbackUrl={`/share/fundraiser?id=${currentId}`}
-                                    onLoggedIn={() => {
-                                        setCurrentStep(1);
-                                    }} />
+                                <ProductAddressPage />
                             )}
                             {currentStep === 3 && (
-                                <TicketPurchaseSuccessModal
+                                <LoginModal
+                                    callbackUrl={`/share/product?id=${currentId}`}
+                                    onLoggedIn={() => {
+                                        setCurrentStep(2);
+                                    }} />
+                            )}
+                            {currentStep === 4 && (
+                                <ProductSuccessPage
                                     email={createdTicket?.content?.buyer?.email}
                                     orderNumber={createdTicket?.content?.orderCode}
                                     onClose={() => {
@@ -102,4 +84,4 @@ function FundRaiserModal({ isOpen, onClose }: IProps) {
     )
 }
 
-export default FundRaiserModal;
+export default ProductModal;

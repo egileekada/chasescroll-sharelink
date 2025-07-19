@@ -4,14 +4,14 @@ import { atom, useAtom, useAtomValue } from 'jotai';
 import React from 'react'
 import { RESOURCE_URL } from '@/constants';
 
-import TicketSelection from './TicketPurchaseModal/TicketSelection';
-import AccountSetup from './TicketPurchaseModal/AccountSetup';
-import LoginModal from './TicketPurchaseModal/LoginModal';
+import TicketSelection from '../TicketPurchaseModal/TicketSelection';
+import AccountSetup from '../TicketPurchaseModal/AccountSetup';
+import LoginModal from '../TicketPurchaseModal/LoginModal';
 import { currentIdAtom } from '@/views/share/Event';
-import TicketPurchaseSuccessModal from './TicketPurchaseModal/TicketPurchaseSuccessModal';
+import TicketPurchaseSuccessModal from '../TicketPurchaseModal/TicketPurchaseSuccessModal';
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
 import FundRaiserAccountSetup from './FundRaiserAccountSetup';
-import ProductReviewPage from './ProductReviewPage';
+import ProductReviewPage from './ProductModal/ProductReviewPage';
 import ProductAddressPage from './ProductAddressPage';
 import ProductSuccessPage from './ProductSuccessPage';
 
