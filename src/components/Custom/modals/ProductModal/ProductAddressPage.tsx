@@ -12,7 +12,7 @@ import {
     IconButton
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import CustomText from '../CustomText'
+import CustomText from '../../CustomText'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useMutation } from '@tanstack/react-query'
 import httpService from '@/services/httpService'
@@ -28,11 +28,11 @@ import { formatNumber } from '@/utils/formatNumber'
 import { RESOURCE_URL } from '@/constants'
 import useForm from '@/hooks/useForm'
 import { accountCreationSchema, addressValidationSchema } from '@/services/validation'
-import CustomInput from '../CustomInput'
+import CustomInput from '../../CustomInput'
 import { STORAGE_KEYS } from '@/utils/StorageKeys'
 import { usePaystackPayment } from 'react-paystack';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
-import PaymentButton from '../PaymentButton'
+import PaymentButton from '../../PaymentButton'
 import { IUser } from '@/models/User'
 import { activeFundRaiserAtom, donationAmountAtom } from '@/states/activeFundraiser'
 import { activeProductAtom, activeProductQuantityAtom } from '@/states/activeProduct'
@@ -58,7 +58,6 @@ interface Props {
 function ProductAddressPage() {
 
     const [step, setStep] = useAtom(ticketurchaseStepAtom);
-    const [activeFundRaider, setActiveFundRaiser] = useAtom(activeFundRaiserAtom);
     const [amount, setAmount] = useAtom(activeProductQuantityAtom);
     const [canPay, setCanPay] = useAtom(canPayAtom);
     const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
@@ -178,7 +177,7 @@ function ProductAddressPage() {
 
     return renderForm(
         <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
-            <Flex w="full">
+            <Flex w="full" flexDir={['column', 'column', 'row', 'row']}>
                 {/* Left Side - Checkout Form */}
                 <Box flex="0.6">
                     {/* Header */}
@@ -259,7 +258,7 @@ function ProductAddressPage() {
                         )}
 
                         {/* Footer */}
-                        <HStack justify="space-between" align="center">
+                        <HStack justify="space-between" align="center" display={['none', 'none', 'flex', 'flex']}>
                             {!canPay && (
                                 <Button
                                     w="full"
@@ -289,22 +288,9 @@ function ProductAddressPage() {
 
                 {/* Right Side - Event Image & Order Summary */}
                 <Box flex="0.4" position="relative" bgColor="whitesmoke">
-                    {/* Close Button */}
-                    <IconButton
-                        aria-label="Close"
-                        position="absolute"
-                        top={4}
-                        right={4}
-                        zIndex={10}
-                        variant="ghost"
-                        color="white"
-                        _hover={{ bg: "blackAlpha.600" }}
-                    >
-                        <CloseSquare size="24" />
-                    </IconButton>
 
                     {/* Event Image */}
-                    <Box w="100%" h="300px" overflow="hidden">
+                    <Box w="100%" h="300px" overflow="hidden" display={['none', 'none', 'block', 'block']}>
                         <Image
                             src={RESOURCE_URL + '/' + product?.images[0] || "/images/tech-event.jpg"}
                             w="100%"
@@ -337,6 +323,31 @@ function ProductAddressPage() {
                                 <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * amount)}</Text>
                             </Flex>
                         </VStack>
+
+                        <HStack justify="space-between" align="center" display={['flex', 'flex', 'none', 'none']} mt="20px">
+                            {!canPay && (
+                                <Button
+                                    w="full"
+                                    h="60px"
+                                    bgColor="primaryColor"
+                                    size="lg"
+                                    borderRadius="full"
+                                    px={8}
+                                    loading={createCustomOrder.isPending || createOrder.isPending || createAddress.isPending}
+                                    type={'submit'}
+                                >
+                                    Save Address
+                                </Button>
+                            )}
+                            {canPay && (
+                                <PaymentButton
+                                    reference={paystackDetails?.reference as string}
+                                    email={paystackDetails?.email as string}
+                                    amount={paystackDetails?.amount as number}
+                                    text={'Pay'}
+                                />
+                            )}
+                        </HStack>
                     </Box>
                 </Box>
             </Flex>

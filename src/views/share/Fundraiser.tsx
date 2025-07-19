@@ -147,7 +147,10 @@ function Fundraiser({ id }: { id: string }) {
                                     </HStack>
                                 </HStack>
 
-                                <Button w="full" h="60px" borderRadius={'full'} color="white" bgColor="primaryColor" onClick={() => setShowModal(true)}>Donate</Button>
+                                <Button w="full" h="60px" borderRadius={'full'} color="white" bgColor="primaryColor" onClick={() => {
+                                    setFundRaiser(event);
+                                    setShowModal(true)
+                                }}>Donate</Button>
 
                             </VStack>
 
