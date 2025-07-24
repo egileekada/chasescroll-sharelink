@@ -9,9 +9,10 @@ interface IProps {
     name: string;
     label: string;
     isPassword?: boolean;
+    type?: 'text' | 'number' | 'email';
 }
 
-function CustomInput({ name, label, isPassword = false }: IProps) {
+function CustomInput({ name, label, isPassword = false, type = 'text' }: IProps) {
     const [isActive, setIsActive] = React.useState(false)
     const [showPassword, setShowPassword] = React.useState(false);
     const { handleBlur, handleChange, errors, touched, values } = useFormikContext<any>();
@@ -40,7 +41,15 @@ function CustomInput({ name, label, isPassword = false }: IProps) {
                         name={name}
                         id={name}
                         value={values[name] || ''}
-                        onChange={handleChange}
+                        onChange={(e) => {
+
+                            if (type === 'number') {
+                                // Only allow numbers
+                                const value = e.target.value.replace(/[^0-9]/g, '');
+                                e.target.value = value;
+                            }
+                            handleChange(e);
+                        }}
                         onBlur={(e) => {
                             setIsActive(false);
                             handleBlur(e);

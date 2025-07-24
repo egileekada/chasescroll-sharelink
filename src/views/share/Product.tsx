@@ -94,7 +94,7 @@ function Product({ id }: { id: string }) {
 
     const handleQuantityChange = React.useCallback(({ type }: { type: 'INC' | 'DEC' }) => {
         if (type === 'INC') {
-            if (quantity === product?.quantity) {
+            if (quantity >= (product?.quantity as number)) {
                 toaster.create({
                     title: 'warning',
                     description: 'You cannot select more than the available quantity',
@@ -218,15 +218,20 @@ function Product({ id }: { id: string }) {
                             <HStack w="full" justifyContent={'space-between'} my="20px">
                                 <HStack>
                                     <Text>QTY</Text>
-                                    <HStack width="auto" p="5px" borderWidth={'2px'} borderRadius={'full'} borderColor={'gray.200'} spaceX={3}>
-                                        <Button onClick={() => handleQuantityChange({ type: 'DEC' })} w="40px" h="40px" borderRadius={'full'} bgColor="gray.200" variant={'subtle'}>
-                                            <Minus variant='Outline' color="black" />
-                                        </Button>
-                                        <Text>{quantity}</Text>
-                                        <Button onClick={() => handleQuantityChange({ type: 'INC' })} w="40px" h="40px" borderRadius={'full'} bgColor="gray.200" variant={'subtle'}>
-                                            <Add variant='Outline' color="black" />
-                                        </Button>
-                                    </HStack>
+                                    {(product?.quantity as number) > 0 && (
+                                        <HStack width="auto" p="5px" borderWidth={'2px'} borderRadius={'full'} borderColor={'gray.200'} spaceX={3}>
+                                            <Button onClick={() => handleQuantityChange({ type: 'DEC' })} w="40px" h="40px" borderRadius={'full'} bgColor="gray.200" variant={'subtle'}>
+                                                <Minus variant='Outline' color="black" />
+                                            </Button>
+                                            <Text>{quantity}</Text>
+                                            <Button onClick={() => handleQuantityChange({ type: 'INC' })} w="40px" h="40px" borderRadius={'full'} bgColor="gray.200" variant={'subtle'}>
+                                                <Add variant='Outline' color="black" />
+                                            </Button>
+                                        </HStack>
+                                    )}
+                                    {(product?.quantity as number) < 1 && (
+                                        <Text color='red'>OUT OF STOCK</Text>
+                                    )}
                                 </HStack>
 
                                 {(product?.quantity as number) > 0 && !product?.outOfStock && (
