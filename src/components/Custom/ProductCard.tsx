@@ -19,7 +19,7 @@ function ProductCard({ service }: IProps) {
     const router = useRouter();
 
     return (
-        <Box onClick={() => router.push(`/share/product?id=${service?.id}`)} cursor='pointer' w='full' h='auto' borderWidth={'1px'} borderColor={'gray.200'} _hover={{ bg: 'transparent' }} overflow={'hidden'} borderRadius={'16px'}>
+        <Box onClick={() => router.push(`/share/product?id=${service?.id}`)} cursor='pointer' w='full' h='100%' flex={1} borderWidth={'1px'} borderColor={'gray.200'} _hover={{ bg: 'transparent' }} overflow={'hidden'} borderRadius={'16px'} display={'flex'} flexDir={'column'}>
             <Box w='full' h='250px' bg='gray.200' borderRadius='0px' position='relative' overflow='hidden'>
                 <Image
                     w='full'
@@ -66,7 +66,7 @@ function ProductCard({ service }: IProps) {
                 </Flex>
             </Box>
 
-            <Flex direction={'column'} w='full' h='auto' px={0} pt={1}>
+            <Flex direction={'column'} w='full' flex={1} px={0} pt={1}>
                 <Box p={4} flex={'0.3'}>
                     <Flex alignItems={'center'} justifyContent={'space-between'}>
                         <Text fontWeight='bold' fontSize='24px' color='black' mt={0}>
@@ -99,9 +99,10 @@ function ProductCard({ service }: IProps) {
                     </Flex>
                 </Box>
 
-                <Flex justifyContent={'center'} alignItems={'center'} borderTopColor={'gray.200'} borderTopWidth={'1px'} h="50px">
-                    <Text fontSize="16px" fontFamily={'sans-serif'} color="primaryColor">View Product</Text>
-                </Flex>
+
+            </Flex>
+            <Flex justifyContent={'center'} alignItems={'center'} borderTopColor={'gray.200'} borderTopWidth={'1px'} h="50px">
+                <Text fontSize="16px" fontFamily={'sans-serif'} color="primaryColor">View Product</Text>
             </Flex>
         </Box>
     )
