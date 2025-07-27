@@ -8,6 +8,7 @@ import { STORAGE_KEYS } from '@/utils/StorageKeys';
 import ProductReviewPage from './ProductReviewPage';
 import ProductAddressPage from './ProductAddressPage';
 import ProductSuccessPage from './ProductSuccessPage';
+import { activeProductAtom, activeProductQuantityAtom } from '@/states/activeProduct';
 
 const titles = [
     'Select Tickets',
@@ -22,24 +23,27 @@ interface IProps {
 
 function ProductModal({ isOpen, onClose }: IProps) {
 
-    const [quantity, setQuantity] = useAtom(ticketCountAtom)
     const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
-    const [event, setEvent] = useAtom(activeEventAtom);
     const [activeTicket, setActiveTicket] = useAtom(activeTicketAtom);
+    const [amount, setAmount] = useAtom(activeProductQuantityAtom);
+    const [product, setProduct] = useAtom(activeProductAtom);
     const currentId = useAtomValue(currentIdAtom);
-    const createdTicket = useAtomValue(createdTicketAtom);
 
     React.useEffect(() => {
-        setQuantity(() => {
-            const quantity = localStorage.getItem(STORAGE_KEYS.TICKET_COUNT);
+        setAmount(() => {
+            const quantity = localStorage.getItem(STORAGE_KEYS.PRODUCT_QUANTITY);
             return quantity ? Number(quantity) : 1;
         })
     }, [])
 
     return (
         <Dialog.Root lazyMount open={isOpen} onOpenChange={() => {
+            localStorage.clear();
+            setCurrentStep(1);
+            setAmount(1);
+            // setProduct(null);
             onClose();
-        }} size={currentStep === 3 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false}>
+        }} size={currentStep === 4 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false}>
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -60,17 +64,15 @@ function ProductModal({ isOpen, onClose }: IProps) {
                             )}
                             {currentStep === 4 && (
                                 <ProductSuccessPage
-                                    email={createdTicket?.content?.buyer?.email}
-                                    orderNumber={createdTicket?.content?.orderCode}
+                                    email={''}
+                                    orderNumber={''}
                                     onClose={() => {
                                         localStorage.clear();
                                         setCurrentStep(1);
-                                        setQuantity(1);
-                                        setEvent(null)
-                                        setActiveTicket(null);
+
                                         onClose();
                                     }}
-                                    type='FUNDRAISER'
+                                    type='PRODUCT'
                                 />
                             )}
                         </Dialog.Body>

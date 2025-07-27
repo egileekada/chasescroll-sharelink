@@ -87,43 +87,41 @@ function ProductSuccessPage({
 
                 {/* Event Details Section */}
                 <Box mb={8}>
-                    <Text fontSize="sm" color="gray.600" mb={2} textTransform="uppercase" letterSpacing="wide">
+                    <Text fontSize="sm" color="gray.600" mb={2} textTransform="uppercase" letterSpacing="wide" textAlign={'center'}>
                         You Bought
                     </Text>
 
-                    <Flex justify="space-between" align="start" mb={6}>
-                        <Text fontSize="3xl" fontWeight="bold" color="primaryColor">
+                    <Flex justify="center" align="start" mb={6} w="full">
+                        <Text fontSize="3xl" fontWeight="bold" color="primaryColor" textAlign={'center'}>
                             {product?.name || "Tech Submit"}
                         </Text>
                     </Flex>
 
                     {/* Event Info Grid */}
-                    <SimpleGrid columns={[1, 1, 2, 2]} gap={8} mb={6}>
-                        <GridItem>
-                            <VStack align="start" spaceY={2}>
-                                <Text fontSize="sm" color="gray.600" fontWeight="semibold" textTransform="uppercase">
-                                    Order Summary
-                                </Text>
-                                <Flex justify="space-between">
-                                    <Text>Product Name</Text>
-                                    <Text fontWeight="semibold">{product?.name}</Text>
-                                </Flex>
-                                <Flex justify="space-between">
-                                    <Text>Quantity</Text>
-                                    <Text fontWeight="semibold">{quantity}</Text>
-                                </Flex>
-                                <Flex justify="space-between">
-                                    <Text>Amount</Text>
-                                    <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * quantity)}</Text>
-                                </Flex>
-                                <Flex justify="space-between" borderTopWidth={'1px'} borderTopColor={'lightgrey'} pt="10px">
-                                    <Text>Total</Text>
-                                    <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * quantity)}</Text>
-                                </Flex>
-                            </VStack>
-                        </GridItem>
+                    <VStack mb={6} w="full">
+                        <VStack align="start" spaceY={4} w="full" >
+                            <Text fontSize="sm" color="gray.600" fontWeight="semibold" textTransform="uppercase">
+                                Order Summary
+                            </Text>
+                            <Flex justify="space-between" spaceX={2}>
+                                <Text>Product Name</Text>
+                                <Text fontWeight="semibold">{product?.name}</Text>
+                            </Flex>
+                            <Flex justify="space-between" spaceX={2}>
+                                <Text>Quantity</Text>
+                                <Text fontWeight="semibold">{quantity}</Text>
+                            </Flex>
+                            <Flex justify="space-between" spaceX={2}>
+                                <Text>Amount</Text>
+                                <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * quantity)}</Text>
+                            </Flex>
+                            <Flex justify="space-between" borderTopWidth={'1px'} borderTopColor={'lightgrey'} pt="10px" w="full">
+                                <Text>Total</Text>
+                                <Text fontWeight="semibold">NGN {formatNumber((product?.price as number) * quantity)}</Text>
+                            </Flex>
+                        </VStack>
 
-                        <GridItem>
+                        {/* <GridItem>
                             <VStack align="start" spaceY={2}>
                                 <Text fontSize="sm" color="gray.600" fontWeight="semibold" textTransform="uppercase">
                                     DATE
@@ -133,9 +131,9 @@ function ProductSuccessPage({
                                 </Text>
 
                             </VStack>
-                        </GridItem>
+                        </GridItem> */}
 
-                    </SimpleGrid>
+                    </VStack>
                 </Box>
 
                 {/* Products Section */}
