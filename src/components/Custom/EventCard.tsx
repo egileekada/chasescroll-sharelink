@@ -49,8 +49,8 @@ function EventCard({ event }: { event: IEventType }) {
                         />
                     </ChasescrollBox>
                     <Flex direction='column' ml={2}>
-                        <Text fontWeight='medium' fontSize='14px' color='black'>
-                            {capitalizeFLetter(textLimit(event?.createdBy.firstName, 15))} {capitalizeFLetter(textLimit(event?.createdBy.lastName, 10))}
+                        <Text fontWeight='medium' fontSize='14px' color='black' fontFamily={'Raleway'}>
+                            {capitalizeFLetter(textLimit(event?.createdBy.firstName, 15))} {capitalizeFLetter(textLimit(event?.createdBy.lastName, 40))}
                         </Text>
                         <Text fontWeight='medium' fontSize='12px' color='gray.500'>
                             {event?.createdDate ? format(new Date(event?.createdDate).toDateString()) : 'no Date'}

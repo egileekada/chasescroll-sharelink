@@ -22,7 +22,7 @@ import { signIn, useSession, getSession } from 'next-auth/react';
 import { getToken } from 'next-auth/jwt';
 import { currentIdAtom, showTicketModalAtom } from '@/views/share/Event'
 import { useGoogleTokens } from '@/hooks/useGoogleTokens';
-import { activeEventAtom, activeTicketAtom, canPayAtom, createdTicketAtom, currentUrlAtom, paystackDetailsAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket'
+import { activeEventAtom, activeTicketAtom, canPayAtom, createdTicketAtom, currentUrlAtom, paystackDetailsAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom, totalAmountForSelectedTicketsAtom } from '@/states/activeTicket'
 import { ArrowLeft, CloseSquare, Edit } from 'iconsax-reactjs'
 import { formatNumber } from '@/utils/formatNumber'
 import { RESOURCE_URL } from '@/constants'
@@ -34,6 +34,7 @@ import { usePaystackPayment } from 'react-paystack';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
 import PaymentButton from '../../PaymentButton'
 import { IUser } from '@/models/User'
+import { ISelectedTicket } from '@/models/SelectedTicketsType'
 
 interface Props {
     params: {
@@ -54,9 +55,12 @@ function AccountSetup() {
     const [quantity, setQuantity] = useAtom(ticketCountAtom);
     const [canPay, setCanPay] = useAtom(canPayAtom)
     const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
+    const [selectedTickets, setSelectedTickets] = useAtom(selectedTicketsAtom);
     const [createTicketIsLoading, setCreateTicketIsLoading] = React.useState(false)
     const setCreatedTicket = useSetAtom(createdTicketAtom)
     const currentId = useAtomValue(currentIdAtom);
+    const setTotalSelectedTicketPrice = useSetAtom(totalAmountForSelectedTicketsAtom);
+
 
     const [token, setToken] = React.useState(() => localStorage.getItem(STORAGE_KEYS.token));
     const [userId, setUserId] = React.useState(() => localStorage.getItem(STORAGE_KEYS.USER_ID));
@@ -87,8 +91,7 @@ function AccountSetup() {
             if (isLoggedIn) {
                 createTicket({
                     eventID: event?.id as string,
-                    ticketType: ticket?.ticketType as string,
-                    numberOfTickets: quantity,
+                    ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
                 })
                 return;
             } else if (googleAuthUsed) {
@@ -121,14 +124,31 @@ function AccountSetup() {
     React.useEffect(() => {
         if (token !== null && userId !== null) {
             setIsLoggedIn(true);
+            createTicket({
+                eventID: event?.id as string,
+                ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+            })
         }
-    }, [token, userId, status])
+    }, [token, userId, status]);
 
-    const createTicket = async (data: { eventID: string, ticketType: string, numberOfTickets: number }) => {
+    const getTicketPrice = (ticketType: string) => {
+        const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0];
+        return ticket?.ticketPrice;
+    }
+
+    const calculateTotal = () => {
+        let total = 0;
+        selectedTickets?.forEach((item) => {
+            total += (getTicketPrice(item.ticketType) as number) * item.quantity;
+        })
+        setTotalSelectedTicketPrice(total);
+        return formatNumber(total);
+    }
+
+    const createTicket = async (data: { eventID: string, ticketBuyObjectList: { ticketType: string, numberOfTickets: number }[] }) => {
         setCreateTicketIsLoading(true);
         try {
-
-            const res = await httpService.post(`${URLS.event}/create-ticket`, data);
+            const res = await httpService.post(`${URLS.event}/create-multi-ticket`, data);
             const json: ITicketCreatedModel = res.data;
 
             console.log(json);
@@ -148,6 +168,7 @@ function AccountSetup() {
                 setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderId, amount: json.content?.orderTotal * 100 });
                 return;
             } else {
+                console.log(res)
                 toaster.create({
                     title: 'An error occured',
                     description: 'Failed to create ticket',
@@ -157,6 +178,7 @@ function AccountSetup() {
             // you can call this function anything
             setCreateTicketIsLoading(false);
         } catch (error) {
+            console.log('An error occured while trying to create the tickets')
             console.log(error)
         }
     }
@@ -169,6 +191,10 @@ function AccountSetup() {
             console.log(`User details`, details);
             localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
             setUserDetails(details);
+            createTicket({
+                eventID: event?.id as string,
+                ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+            })
             // setCanPay(true);
         },
     })
@@ -214,6 +240,7 @@ function AccountSetup() {
                 localStorage.setItem(STORAGE_KEYS.ACTIVE_TICKET, JSON.stringify(ticket));
                 localStorage.setItem(STORAGE_KEYS.QUANTITY, quantity.toString());
                 localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
+                localStorage.setItem(STORAGE_KEYS.SELECTED_TICKETS, JSON.stringify(selectedTickets));
                 setStep((prev) => prev + 1);
                 toaster.create({
                     title: 'Alert!',
@@ -225,7 +252,7 @@ function AccountSetup() {
                 setToken(data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-                createTicket({ eventID: event?.id as string, ticketType: ticket?.ticketType as string, numberOfTickets: quantity });
+                createTicket({ eventID: event?.id as string, ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any, });
             }
         }
     });
@@ -287,21 +314,21 @@ function AccountSetup() {
                         </HStack>
 
                         {/* Contact Information */}
-                        {!canPay && (
+                        {!canPay && !isLoggedIn && (
                             <VStack align="start" spaceY={[0, 0, 6, 6]} mb={8}>
 
 
                                 <Flex spaceX={[0, 0, 4, 4]} w="full" flexDir={['column', 'column', 'row', 'row']}>
                                     <Box w="full">
-                                        <CustomInput name="firstName" label='First Name' isPassword={false} />
+                                        <CustomInput name="firstName" type='text' label='First Name' isPassword={false} />
                                     </Box>
 
                                     <Box w="full" mt={['10px', '10px', '0px', '0px']}>
-                                        <CustomInput name="lastName" label='Last Name' isPassword={false} />
+                                        <CustomInput name="lastName" type='text' label='Last Name' isPassword={false} />
                                     </Box>
                                 </Flex>
                                 <Box w="full">
-                                    <CustomInput name="email" label='Email' isPassword={false} />
+                                    <CustomInput name="email" type='email' label='Email' isPassword={false} />
                                 </Box>
 
                             </VStack>
@@ -320,7 +347,7 @@ function AccountSetup() {
                                     loading={isPending || createTicketIsLoading || googleAuth.isPending || getPublicProfile.isPending}
                                     type={'submit'}
                                 >
-                                    Confirm Details
+                                    {isLoggedIn ? 'Proceed to make payment' : 'Confirm Details'}
                                 </Button>
                             )}
                             {canPay && (
@@ -331,6 +358,11 @@ function AccountSetup() {
                                     text={'Pay'}
                                 />
                             )}
+                        </HStack>
+
+                        <HStack fontFamily={'Raleway-Regular'} w="full" justifyContent={'center'} mt='20px'>
+                            <Text color="grey" fontSize={'14px'}>Powered by</Text>
+                            <Text color="primaryColor" fontSize={'16px'} fontWeight={600}>Chasescroll</Text>
                         </HStack>
 
                     </Box>
@@ -358,14 +390,25 @@ function AccountSetup() {
                         </Text>
 
                         <VStack spaceY={3} align="stretch">
-                            <Flex justify="space-between">
-                                <Text>{quantity} x {ticket?.ticketType}</Text>
-                                <Text fontWeight="semibold">NGN {formatNumber((ticket?.ticketPrice as number) * quantity)}</Text>
+                            {selectedTickets !== null && selectedTickets.length > 0 && selectedTickets.map((item) => (
+                                <Flex justify="space-between" mb="10px">
+                                    <Text>
+                                        {item?.quantity} x {item?.ticketType}
+                                    </Text>
+                                    <Text fontWeight="semibold">
+                                        {formatNumber((getTicketPrice(item.ticketType) as number) * item.quantity)}
+                                    </Text>
+                                </Flex>
+                            ))}
+
+                            {/* <Divider /> */}
+
+                            <Flex justify="space-between" fontSize="lg" fontWeight="bold">
+                                <Text>Total</Text>
+                                <Text>
+                                    NGN {calculateTotal()}
+                                </Text>
                             </Flex>
-                            {/* <Flex justify="space-between">
-                                <Text>1 x VIP</Text>
-                                <Text fontWeight="semibold">NGN 3000</Text>
-                            </Flex> */}
                         </VStack>
                     </Box>
                 </Box>

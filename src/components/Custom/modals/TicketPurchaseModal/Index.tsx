@@ -1,4 +1,4 @@
-import { activeEventAtom, activeTicketAtom, createdTicketAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
+import { activeEventAtom, activeTicketAtom, createdTicketAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
 import { Dialog, HStack, Portal, CloseButton } from '@chakra-ui/react';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import React from 'react'
@@ -10,6 +10,7 @@ import LoginModal from './LoginModal';
 import { currentIdAtom } from '@/views/share/Event';
 import TicketPurchaseSuccessModal from './TicketPurchaseSuccessModal';
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
+import { useSession, signOut } from 'next-auth/react';
 
 const titles = [
     'Select Tickets',
@@ -30,6 +31,9 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
     const [activeTicket, setActiveTicket] = useAtom(activeTicketAtom);
     const currentId = useAtomValue(currentIdAtom);
     const createdTicket = useAtomValue(createdTicketAtom);
+    const [selectedTickets, setSelectedTickets] = useAtom(selectedTicketsAtom);
+    const { update, data } = useSession();
+
 
     React.useEffect(() => {
         setQuantity(() => {
@@ -46,13 +50,22 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
             const ticket = localStorage.getItem(STORAGE_KEYS.ACTIVE_TICKET);
             return ticket ? JSON.parse(ticket) : null;
         })
+
+        setSelectedTickets(() => {
+            const ticket = localStorage.getItem(STORAGE_KEYS.SELECTED_TICKETS);
+            return ticket ? JSON.parse(ticket) : null;
+        })
     }, [])
 
     return (
         <Dialog.Root lazyMount open={isOpen} onOpenChange={() => {
             setCurrentStep(1);
             setQuantity(1);
-            localStorage.clear()
+            setSelectedTickets(null);
+            localStorage.clear();
+            // sessionStorage.clear();
+            // signOut()
+            localStorage.removeItem(STORAGE_KEYS.SELECTED_TICKETS);
             onClose();
         }} size={currentStep === 3 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false}>
             <Portal>
