@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { Add, Minus } from 'iconsax-reactjs';
 import { useAtom, useSetAtom } from 'jotai';
-import { activeEventAtom, activeTicketAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
+import { activeEventAtom, activeTicketAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom, totalAmountForSelectedTicketsAtom } from '@/states/activeTicket';
 import { IProductTypeData } from '@/models/Event';
 import { toaster } from '@/components/ui/toaster';
 import { formatNumber } from '@/utils/formatNumber';
@@ -32,97 +32,94 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
 }) => {
 
     const [event, setActiveEvent] = useAtom(activeEventAtom);
-    const [activeTicket, setActiveTicket] = useAtom(activeTicketAtom);
+    const [selectedTickets, setSelectedTickets] = useAtom(selectedTicketsAtom);
     const setStep = useSetAtom(ticketurchaseStepAtom);
-    const [quantity, setQuantity] = useAtom(ticketCountAtom)
+    const setTotalSelectedTicketPrice = useSetAtom(totalAmountForSelectedTicketsAtom);
 
 
     const increment = (ticketType: string) => {
-        if (activeTicket === null) {
-            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
-            setActiveTicket(ticket);
-
-            if (quantity + 1 > (ticket.maxTicketBuy as number)) {
-                toaster.create({
-                    title: 'Error',
-                    description: `You can only buy ${ticket.maxTicketBuy} tickets`,
-                    type: 'error',
-                });
-                return;
-            }
-            setQuantity((prev) => prev + 1);
+        if (selectedTickets === null) {
+            setSelectedTickets([{
+                ticketType,
+                quantity: 1,
+            }])
         } else {
-            // check the current active ticket
-            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
-            if (ticket.ticketType !== activeTicket.ticketType) {
-                setActiveTicket(ticket);
-                if (quantity + 1 > (ticket.maxTicketBuy as number)) {
+            // check if the ticket exisit 
+            const ticket = selectedTickets?.filter((item) => item.ticketType === ticketType)[0];
+            const eventTicket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0];
+            if (ticket) {
+                if (ticket.quantity + 1 > (eventTicket?.maxTicketBuy as number)) {
                     toaster.create({
                         title: 'Error',
-                        description: `You can only buy ${ticket.maxTicketBuy} tickets`,
+                        description: `You can only buy ${eventTicket?.maxTicketBuy} tickets`,
                         type: 'error',
                     });
                     return;
                 }
-                setQuantity(1);
+                setSelectedTickets(selectedTickets?.map((item) => {
+                    if (item.ticketType === ticketType) {
+                        return {
+                            ticketType,
+                            quantity: item.quantity + 1,
+                        }
+                    }
+                    return item;
+                }))
             } else {
-                if (quantity + 1 > (ticket.maxTicketBuy as number)) {
-                    toaster.create({
-                        title: 'Error',
-                        description: `You can only buy ${ticket.maxTicketBuy} tickets`,
-                        type: 'error',
-                    });
-                    return;
-                }
-                setQuantity((prev) => prev + 1);
+                setSelectedTickets([...selectedTickets, {
+                    ticketType,
+                    quantity: 1,
+                }])
             }
         }
     }
 
     const decrement = (ticketType: string) => {
-        if (activeTicket === null) {
-            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
-            setActiveTicket(ticket);
-
-            if (quantity === 1) {
-                toaster.create({
-                    title: 'Error',
-                    description: `You must buy at least one ticket`,
-                    type: 'error',
-                });
-                return;
-            }
-            setQuantity((prev) => prev - 1);
+        if (selectedTickets === null) {
+            return;
         } else {
-            // check the current active ticket
-            const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0] as IProductTypeData;
-            if (ticket.ticketType !== activeTicket.ticketType) {
-                setActiveTicket(ticket);
-                if (quantity === 1) {
-                    toaster.create({
-                        title: 'Error',
-                        description: `You must buy at least one ticket`,
-                        type: 'error',
-                    });
+            // check if the ticket exisit 
+            const ticket = selectedTickets?.filter((item) => item.ticketType === ticketType)[0];
+            const eventTicket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0];
+            if (ticket) {
+                if (ticket.quantity - 1 === 0) {
+                    const filtered = selectedTickets.filter((item) => item.ticketType !== ticketType);
+                    setSelectedTickets(filtered);
                     return;
                 }
-                setQuantity(1);
-            } else {
-                if (quantity === 1) {
-                    toaster.create({
-                        title: 'Error',
-                        description: `You must buy at least one ticket`,
-                        type: 'error',
-                    });
-                    return;
-                }
-                setQuantity((prev) => prev - 1);
+                setSelectedTickets(selectedTickets?.map((item) => {
+                    if (item.ticketType === ticketType) {
+                        return {
+                            ticketType,
+                            quantity: item.quantity - 1,
+                        }
+                    }
+                    return item;
+                }))
             }
         }
     }
 
+    const getTicket = (ticketType: string) => {
+        return selectedTickets?.filter((item) => item.ticketType === ticketType)[0];
+    }
+
+    const getTicketPrice = (ticketType: string) => {
+        const ticket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0];
+        return ticket?.ticketPrice;
+    }
+
+    const calculateTotal = () => {
+        let total = 0;
+        selectedTickets?.forEach((item) => {
+            total += (getTicketPrice(item.ticketType) as number) * item.quantity;
+        })
+        setTotalSelectedTicketPrice(total);
+        return formatNumber(total);
+    }
+
     const handleNext = () => {
-        if (activeTicket === null) {
+        if (selectedTickets === null || selectedTickets?.length < 1) {
             toaster.create({
                 title: 'Error',
                 description: 'You need to select a ticket to continue',
@@ -167,22 +164,22 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                         border="1px solid"
                                         borderRadius="lg"
                                         p={4}
-                                        bg={activeTicket?.ticketType === ticket.ticketType ? "blue.50" : "white"}
-                                        borderWidth={activeTicket?.ticketType === ticket.ticketType ? "2px" : "1px"}
-                                        borderStyle={activeTicket?.ticketType === ticket.ticketType ? "solid" : "solid"}
-                                        borderColor={activeTicket?.ticketType === ticket.ticketType ? "blue.400" : "gray.200"}
+                                        bg={getTicket(ticket?.ticketType) ? "blue.50" : "white"}
+                                        borderWidth={getTicket(ticket?.ticketType)?.ticketType ? "2px" : "1px"}
+                                        borderStyle={getTicket(ticket?.ticketType) ? "solid" : "solid"}
+                                        borderColor={getTicket(ticket?.ticketType) ? "blue.400" : "gray.200"}
                                     >
                                         <Flex justify="space-between" align="center">
                                             <Box flex="1">
                                                 <HStack spaceX={3} mb={2}>
-                                                    <Text fontSize="lg" fontWeight="semibold" color={activeTicket?.ticketType === ticket.ticketType ? 'black' : 'grey'}>
+                                                    <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType) ? 'black' : 'grey'}>
                                                         {ticket.ticketType}
                                                     </Text>
 
                                                 </HStack>
-                                                <Text fontSize="sm" mb={2} color={activeTicket?.ticketType === ticket.ticketType ? 'grey' : 'lightgrey'} >
+                                                {/* <Text fontSize="sm" mb={2} color={getTicket(ticket?.ticketType) ? 'grey' : 'lightgrey'} >
                                                     Ticket Available for this Event
-                                                </Text>
+                                                </Text> */}
                                             </Box>
 
                                             <HStack spaceX={1}>
@@ -191,14 +188,14 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                                     size="sm"
                                                     variant="outline"
                                                     borderRadius="full"
-                                                    disabled={quantity === 0}
+                                                    disabled={!getTicket(ticket.ticketType)}
                                                     onClick={() => decrement(ticket.ticketType)}
                                                 >
                                                     <Minus size="16" />
                                                 </IconButton>
 
-                                                <Text fontSize="lg" fontWeight="semibold" color={activeTicket?.ticketType === ticket.ticketType ? 'black' : 'grey'} >
-                                                    {activeTicket?.ticketType === ticket.ticketType ? quantity : 0}
+                                                <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType)?.quantity ? 'black' : 'grey'} >
+                                                    {getTicket(ticket.ticketType)?.quantity ? getTicket(ticket?.ticketType)?.quantity : 0}
                                                 </Text>
 
                                                 <IconButton
@@ -223,7 +220,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                 h="60px"
                                 borderRadius="full"
                                 onClick={() => handleNext()}
-                                disabled={activeTicket === null}
+                                disabled={selectedTickets === null}
                                 _disabled={{
                                     bg: "gray.300",
                                     color: "gray.500",
@@ -233,6 +230,11 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                             >
                                 Get Ticket
                             </Button>
+
+                            <HStack fontFamily={'Raleway-Regular'}>
+                                <Text color="grey" fontSize={'14px'}>Powered by</Text>
+                                <Text color="primaryColor" fontSize={'16px'} fontWeight={600}>Chasescroll</Text>
+                            </HStack>
                         </VStack>
 
 
@@ -255,7 +257,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                     </Box>
 
                     {/* Order Summary */}
-                    {activeTicket !== null && (
+                    {selectedTickets !== null && (
                         <Box p="20px">
                             {/* <Divider mb={4} /> */}
                             <Text fontSize="lg" fontWeight="bold" mb={4}>
@@ -263,21 +265,23 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                             </Text>
 
                             <VStack spaceY={3} align="stretch">
-                                <Flex justify="space-between">
-                                    <Text>
-                                        {quantity} x {activeTicket.ticketType}
-                                    </Text>
-                                    <Text fontWeight="semibold">
-                                        {formatNumber((activeTicket.ticketPrice as number) * quantity)}
-                                    </Text>
-                                </Flex>
+                                {selectedTickets !== null && selectedTickets.length > 0 && selectedTickets.map((item) => (
+                                    <Flex justify="space-between" mb="10px">
+                                        <Text>
+                                            {item?.quantity} x {item?.ticketType}
+                                        </Text>
+                                        <Text fontWeight="semibold">
+                                            {formatNumber((getTicketPrice(item.ticketType) as number) * item.quantity)}
+                                        </Text>
+                                    </Flex>
+                                ))}
 
                                 {/* <Divider /> */}
 
                                 <Flex justify="space-between" fontSize="lg" fontWeight="bold">
                                     <Text>Total</Text>
                                     <Text>
-                                        NGN {formatNumber((activeTicket.ticketPrice as number) * quantity)}
+                                        NGN {calculateTotal()}
                                     </Text>
                                 </Flex>
                             </VStack>
@@ -289,7 +293,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                 h="60px"
                                 borderRadius="full"
                                 onClick={() => handleNext()}
-                                disabled={activeTicket === null}
+                                disabled={selectedTickets === null}
                                 _disabled={{
                                     bg: "gray.300",
                                     color: "gray.500",

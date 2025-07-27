@@ -1,4 +1,5 @@
 import { IEventTicket, IEventType, IProductTypeData } from '@/models/Event';
+import { ISelectedTicket } from '@/models/SelectedTicketsType';
 import { ITicketCreatedModel } from '@/models/TicketCreatedModel';
 import { atom } from 'jotai';
 
@@ -10,3 +11,5 @@ export const currentUrlAtom = atom<string | null>(null);
 export const createdTicketAtom = atom<ITicketCreatedModel | null>(null);
 export const canPayAtom = atom<boolean>(false);
 export const paystackDetailsAtom = atom<{ email: string, reference: string, amount: number } | null>(null);
+export const selectedTicketsAtom = atom<ISelectedTicket[] | null>(null);
+export const totalAmountForSelectedTicketsAtom = atom<number>(0)

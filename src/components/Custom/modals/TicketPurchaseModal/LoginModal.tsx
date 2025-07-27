@@ -147,11 +147,11 @@ function LoginModal({ onLoggedIn, callbackUrl }: { onLoggedIn: () => void, callb
                 <VStack spaceY={4}>
 
                     <Box w="full">
-                        <CustomInput label='Username' name="username" isPassword={false} />
+                        <CustomInput label='Username' type='email' name="username" isPassword={false} />
                     </Box>
 
                     <Box w="full">
-                        <CustomInput label='Password' name="password" isPassword />
+                        <CustomInput label='Password' type="email" name="password" isPassword />
                     </Box>
 
                     {/* Login Button */}
@@ -199,6 +199,11 @@ function LoginModal({ onLoggedIn, callbackUrl }: { onLoggedIn: () => void, callb
                         />
                         CONTINUE WITH GOOGLE
                     </Button>
+
+                    <HStack fontFamily={'Raleway-Regular'}>
+                        <Text color="grey" fontSize={'14px'}>Powered by</Text>
+                        <Text color="primaryColor" fontSize={'16px'} fontWeight={600}>Chasescroll</Text>
+                    </HStack>
                 </VStack>
             </VStack>
         </Box>

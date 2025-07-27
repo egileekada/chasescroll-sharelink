@@ -42,7 +42,11 @@ function CustomInput({ name, label, isPassword = false, type = 'text' }: IProps)
                         id={name}
                         value={values[name] || ''}
                         onChange={(e) => {
-
+                            if (type === 'text') {
+                                // Remove numbers, spaces and special characters for text type
+                                const value = e.target.value.replace(/[^a-zA-Z]/g, '');
+                                e.target.value = value;
+                            }
                             if (type === 'number') {
                                 // Only allow numbers
                                 const value = e.target.value.replace(/[^0-9]/g, '');
