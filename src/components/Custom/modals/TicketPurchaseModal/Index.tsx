@@ -1,5 +1,5 @@
 import { activeEventAtom, activeTicketAtom, createdTicketAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
-import { Dialog, HStack, Portal, CloseButton } from '@chakra-ui/react';
+import { Dialog, HStack, Portal, CloseButton, Box } from '@chakra-ui/react';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import React from 'react'
 import { RESOURCE_URL } from '@/constants';
@@ -67,42 +67,44 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
             // signOut()
             localStorage.removeItem(STORAGE_KEYS.SELECTED_TICKETS);
             onClose();
-        }} size={currentStep === 3 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false}>
+        }} size={currentStep === 3 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false} >
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content borderRadius={'16px'} bgColor="white" p="0">
-                        <Dialog.Body p="0px">
-                            {currentStep === 1 && (
-                                <TicketSelection eventTitle={event?.eventName} eventDate={event?.startDate} eventImage={`${RESOURCE_URL}/${event?.currentPicUrl}`} />
-                            )}
-                            {currentStep === 2 && (
-                                <AccountSetup />
-                            )}
-                            {currentStep === 3 && (
-                                <LoginModal
-                                    callbackUrl={`/share/event?id=${currentId}`}
-                                    onLoggedIn={() => {
-                                        setCurrentStep(2);
-                                    }} />
-                            )}
-                            {currentStep === 4 && (
-                                <TicketPurchaseSuccessModal
-                                    email={createdTicket?.content?.buyer?.email}
-                                    orderNumber={createdTicket?.content?.orderCode}
-                                    onClose={() => {
-                                        localStorage.clear();
-                                        setCurrentStep(1);
-                                        setQuantity(1);
-                                        setEvent(null)
-                                        setActiveTicket(null);
-                                        onClose();
-                                    }}
-                                />
-                            )}
+                        <Dialog.Body p="0px" minH={"608px"}>
+                            <Box w="full" h="full">
+                                {currentStep === 1 && (
+                                    <TicketSelection eventTitle={event?.eventName} eventDate={event?.startDate} eventImage={`${RESOURCE_URL}/${event?.currentPicUrl}`} />
+                                )}
+                                {currentStep === 2 && (
+                                    <AccountSetup />
+                                )}
+                                {currentStep === 3 && (
+                                    <LoginModal
+                                        callbackUrl={`/share/event?id=${currentId}`}
+                                        onLoggedIn={() => {
+                                            setCurrentStep(2);
+                                        }} />
+                                )}
+                                {currentStep === 4 && (
+                                    <TicketPurchaseSuccessModal
+                                        email={createdTicket?.content?.buyer?.email}
+                                        orderNumber={createdTicket?.content?.orderCode}
+                                        onClose={() => {
+                                            localStorage.clear();
+                                            setCurrentStep(1);
+                                            setQuantity(1);
+                                            setEvent(null)
+                                            setActiveTicket(null);
+                                            onClose();
+                                        }}
+                                    />
+                                )}
+                            </Box>
                         </Dialog.Body>
                         <Dialog.CloseTrigger asChild>
-                            <CloseButton bg="black" color={'white'} size="sm" />
+                            <CloseButton bg="gray.100" color={'gray.700'} size="sm" />
                         </Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>

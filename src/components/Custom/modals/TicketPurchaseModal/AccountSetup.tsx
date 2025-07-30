@@ -145,6 +145,29 @@ function AccountSetup() {
         return formatNumber(total);
     }
 
+    const validateTicket = useMutation({
+        mutationFn: (data: string) => httpService.get(`/payments/verifyWebPaystackTx`, {
+            params: {
+                orderCode: data,
+            },
+        }),
+        onSuccess: (data) => {
+            toaster.create({
+                title: 'Success',
+                description: 'Ticket verification successful',
+                type: 'success',
+            })
+            setStep(4);
+        },
+        onError: (error) => {
+            toaster.create({
+                title: 'Error',
+                description: error?.message,
+                type: 'error',
+            })
+        }
+    })
+
     const createTicket = async (data: { eventID: string, ticketBuyObjectList: { ticketType: string, numberOfTickets: number }[] }) => {
         setCreateTicketIsLoading(true);
         try {
@@ -165,7 +188,7 @@ function AccountSetup() {
 
                 }
                 setCanPay(true);
-                setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderId, amount: json.content?.orderTotal * 100 });
+                setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderCode, amount: json.content?.orderTotal * 100 });
                 return;
             } else {
                 console.log(res)
@@ -352,6 +375,7 @@ function AccountSetup() {
                             )}
                             {canPay && (
                                 <PaymentButton
+                                    onSucces={() => validateTicket.mutate(paystackDetails?.reference as string)}
                                     reference={paystackDetails?.reference as string}
                                     email={paystackDetails?.email as string}
                                     amount={paystackDetails?.amount as number}
