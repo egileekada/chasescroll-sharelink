@@ -70,7 +70,7 @@ function ProductCard({ service }: IProps) {
                 <Box p={4} flex={'0.3'}>
                     <Flex alignItems={'center'} justifyContent={'space-between'}>
                         <Text fontWeight='bold' fontSize='24px' color='black' mt={0}>
-                            {service?.name}
+                            {textLimit(service?.name, 30)}
                         </Text>
                         <Flex justifyContent={'flex-end'}>
                             <Flex width='auto' px="5px" height="30px" borderRadius={'50px'} borderWidth="0.5px" borderColor="#CACACA" justifyContent={'center'} alignItems={'center'}>
@@ -80,7 +80,7 @@ function ProductCard({ service }: IProps) {
                         </Flex>
                     </Flex>
                     <Text fontWeight='normal' fontSize='16px' color='black' my={2}>
-                        {service?.category?.length > 50 ? service?.category?.substring(0, 50).replaceAll('_', ' ') : service?.category.replaceAll('_', ' ')}
+                        {textLimit(service?.category.replaceAll('_', ' '), 30)}
                     </Text>
                     <Flex mt={2}>
                         <Location variant='Outline' size="20px" color="#5465E0" />

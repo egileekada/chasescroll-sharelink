@@ -22,7 +22,7 @@ import { signIn, useSession, getSession } from 'next-auth/react';
 import { getToken } from 'next-auth/jwt';
 import { currentIdAtom, showTicketModalAtom } from '@/views/share/Event'
 import { useGoogleTokens } from '@/hooks/useGoogleTokens';
-import { activeEventAtom, activeTicketAtom, canPayAtom, createdTicketAtom, currentUrlAtom, paystackDetailsAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom, totalAmountForSelectedTicketsAtom } from '@/states/activeTicket'
+import { activeEventAtom, activeTicketAtom, affiliateIDAtom, canPayAtom, createdTicketAtom, currentUrlAtom, paystackDetailsAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom, totalAmountForSelectedTicketsAtom } from '@/states/activeTicket'
 import { ArrowLeft, CloseSquare, Edit } from 'iconsax-reactjs'
 import { formatNumber } from '@/utils/formatNumber'
 import { RESOURCE_URL } from '@/constants'
@@ -60,6 +60,7 @@ function AccountSetup() {
     const setCreatedTicket = useSetAtom(createdTicketAtom)
     const currentId = useAtomValue(currentIdAtom);
     const setTotalSelectedTicketPrice = useSetAtom(totalAmountForSelectedTicketsAtom);
+    const affiliateID = useAtomValue(affiliateIDAtom);
 
 
     const [token, setToken] = React.useState(() => localStorage.getItem(STORAGE_KEYS.token));
@@ -89,10 +90,19 @@ function AccountSetup() {
         },
         onSubmit: (data) => {
             if (isLoggedIn) {
-                createTicket({
-                    eventID: event?.id as string,
-                    ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
-                })
+                if (affiliateID) {
+                    createTicket({
+                        eventID: event?.id as string,
+                        ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                        affiliateID
+                    })
+                } else {
+                    createTicket({
+                        eventID: event?.id as string,
+                        ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                    })
+                }
+
                 return;
             } else if (googleAuthUsed) {
                 // LOGIN USER
@@ -124,10 +134,18 @@ function AccountSetup() {
     React.useEffect(() => {
         if (token !== null && userId !== null) {
             setIsLoggedIn(true);
-            createTicket({
-                eventID: event?.id as string,
-                ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
-            })
+            if (affiliateID) {
+                createTicket({
+                    eventID: event?.id as string,
+                    ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                    affiliateID
+                })
+            } else {
+                createTicket({
+                    eventID: event?.id as string,
+                    ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                })
+            }
         }
     }, [token, userId, status]);
 
@@ -145,7 +163,30 @@ function AccountSetup() {
         return formatNumber(total);
     }
 
-    const createTicket = async (data: { eventID: string, ticketBuyObjectList: { ticketType: string, numberOfTickets: number }[] }) => {
+    const validateTicket = useMutation({
+        mutationFn: (data: string) => httpService.get(`/payments/verifyWebPaystackTx`, {
+            params: {
+                orderCode: data,
+            },
+        }),
+        onSuccess: (data) => {
+            toaster.create({
+                title: 'Success',
+                description: 'Ticket verification successful',
+                type: 'success',
+            })
+            setStep(4);
+        },
+        onError: (error) => {
+            toaster.create({
+                title: 'Error',
+                description: error?.message,
+                type: 'error',
+            })
+        }
+    })
+
+    const createTicket = async (data: { eventID: string, ticketBuyObjectList: { ticketType: string, numberOfTickets: number }[], affiliateID?: string }) => {
         setCreateTicketIsLoading(true);
         try {
             const res = await httpService.post(`${URLS.event}/create-multi-ticket`, data);
@@ -165,7 +206,7 @@ function AccountSetup() {
 
                 }
                 setCanPay(true);
-                setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderId, amount: json.content?.orderTotal * 100 });
+                setPaystackDetails({ email: json?.content?.buyer?.email, reference: json.content?.orderCode, amount: json.content?.orderTotal * 100 });
                 return;
             } else {
                 console.log(res)
@@ -191,10 +232,18 @@ function AccountSetup() {
             console.log(`User details`, details);
             localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
             setUserDetails(details);
-            createTicket({
-                eventID: event?.id as string,
-                ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
-            })
+            if (affiliateID) {
+                createTicket({
+                    eventID: event?.id as string,
+                    ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                    affiliateID
+                })
+            } else {
+                createTicket({
+                    eventID: event?.id as string,
+                    ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                })
+            }
             // setCanPay(true);
         },
     })
@@ -252,7 +301,18 @@ function AccountSetup() {
                 setToken(data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-                createTicket({ eventID: event?.id as string, ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any, });
+                if (affiliateID) {
+                    createTicket({
+                        eventID: event?.id as string,
+                        ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                        affiliateID
+                    })
+                } else {
+                    createTicket({
+                        eventID: event?.id as string,
+                        ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
+                    })
+                }
             }
         }
     });
@@ -352,6 +412,7 @@ function AccountSetup() {
                             )}
                             {canPay && (
                                 <PaymentButton
+                                    onSucces={() => validateTicket.mutate(paystackDetails?.reference as string)}
                                     reference={paystackDetails?.reference as string}
                                     email={paystackDetails?.email as string}
                                     amount={paystackDetails?.amount as number}

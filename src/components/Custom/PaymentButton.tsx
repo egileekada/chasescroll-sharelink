@@ -11,7 +11,7 @@ interface IProps {
     bgColor?: string;
     textColor?: string;
     text: string;
-    onSucces?: () => void;
+    onSucces?: (item?: string) => void;
     isLoading?: boolean
 }
 
@@ -30,7 +30,8 @@ function PaymentButton({ reference, email, amount, bgColor = 'green', textColor 
 
         const onSuccess = (reference: string) => {
             if (onSucces) {
-                onSucces()
+                onSucces(reference)
+
             } else {
                 setCurrentStep(4)
             }

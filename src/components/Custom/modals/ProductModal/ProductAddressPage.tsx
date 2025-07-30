@@ -234,22 +234,22 @@ function ProductAddressPage() {
                                 <Flex spaceX={4} w="full">
 
                                     <Box w="full">
-                                        <CustomInput name="state" label='State' isPassword={false} />
+                                        <CustomInput name="state" type='text' label='State' isPassword={false} />
                                     </Box>
 
                                     <Box w="full">
-                                        <CustomInput name="lga" label='Lga' isPassword={false} />
+                                        <CustomInput name="lga" type='text' label='Lga' isPassword={false} />
                                     </Box>
                                 </Flex>
 
                                 <Flex spaceX={4} w="full">
 
                                     <Box w="full">
-                                        <CustomInput name="address" label='Address' isPassword={false} />
+                                        <CustomInput name="address" type='email' label='Address' isPassword={false} />
                                     </Box>
 
                                     <Box w="full">
-                                        <CustomInput name="phone" label='Phone umber' isPassword={false} />
+                                        <CustomInput name="phone" type='number' label='Phone umber' isPassword={false} />
                                     </Box>
                                 </Flex>
 

@@ -1,3 +1,4 @@
+'use client'
 import React, { useState } from 'react';
 import {
     Box,
@@ -10,7 +11,7 @@ import {
     IconButton,
     Badge,
 } from '@chakra-ui/react';
-import { Add, Minus } from 'iconsax-reactjs';
+import { Add, Minus, ShoppingCart } from 'iconsax-reactjs';
 import { useAtom, useSetAtom } from 'jotai';
 import { activeEventAtom, activeTicketAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom, totalAmountForSelectedTicketsAtom } from '@/states/activeTicket';
 import { IProductTypeData } from '@/models/Event';
@@ -35,6 +36,13 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     const [selectedTickets, setSelectedTickets] = useAtom(selectedTicketsAtom);
     const setStep = useSetAtom(ticketurchaseStepAtom);
     const setTotalSelectedTicketPrice = useSetAtom(totalAmountForSelectedTicketsAtom);
+    const [totalTickets, setTotalTicket] = useState(() => {
+        let total = 0;
+        event?.productTypeData.forEach((item) => {
+            total += item.totalNumberOfTickets as number;
+        });
+        return total;
+    })
 
 
     const increment = (ticketType: string) => {
@@ -132,25 +140,26 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     }
 
     return (
-        <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
+        <Box w="full" bg="white" borderRadius="xl" overflow="hidden" p="20px" h="608px">
 
-            <Flex w="full" flexDirection={['column', 'column', 'row', 'row']}>
+            <Flex w="full" flexDirection={['column', 'column', 'row', 'row']} spaceX={'20px'} h="full">
 
 
                 {/* Right Side - Ticket Selection */}
-                <Box flex="0.55" overflowY={'auto'}>
+                <Flex flexDir={'column'} flex="0.55" overflowY={'auto'}>
                     <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb={["0px", "0px", "20px", "20px"]} pb="10px" pt="20px">
-                        <CustomText type='HEADER' fontSize={'20px'} text={event?.eventName as string} width={'auto'} color={'black'} />
+                        <CustomText type='HEADER' fontSize={'26px'} text={event?.eventName as string} width={'auto'} color={'black'} />
+                        <CustomText type='REGULAR' fontSize={'16px'} text={new Date(event?.endDate).toDateString()} width={'auto'} color={'black'} />
                     </VStack>
-                    <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 8, 8]}>
+                    <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 0, 0]} flex={1}>
                         <Box w="100%" h="200px" overflow={'hidden'} display={['block', 'block', 'none', 'none']}>
                             <Image
                                 src={eventImage}
                                 alt={eventTitle}
-                                w="100%"
+                                w="auto"
                                 h="200px"
                                 objectFit="cover"
-
+                                borderRadius={'20px'}
                             />
                         </Box>
                         {/* Ticket Types */}
@@ -161,6 +170,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                     <Box
                                         key={ticket.ticketType}
                                         w="full"
+                                        h="100px"
                                         border="1px solid"
                                         borderRadius="lg"
                                         p={4}
@@ -169,7 +179,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                         borderStyle={getTicket(ticket?.ticketType) ? "solid" : "solid"}
                                         borderColor={getTicket(ticket?.ticketType) ? "blue.400" : "gray.200"}
                                     >
-                                        <Flex justify="space-between" align="center">
+                                        <Flex justify="space-between" align="center" justifyContent={'center'} h="full">
                                             <Box flex="1">
                                                 <HStack spaceX={3} mb={2}>
                                                     <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType) ? 'black' : 'grey'}>
@@ -177,9 +187,18 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                                     </Text>
 
                                                 </HStack>
-                                                {/* <Text fontSize="sm" mb={2} color={getTicket(ticket?.ticketType) ? 'grey' : 'lightgrey'} >
-                                                    Ticket Available for this Event
-                                                </Text> */}
+                                                {ticket.ticketType === 'Early Bird' ? (
+                                                    <Badge colorPalette="red" fontSize="sm" mt={1} >
+                                                        Sales end on {new Date(ticket.endDate as number).toDateString()}
+                                                    </Badge>
+                                                )
+                                                    :
+                                                    (
+                                                        <Badge colorPalette="blue" fontSize="sm" mt={1} >
+                                                            Total Tickets available - {totalTickets}
+                                                        </Badge>
+                                                    )
+                                                }
                                             </Box>
 
                                             <HStack spaceX={1}>
@@ -213,51 +232,63 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                 );
                             })}
 
-                            <Button
-                                bgColor="primaryColor"
-                                size="lg"
-                                w="100%"
-                                h="60px"
-                                borderRadius="full"
-                                onClick={() => handleNext()}
-                                disabled={selectedTickets === null}
-                                _disabled={{
-                                    bg: "gray.300",
-                                    color: "gray.500",
-                                    cursor: "not-allowed"
-                                }}
-                                display={['none', 'none', 'block', 'block']}
-                            >
-                                Get Ticket
-                            </Button>
-
-                            <HStack fontFamily={'Raleway-Regular'}>
+                            <HStack fontFamily={'Raleway-Regular'} w="full">
                                 <Text color="grey" fontSize={'14px'}>Powered by</Text>
-                                <Text color="primaryColor" fontSize={'16px'} fontWeight={600}>Chasescroll</Text>
+                                <Text color="primaryColor" fontSize={'16px'} fontStyle={'italic'} fontWeight={600}>Chasescroll</Text>
                             </HStack>
+
+
+
+
                         </VStack>
 
 
 
 
                     </VStack>
-                </Box>
+
+                    <HStack w="full" h="70px" borderTopWidth={'2px'} borderTopColor={'lightgrey'} justifyContent={'flex-end'}>
+                        <Button
+                            bgColor="primaryColor"
+                            size="lg"
+                            w="35%"
+                            h="35px"
+                            borderRadius="full"
+                            onClick={() => handleNext()}
+                            disabled={selectedTickets === null || selectedTickets?.length < 1}
+                            display={['none', 'none', 'block', 'block']}
+                        >
+                            Get Ticket
+                        </Button>
+                    </HStack>
+                </Flex>
 
                 {/* Left Side - Event Image */}
-                <Box flex="0.45" position="relative" bgColor="whitesmoke">
-                    <Box w="100%" h="200px" overflow={'hidden'} display={['none', 'none', 'block', 'block']}>
+                <Box flex="0.45" position="relative" bgColor="whitesmoke" borderRadius={'10px'} overflow={'hidden'} display={'flex'} flexDir={'column'}>
+                    <Box w="100%" h="270px" overflow={'hidden'} display={['none', 'none', 'block', 'block']} bg="gray.200">
                         <Image
                             src={eventImage}
                             alt={eventTitle}
                             w="100%"
-                            h="200px"
-                            objectFit="cover"
+                            h="270px"
+                            objectFit="contain"
 
                         />
                     </Box>
 
+                    {/* <VStack alignItems={'center'} borderBottomWidth={'2px'} borderBottomColor={'lightgrey'} pb="10px" h="70px" justifyContent={'center'}>
+                        <Text fontFamily={'Raleway-Bold'} fontSize={'18px'}>{totalTickets}</Text>
+                        <Text fontSize={'14px'}>Tickets available for this event</Text>
+                    </VStack> */}
+
+                    {selectedTickets === null || selectedTickets?.length < 1 && (
+                        <VStack flex={1} justifyContent={'center'} alignItems={'center'}>
+                            <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                        </VStack>
+                    )}
+
                     {/* Order Summary */}
-                    {selectedTickets !== null && (
+                    {selectedTickets !== null && selectedTickets.length > 0 && (
                         <Box p="20px">
                             {/* <Divider mb={4} /> */}
                             <Text fontSize="lg" fontWeight="bold" mb={4}>

@@ -268,15 +268,15 @@ function ProductReviewPage() {
                                     <HStack spaceX={4} w="full">
 
                                         <Box w="full">
-                                            <CustomInput name="firstName" label='First Name' isPassword={false} />
+                                            <CustomInput name="firstName" type='text' label='First Name' isPassword={false} />
                                         </Box>
 
                                         <Box w="full">
-                                            <CustomInput name="lastName" label='Last Name' isPassword={false} />
+                                            <CustomInput name="lastName" type='text' label='Last Name' isPassword={false} />
                                         </Box>
                                     </HStack>
                                     <Box w="full">
-                                        <CustomInput name="email" label='Email' isPassword={false} />
+                                        <CustomInput name="email" type='email' label='Email' isPassword={false} />
                                     </Box>
 
                                 </VStack>
