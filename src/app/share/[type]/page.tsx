@@ -1,9 +1,13 @@
+import { affiliateIDAtom } from '@/states/activeTicket';
+import { useSetAtom } from 'jotai';
 import { notFound } from 'next/navigation'
 // THIS PAGE HAS TO BE SERVER RENDERED
 
 interface Props {
     params: {
-        type: string
+        type: string;
+        affiliateID: string;
+
     },
     searchParams: {
         id: string
@@ -12,8 +16,15 @@ interface Props {
 
 export default async function SharePage({ params, searchParams }: Props) {
     // MAKE SURE YOU AWAIT THE PARAMS
-    const { type } = await params
+    const { type, affiliateID } = await params
     const { id } = await searchParams;
+
+    // state 
+    const setAffilateID = useSetAtom(affiliateIDAtom);
+
+    if (affiliateID) {
+        setAffilateID(affiliateID);
+    }
 
     // Validate allowed types
     const allowedTypes = ['event', 'fundraiser', 'service', 'rental', 'product']
