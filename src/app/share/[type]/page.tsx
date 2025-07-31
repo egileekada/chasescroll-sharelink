@@ -6,8 +6,6 @@ import { notFound } from 'next/navigation'
 interface Props {
     params: {
         type: string;
-
-
     },
     searchParams: {
         id: string;
@@ -20,13 +18,6 @@ export default async function SharePage({ params, searchParams }: Props) {
     const { type } = await params
     const { id, affiliateID } = await searchParams;
 
-    // state 
-    const setAffilateID = useSetAtom(affiliateIDAtom);
-
-    if (affiliateID) {
-        setAffilateID(affiliateID);
-    }
-
     // Validate allowed types
     const allowedTypes = ['event', 'fundraiser', 'service', 'rental', 'product']
     if (!allowedTypes.includes(type.toLowerCase())) {
@@ -36,7 +27,7 @@ export default async function SharePage({ params, searchParams }: Props) {
     const ComponentMap = {
         event: async () => {
             const EventComponent = (await import('@/views/share/Event')).default
-            return <EventComponent id={id} />
+            return <EventComponent id={id} affiliateID={affiliateID} />
         },
         fundraiser: async () => {
             const FundraiserComponent = (await import('@/views/share/Fundraiser')).default
