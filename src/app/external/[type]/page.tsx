@@ -9,7 +9,6 @@ import { notFound } from 'next/navigation'
 interface Props {
     params: {
         type: string;
-        affiliateID: string;
     },
     searchParams: {
         userId: string
@@ -18,15 +17,8 @@ interface Props {
 
 export default async function ExternalPage({ params, searchParams }: Props) {
     // MAKE SURE YOU AWAIT THE PARAMS
-    const { type, affiliateID } = await params
+    const { type } = await params
     const { userId } = await searchParams;
-
-    // state 
-    const setAffilateID = useSetAtom(affiliateIDAtom);
-
-    if (affiliateID) {
-        setAffilateID(affiliateID);
-    }
 
     // Validate allowed types
     const allowedTypes = ['event', 'fundraiser', 'service', 'rental', 'product']

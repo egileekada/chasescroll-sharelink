@@ -18,7 +18,7 @@ import { DateTime } from 'luxon';
 import { formatNumber } from '@/utils/formatNumber';
 import Head from 'next/head';
 import { atom, useAtom, useSetAtom } from 'jotai';
-import { activeEventAtom, activeTicketAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
+import { activeEventAtom, activeTicketAtom, affiliateIDAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
 import TicketPurchaseModal from '@/components/Custom/modals/TicketPurchaseModal/Index';
 import { toaster } from "@/components/ui/toaster"
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
@@ -27,7 +27,7 @@ import { STORAGE_KEYS } from '@/utils/StorageKeys';
 
 export const currentIdAtom = atom<string | null>(null);
 export const showTicketModalAtom = atom(false);
-function Event({ id }: { id: string }) {
+function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
     const router = useRouter();
     const setCurrentId = useSetAtom(currentIdAtom);
 
@@ -39,6 +39,13 @@ function Event({ id }: { id: string }) {
     const setActiveTicket = useSetAtom(activeTicketAtom);
     const setActiveEvent = useSetAtom(activeEventAtom);
     const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
+
+    // state 
+    const setAffilateID = useSetAtom(affiliateIDAtom);
+
+    if (affiliateID) {
+        setAffilateID(affiliateID);
+    }
 
 
     const { isLoading, data, isError, error } = useQuery<AxiosResponse<PaginatedResponse<IEventType>>>({
@@ -250,28 +257,7 @@ function Event({ id }: { id: string }) {
                             )}
 
                             <VStack w={['100%', '100%', '50%', '50%']} borderRadius={'16px'} borderWidth={'1px'} borderColor={'gray.200'} mt='20px' p='2'>
-                                {/* <Menu.Root>
-                                    <Menu.Trigger asChild>
-                                        <Flex justifyContent={'center'} alignItems="center" bgColor={'gray.100'} borderRadius={'16px'} w="full" h="50px" spaceX={4}>
-                                            <Text>{handleTicketType()?.ticketType} {formatNumber(handleTicketType()?.ticketPrice)}</Text>
-                                            {(event?.productTypeData as [])?.length > 1 && (
-                                                <ArrowDown2 size={20} color="blue" variant='Bold' />
-                                            )}
-                                        </Flex>
-                                    </Menu.Trigger>
-                                    <Portal>
-                                        <Menu.Positioner>
-                                            <Menu.Content w="full">
-                                                {event?.productTypeData.map((item, index) => (
-                                                    <Menu.Item onClick={() => setTicketType(item.ticketType)} value={item.ticketType} key={index}>{item.ticketType} {formatNumber(item.ticketPrice)}</Menu.Item>
-                                                ))}
-                                            </Menu.Content>
-                                        </Menu.Positioner>
-                                    </Portal>
-                                </Menu.Root> */}
-
                                 <Button onClick={handlePayment} w="full" h="60px" borderRadius={'full'} bgColor="chasescrollBlue" color="white">Select Ticket Here</Button>
-
                             </VStack>
                         </Box>
                     </Flex>
