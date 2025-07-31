@@ -6,18 +6,19 @@ import { notFound } from 'next/navigation'
 interface Props {
     params: {
         type: string;
-        affiliateID: string;
+
 
     },
     searchParams: {
-        id: string
+        id: string;
+        affiliateID: string;
     }
 }
 
 export default async function SharePage({ params, searchParams }: Props) {
     // MAKE SURE YOU AWAIT THE PARAMS
-    const { type, affiliateID } = await params
-    const { id } = await searchParams;
+    const { type } = await params
+    const { id, affiliateID } = await searchParams;
 
     // state 
     const setAffilateID = useSetAtom(affiliateIDAtom);
