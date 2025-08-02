@@ -142,7 +142,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     return (
         <Box w="full" bg="white" borderRadius="xl" overflow="hidden" p="20px" h="608px">
 
-            <Flex w="full" flexDirection={['column', 'column', 'row', 'row']} spaceX={'20px'} h="full">
+            <Flex w="full" flexDirection={['column', 'column', 'row', 'row']} spaceX={['0px', '0px', '20px', '20px']} h="full">
 
 
                 {/* Right Side - Ticket Selection */}
@@ -151,17 +151,17 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                         <CustomText type='HEADER' fontSize={'26px'} text={event?.eventName as string} width={'auto'} color={'black'} />
                         <CustomText type='REGULAR' fontSize={'16px'} text={new Date(event?.endDate).toDateString()} width={'auto'} color={'black'} />
                     </VStack>
-                    <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 0, 0]} flex={1}>
-                        <Box w="100%" h="200px" overflow={'hidden'} display={['block', 'block', 'none', 'none']}>
+                    <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 0, 0]} flex={[0.8, 0.8, 1, 1]}>
+                        <HStack alignItems={'center'} justifyContent="center" w="100%" h="100px" overflow={'hidden'} display={['flex', 'flex', 'none', 'none']}>
                             <Image
                                 src={eventImage}
                                 alt={eventTitle}
-                                w="auto"
-                                h="200px"
+                                w="100px"
+                                h="100px"
                                 objectFit="cover"
                                 borderRadius={'20px'}
                             />
-                        </Box>
+                        </HStack>
                         {/* Ticket Types */}
                         <VStack spaceY={4} px={['10px', '10px', '0px', '0px']} w="full" h="auto">
                             {event?.productTypeData?.map((ticket) => {
@@ -238,8 +238,6 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                             </HStack>
 
 
-
-
                         </VStack>
 
 
@@ -265,14 +263,13 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
 
                 {/* Left Side - Event Image */}
                 <Box flex="0.45" position="relative" bgColor="whitesmoke" borderRadius={'10px'} overflow={'hidden'} display={'flex'} flexDir={'column'}>
-                    <Box w="100%" h="270px" overflow={'hidden'} display={['none', 'none', 'block', 'block']} bg="gray.200">
+                    <Box w="100%" h="270px" overflow={'hidden'} display={['none', 'none', 'block', 'block']}>
                         <Image
                             src={eventImage}
                             alt={eventTitle}
                             w="100%"
                             h="270px"
                             objectFit="contain"
-
                         />
                     </Box>
 

@@ -257,6 +257,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                             )}
 
                             <VStack w={['100%', '100%', '50%', '50%']} borderRadius={'16px'} borderWidth={'1px'} borderColor={'gray.200'} mt='20px' p='2'>
+                                <Text fontWeight={'700'}>See available tickets</Text>
                                 <Button onClick={handlePayment} w="full" h="60px" borderRadius={'full'} bgColor="chasescrollBlue" color="white">Select Ticket Here</Button>
                             </VStack>
                         </Box>

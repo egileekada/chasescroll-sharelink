@@ -61,6 +61,7 @@ function AccountSetup() {
     const currentId = useAtomValue(currentIdAtom);
     const setTotalSelectedTicketPrice = useSetAtom(totalAmountForSelectedTicketsAtom);
     const affiliateID = useAtomValue(affiliateIDAtom);
+    const [showLink, setShowLink] = React.useState(false);
 
 
     const [token, setToken] = React.useState(() => localStorage.getItem(STORAGE_KEYS.token));
@@ -290,12 +291,7 @@ function AccountSetup() {
                 localStorage.setItem(STORAGE_KEYS.QUANTITY, quantity.toString());
                 localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
                 localStorage.setItem(STORAGE_KEYS.SELECTED_TICKETS, JSON.stringify(selectedTickets));
-                setStep((prev) => prev + 1);
-                toaster.create({
-                    title: 'Alert!',
-                    description: data?.data?.message,
-                    type: 'warn',
-                })
+                setShowLink(true);
             } else {
                 setUserId(data?.data?.user_id);
                 setToken(data?.data?.access_token);
@@ -389,6 +385,12 @@ function AccountSetup() {
                                 </Flex>
                                 <Box w="full">
                                     <CustomInput name="email" type='email' label='Email' isPassword={false} />
+                                    {showLink && (
+                                        <HStack mt="10px">
+                                            <Text color="red">You already have an account on chasecroll, for security reasons</Text>
+                                            <Text color="primaryColor" cursor={'pointer'} onClick={() => setStep(3)} textDecorationLine={'underline'}>Sign in</Text>
+                                        </HStack>
+                                    )}
                                 </Box>
 
                             </VStack>
