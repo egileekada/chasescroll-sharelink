@@ -302,8 +302,6 @@ function TicketPurchaseSuccessModal({
     };
 
 
-
-
     return (
         <Box
             w="full"
@@ -378,7 +376,7 @@ function TicketPurchaseSuccessModal({
                             <Flex className="ticket-left" flex={0.7} borderRightWidth={'1px'} borderRightColor={'grey'} borderRightStyle={'dashed'} h="full" p="10px">
                                 <Box className="event-image-container" w="150px" h="full" borderWidth={'1px'} borderRadius="10px" borderColor="gray.300" p="0px" display={'flex'} justifyContent={'center'}>
                                     <Box className="event-image" w="70%" h="full" bg="gray.200" borderRadius={'10px'} overflow={'hidden'}>
-                                        <Image src={RESOURCE_URL + event?.currentPicUrl} w="full" h="full" />
+                                        <Image src={RESOURCE_URL + event?.currentPicUrl} w="full" h="full" objectFit={'contain'} />
                                     </Box>
                                 </Box>
                                 <VStack className="event-details" flex="1" justifyContent={'center'}>

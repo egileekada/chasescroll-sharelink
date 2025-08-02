@@ -46,7 +46,8 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
 
 
     const increment = (ticketType: string) => {
-        if (selectedTickets === null) {
+        console.log(selectedTickets)
+        if (selectedTickets?.length < 1 || selectedTickets === null) {
             setSelectedTickets([{
                 ticketType,
                 quantity: 1,
@@ -83,7 +84,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     }
 
     const decrement = (ticketType: string) => {
-        if (selectedTickets === null) {
+        if (selectedTickets?.length < 1 || selectedTickets === null) {
             return;
         } else {
             // check if the ticket exisit 
@@ -245,12 +246,12 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
 
                     </VStack>
 
-                    <HStack w="full" h="70px" borderTopWidth={'2px'} borderTopColor={'lightgrey'} justifyContent={'flex-end'}>
+                    <HStack w="full" h="70px" borderTopWidth={'2px'} borderTopColor={'lightgrey'} justifyContent={'flex-end'} mt="20px">
                         <Button
                             bgColor="primaryColor"
                             size="lg"
                             w="35%"
-                            h="35px"
+                            h="45px"
                             borderRadius="full"
                             onClick={() => handleNext()}
                             disabled={selectedTickets === null || selectedTickets?.length < 1}
@@ -279,14 +280,20 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                         <Text fontSize={'14px'}>Tickets available for this event</Text>
                     </VStack> */}
 
-                    {selectedTickets === null || selectedTickets?.length < 1 || !selectedTickets && (
+                    {selectedTickets?.length < 1 && (
+                        <VStack flex={1} justifyContent={'center'} alignItems={'center'}>
+                            <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                        </VStack>
+                    )}
+
+                    {selectedTickets === null && (
                         <VStack flex={1} justifyContent={'center'} alignItems={'center'}>
                             <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
                         </VStack>
                     )}
 
                     {/* Order Summary */}
-                    {selectedTickets !== null && selectedTickets.length > 0 && (
+                    {selectedTickets?.length > 0 && (
                         <Box p="20px">
                             {/* <Divider mb={4} /> */}
                             <Text fontSize="lg" fontWeight="bold" mb={4}>

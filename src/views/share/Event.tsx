@@ -128,7 +128,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                     <Flex w='full' h="full" spaceX={[0, 0, 6, 6]} mt="10px" direction={['column', 'column', 'row', 'row']}>
                         <Box flex={1} h="full" mb={['20px', '20px', '0px', '0px']}>
                             <Box width={'full'} h="500px" mb="10xp" borderWidth={'1px'} borderColor="gray.200" borderRadius={'16px'} overflow={'hidden'}>
-                                <Image w="full" h="full" objectFit="cover" src={(RESOURCE_URL as string) + (event?.currentPicUrl as string)} />
+                                <Image w="full" h="full" objectFit="contain" src={(RESOURCE_URL as string) + (event?.currentPicUrl as string)} />
                             </Box>
 
                             <HStack display={['none', 'none', 'flex', 'flex']} w="auto" h={['50px', '50px', '40px', '45px']} borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
