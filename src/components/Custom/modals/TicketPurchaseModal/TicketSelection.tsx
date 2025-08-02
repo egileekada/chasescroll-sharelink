@@ -254,6 +254,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                             borderRadius="full"
                             onClick={() => handleNext()}
                             disabled={selectedTickets === null || selectedTickets?.length < 1}
+                            mt="10px"
                             display={['none', 'none', 'block', 'block']}
                         >
                             Get Ticket
@@ -278,7 +279,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                         <Text fontSize={'14px'}>Tickets available for this event</Text>
                     </VStack> */}
 
-                    {selectedTickets === null || selectedTickets?.length < 1 && (
+                    {selectedTickets === null || selectedTickets?.length < 1 || !selectedTickets && (
                         <VStack flex={1} justifyContent={'center'} alignItems={'center'}>
                             <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
                         </VStack>
