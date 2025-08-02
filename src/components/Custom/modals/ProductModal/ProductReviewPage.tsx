@@ -316,7 +316,7 @@ function ProductReviewPage() {
                 <Box flex="0.4" position="relative" bgColor="whitesmoke">
 
                     {/* Event Image */}
-                    <Box w="100%" h="300px" overflow="hidden">
+                    <Box w="100%" h="300px" overflow="hidden" bg="red">
                         <Image
                             src={RESOURCE_URL + '/' + product?.images[0] || "/images/tech-event.jpg"}
                             w="100%"
