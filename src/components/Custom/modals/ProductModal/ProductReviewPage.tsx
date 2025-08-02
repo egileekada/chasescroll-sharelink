@@ -71,7 +71,8 @@ function ProductReviewPage() {
         const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
         return token !== null && user_id !== null;
     });
-    const [googleAuthUsed, setGoogleAuthUsed] = React.useState(() => localStorage.getItem(STORAGE_KEYS.GOOGLE_AUTH))
+    const [googleAuthUsed, setGoogleAuthUsed] = React.useState(() => localStorage.getItem(STORAGE_KEYS.GOOGLE_AUTH));
+    const [showLink, setShowLink] = React.useState(false);
 
 
     const { data: session, status } = useSession();
@@ -195,7 +196,7 @@ function ProductReviewPage() {
                     description: data?.data?.message,
                     type: 'info',
                 });
-                setStep((prev) => prev + 2);
+                setShowLink(true);
             } else {
                 setUserId(data?.data?.id);
                 setToken(data?.data?.token);
@@ -277,6 +278,12 @@ function ProductReviewPage() {
                                     </HStack>
                                     <Box w="full">
                                         <CustomInput name="email" type='email' label='Email' isPassword={false} />
+                                        {showLink && (
+                                            <HStack mt="10px">
+                                                <Text color="red">You already have an account on chasecroll, for security reasons</Text>
+                                                <Text color="primaryColor" cursor={'pointer'} onClick={() => setStep(3)} textDecorationLine={'underline'}>Sign in</Text>
+                                            </HStack>
+                                        )}
                                     </Box>
 
                                 </VStack>
