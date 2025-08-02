@@ -244,6 +244,14 @@ function TicketPurchaseSuccessModal({
         } else {
             return null;
         }
+    });
+    const [userId, setUserId] = React.useState(() => {
+        const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
+        if (userId) {
+            return userId;
+        } else {
+            return null;
+        }
     })
 
     // Inject print styles
@@ -261,7 +269,7 @@ function TicketPurchaseSuccessModal({
         queryKey: [`get-tickets-${userDetails?.userId}`, userDetails?.userId],
         queryFn: () => httpService.get(`${URLS.event}/get-users-tickets`, {
             params: {
-                userID: userDetails?.userId,
+                userID: userId ? userId : userDetails?.userId,
                 eventID: event?.id
             }
         }),
