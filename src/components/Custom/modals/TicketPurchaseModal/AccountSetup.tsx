@@ -297,18 +297,8 @@ function AccountSetup() {
                 setToken(data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
                 localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-                if (affiliateID) {
-                    createTicket({
-                        eventID: event?.id as string,
-                        ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
-                        affiliateID
-                    })
-                } else {
-                    createTicket({
-                        eventID: event?.id as string,
-                        ticketBuyObjectList: selectedTickets?.map((item) => ({ ticketType: item.ticketType, numberOfTickets: item.quantity })) as any,
-                    })
-                }
+                const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
+                getPublicProfile.mutate(user_id);
             }
         }
     });
