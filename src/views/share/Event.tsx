@@ -75,11 +75,11 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
         if (!isLoading && !isError && data?.data) {
             const item: PaginatedResponse<IEventType> = data?.data;
             setEvent(item?.content[0]);
-            setTicketType(item?.content[0].productTypeData[0].ticketType);
-            setTickets(item.content[0].productTypeData);
+            setTicketType(item?.content[0]?.productTypeData[0]?.ticketType);
+            setTickets(item.content[0]?.productTypeData);
 
             // set atoms
-            setActiveTicket(item?.content[0].productTypeData[0]);
+            setActiveTicket(item?.content[0]?.productTypeData[0]);
             setActiveEvent(item?.content[0]);
         }
     }, [data, isError, isLoading]);
