@@ -18,6 +18,12 @@ import { IProductTypeData } from '@/models/Event';
 import { toaster } from '@/components/ui/toaster';
 import { formatNumber } from '@/utils/formatNumber';
 import CustomText from '../../CustomText';
+import { dateFormat, timeFormat } from '@/utils/dateFormat';
+import { capitalizeFLetter } from '@/utils/capitalizeLetter';
+import useCustomTheme from '@/hooks/useTheme';
+import { formatNumberWithK } from '@/utils/formatNumberWithK';
+import ProductImageScroller from '../../productImageScroller';
+import CustomButton from '../../customButton';
 
 
 interface TicketSelectionProps {
@@ -44,6 +50,12 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
         return total;
     })
 
+    const {
+        primaryColor,
+        secondaryBackgroundColor,
+        headerTextColor
+    } = useCustomTheme()
+
 
     const increment = (ticketType: string) => {
         console.log(selectedTickets)
@@ -53,7 +65,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                 quantity: 1,
             }])
         } else {
-            // check if the ticket exisit 
+            //    check if the ticket exisit 
             const ticket = selectedTickets?.filter((item) => item.ticketType === ticketType)[0];
             const eventTicket = event?.productTypeData.filter((item) => item.ticketType === ticketType)[0];
             if (ticket) {
@@ -140,398 +152,388 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
         setStep((prev) => prev + 1);
     }
 
-    return (
-        <Box w="full" bg="white" borderRadius="xl" overflow={["auto", "auto", "hidden"]} p="20px" maxH={["100vh", "100vh", "608px"]} h={["full", "full", "608px"]}>
-            <Flex flexDir={'column'} display={["flex", "flex", "none", "none"]} >
-                <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb={["0px", "0px", "20px", "20px"]} pb="10px" pt="20px">
-                    <CustomText type='HEADER' fontSize={'26px'} text={event?.eventName as string} width={'auto'} color={'black'} />
-                    <CustomText type='REGULAR' fontSize={'16px'} text={new Date(event?.endDate).toDateString()} width={'auto'} color={'black'} />
-                </VStack>
-                <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 0, 0]} flex={[0.8, 0.8, 1, 1]}>
-                    <HStack alignItems={'center'} justifyContent="center" w="100%" h="100px" overflow={'hidden'} display={['flex', 'flex', 'none', 'none']}>
-                        <Image
-                            src={eventImage}
-                            alt={eventTitle}
-                            w="100px"
-                            h="100px"
-                            objectFit="cover"
-                            borderRadius={'20px'}
-                        />
-                    </HStack>
-                    {/* Ticket Types */}
-                    <VStack spaceY={4} px={['10px', '10px', '0px', '0px']} w="full" h="auto">
-                        {event?.productTypeData?.map((ticket) => {
-                            return (
-                                <Box
-                                    key={ticket.ticketType}
-                                    w="full"
-                                    h="100px"
-                                    border="1px solid"
-                                    borderRadius="lg"
-                                    p={4}
-                                    bg={getTicket(ticket?.ticketType) ? "blue.50" : "white"}
-                                    borderWidth={getTicket(ticket?.ticketType)?.ticketType ? "2px" : "1px"}
-                                    borderStyle={getTicket(ticket?.ticketType) ? "solid" : "solid"}
-                                    borderColor={getTicket(ticket?.ticketType) ? "blue.400" : "gray.200"}
-                                >
-                                    <Flex justify="space-between" align="center" justifyContent={'center'} h="full">
-                                        <Box flex="1">
-                                            <HStack spaceX={3} mb={2}>
-                                                <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType) ? 'black' : 'grey'}>
-                                                    {ticket.ticketType}
-                                                </Text>
-
-                                            </HStack>
-                                            {((Number(ticket?.totalNumberOfTickets) - Number(ticket?.ticketsSold) === 0) || (new Date(Number(ticket?.endDate)) < new Date())) ? (
-                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
-                                                    Tickets sold out
-                                                </Badge>
-                                            ) : ticket.ticketType === 'Early Bird' ? (
-                                                <Badge colorPalette="red" fontSize="sm" mt={1} >
-                                                    Sales end on {new Date(ticket.endDate as number).toDateString()}
-                                                </Badge>
-                                            ) : (
-                                                <Badge colorPalette="blue" fontSize="sm" mt={1} >
-                                                    Total Tickets available - {totalTickets}
-                                                </Badge>
-                                            )
-                                            }
-                                        </Box>
-
-                                        <HStack spaceX={1}>
-                                            <IconButton
-                                                aria-label="Decrease quantity"
-                                                size="sm"
-                                                variant="outline"
-                                                borderRadius="full"
-                                                disabled={!getTicket(ticket.ticketType)}
-                                                onClick={() => decrement(ticket.ticketType)}
-                                            >
-                                                <Minus size="16" />
-                                            </IconButton>
-
-                                            <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType)?.quantity ? 'black' : 'grey'} >
-                                                {getTicket(ticket.ticketType)?.quantity ? getTicket(ticket?.ticketType)?.quantity : 0}
-                                            </Text>
-
-                                            <IconButton
-                                                aria-label="Increase quantity"
-                                                size="sm"
-                                                variant="outline"
-                                                borderRadius="full"
-                                                disabled={(new Date(Number(ticket?.endDate)) < new Date())}
-                                                onClick={() => increment(ticket.ticketType)}
-                                            >
-                                                <Add size="16px" />
-                                            </IconButton>
-                                        </HStack>
-                                    </Flex>
-                                </Box>
-                            );
-                        })}
-
-                        <HStack fontFamily={'Raleway-Regular'} w="full">
-                            <Text color="grey" fontSize={'14px'}>Powered by</Text>
-                            <Text color="primaryColor" fontSize={'16px'} fontStyle={'italic'} fontWeight={600}>Chasescroll</Text>
-                        </HStack>
-
-
-                    </VStack>
-
-
-
-
-                </VStack>
-
-                <HStack w="full" h="70px" borderTopWidth={'2px'} borderTopColor={'lightgrey'} justifyContent={'flex-end'} mt="20px">
-                    <Button
-                        bgColor="primaryColor"
-                        size="lg"
-                        w="35%"
-                        h="45px"
-                        borderRadius="full"
-                        onClick={() => handleNext()}
-                        disabled={selectedTickets === null || selectedTickets?.length < 1}
-                        mt="10px"
-                        display={['none', 'none', 'block', 'block']}
-                    >
-                        Get Ticket
-                    </Button>
-                </HStack>
-                <Box w="100%" h="270px" overflow={'hidden'} display={['none', 'none', 'block', 'block']}>
-                    <Image
-                        src={eventImage}
-                        alt={eventTitle}
-                        w="100%"
-                        h="270px"
-                        objectFit="contain"
-                    />
-                </Box>
-
-                {selectedTickets?.length < 1 && (
-                    <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
-                        <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
-                    </VStack>
-                )}
-
-                {selectedTickets === null && (
-                    <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
-                        <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
-                    </VStack>
-                )}
-
-                {/* Order Summary */}
-                {selectedTickets?.length > 0 && (
-                    <Box p="20px">
-                        {/* <Divider mb={4} /> */}
-                        <Text fontSize="lg" fontWeight="bold" mb={4}>
-                            Order summary
-                        </Text>
-
-                        <VStack spaceY={3} align="stretch">
-                            {selectedTickets !== null && selectedTickets.length > 0 && selectedTickets.map((item) => (
-                                <Flex justify="space-between" mb="10px">
-                                    <Text>
-                                        {item?.quantity} x {item?.ticketType}
-                                    </Text>
-                                    <Text fontWeight="semibold">
-                                        {formatNumber((getTicketPrice(item.ticketType) as number) * item.quantity)}
-                                    </Text>
-                                </Flex>
-                            ))}
-
-                            {/* <Divider /> */}
-
-                            <Flex justify="space-between" fontSize="lg" fontWeight="bold">
-                                <Text>Total</Text>
-                                <Text>
-                                    NGN {calculateTotal()}
-                                </Text>
+    return ( 
+        <>
+            <Flex w={"full"} maxH={"100vh"} display={["flex", "flex", "none"]} h={"full"} overflowY={"auto"} >
+                <Flex flexDir={"column"} h={"full"} py={"6"} w={"full"}>
+                    <Flex flexDir={"column"} h={"fit-content"} gap={"7"} px={"3"} w={"full"} >
+                        <Flex flexDirection={"column"} textAlign={"center"} w={"full"} pb={"2"} borderBottomWidth={"1px"} gap={"1"} >
+                            <Text fontWeight={"700"} fontSize={"25px"} >{event?.eventName}</Text>
+                            <Text fontSize={"14px"} >{dateFormat(event?.startDate)}</Text>
+                        </Flex>
+                        <Flex w={"full"}>
+                            <ProductImageScroller objectFit={"cover"} images={event?.picUrls?.length > 0 ? [...event?.picUrls] : []} height={"200px"} />
+                        </Flex>
+                        <Flex flexDir={"column"} w={"full"} >
+                            <Flex flexDir={"column"} h={"auto"} gap={"3"} >
+                                {event?.productTypeData?.map((item, index) => {
+                                    if (new Date(Number(item?.startDate)) <= new Date() && item.ticketType === "Early Bird") {
+                                        return (
+                                            <Flex flexDir={["column", "column", "row"]} gap={"2"} _hover={{ borderColor: primaryColor }} key={index} w={"full"} borderWidth={"1px"} justifyContent={"space-between"} rounded={"8px"} px={"4"} py={"4"} >
+                                                <Flex flexDir={"column"} gap={"2"} >
+                                                    <Text fontWeight={"semibold"} >{capitalizeFLetter(item.ticketType)} {formatNumberWithK(item?.ticketPrice, false)}</Text>
+                                                    {item.ticketType === "Early Bird" ? (
+                                                        <>
+                                                            {((Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) || (new Date(Number(item?.endDate)) < new Date())) ?
+                                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge maxW={"100%"} w={"fit-content"} py={"1"} whiteSpace={"break-spaces"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Sales ends on {dateFormat(item.endDate)} {timeFormat(item.endDate)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {(Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) ?
+                                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"blue"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Total Tickets avaliable - {Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    )}
+                                                </Flex>
+                                                <Flex gap={"3"} alignItems={"center"} mx={"auto"} >
+                                                    <Flex gap={"3"} alignItems={"center"} >
+                                                        <IconButton
+                                                            disabled={!getTicket(item.ticketType)}
+                                                            onClick={() => decrement(item.ticketType)}
+                                                            bgColor={secondaryBackgroundColor}
+                                                            color={headerTextColor} rounded={"full"} size="sm">
+                                                            {/* <LuMinus /> */}
+                                                            <Text fontWeight={"500"} fontSize={"25px"} >-</Text>
+                                                        </IconButton>
+                                                        {getTicket(item.ticketType)?.quantity ? getTicket(item?.ticketType)?.quantity : 0}
+                                                        <IconButton
+                                                            disabled={(new Date(Number(item?.endDate)) < new Date())}
+                                                            onClick={() => increment(item.ticketType)}
+                                                            bgColor={secondaryBackgroundColor} color={headerTextColor} rounded={"full"} size="sm">
+                                                            <Text fontWeight={"500"} fontSize={"25px"} >+</Text>
+                                                        </IconButton>
+                                                    </Flex>
+                                                </Flex>
+                                            </Flex>
+                                        )
+                                    } else if (item.ticketType !== "Early Bird") {
+                                        return (
+                                            <Flex flexDir={["column", "column", "row"]} gap={"2"} _hover={{ borderColor: primaryColor }} key={index} w={"full"} borderWidth={"1px"} justifyContent={"space-between"} rounded={"8px"} px={"4"} py={"4"} >
+                                                <Flex flexDir={"column"} gap={"2"} >
+                                                    <Text fontWeight={"semibold"} >{capitalizeFLetter(item.ticketType)} {formatNumberWithK(item?.ticketPrice, false)}</Text>
+                                                    {item.ticketType === "Early Bird" ? (
+                                                        <>
+                                                            {((Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) || (new Date(Number(item?.endDate)) < new Date())) ?
+                                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge maxW={"100%"} w={"fit-content"} py={"1"} whiteSpace={"break-spaces"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Sales ends on {dateFormat(item.endDate)} {timeFormat(item.endDate)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {(Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) ?
+                                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"blue"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                                    Total Tickets avaliable - {Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    )}
+                                                </Flex>
+                                                <Flex gap={"3"} alignItems={"center"} >
+                                                    <IconButton
+                                                        disabled={!getTicket(item.ticketType)}
+                                                        onClick={() => decrement(item.ticketType)}
+                                                        bgColor={secondaryBackgroundColor}
+                                                        color={headerTextColor} rounded={"full"} size="sm">
+                                                        {/* <LuMinus /> */}
+                                                        <Text fontWeight={"500"} fontSize={"25px"} >-</Text>
+                                                    </IconButton>
+                                                    {getTicket(item.ticketType)?.quantity ? getTicket(item?.ticketType)?.quantity : 0}
+                                                    <IconButton
+                                                        disabled={(new Date(Number(item?.endDate)) < new Date())}
+                                                        onClick={() => increment(item.ticketType)}
+                                                        bgColor={secondaryBackgroundColor} color={headerTextColor} rounded={"full"} size="sm">
+                                                        <Text fontWeight={"500"} fontSize={"25px"} >+</Text>
+                                                    </IconButton>
+                                                </Flex>
+                                            </Flex>
+                                        )
+                                    }
+                                })}
                             </Flex>
-                        </VStack>
+                        </Flex>
+                        <Text fontWeight={"medium"} mr={"auto"} >Powered by <span style={{ color: primaryColor, fontStyle: "italic" }} >Chasescroll.com</span></Text>
+                    </Flex>
+                    <Flex bgColor={secondaryBackgroundColor} rounded={"8px"} w={"full"} p={"4"} flexDir={"column"} gap={"4"} >
 
-                        <Button
-                            bgColor="primaryColor"
-                            size="lg"
-                            w="100%"
-                            h="60px"
-                            borderRadius="full"
-                            onClick={() => handleNext()}
-                            disabled={selectedTickets === null}
-                            _disabled={{
-                                bg: "gray.300",
-                                color: "gray.500",
-                                cursor: "not-allowed"
-                            }}
-                            display={['block', 'block', 'none', 'none']}
-                            mt="20px"
-                        >
-                            Get Ticket
-                        </Button>
-                    </Box>
-                )}
-            </Flex>
-            <Flex w="full" display={["none", "none", "flex", "flex"]} flexDirection={['column', 'column', 'row', 'row']} spaceX={['0px', '0px', '20px', '20px']} h={["full"]}>
-                {/* Right Side - Ticket Selection */}
-                <Flex flexDir={'column'} flex="0.55" overflowY={['auto']}>
-                    <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb={["0px", "0px", "20px", "20px"]} pb="10px" pt="20px">
-                        <CustomText type='HEADER' fontSize={'26px'} text={event?.eventName as string} width={'auto'} color={'black'} />
-                        <CustomText type='REGULAR' fontSize={'16px'} text={new Date(event?.endDate).toDateString()} width={'auto'} color={'black'} />
-                    </VStack>
-                    <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 0, 0]} flex={[0.8, 0.8, 1, 1]}>
-                        <HStack alignItems={'center'} justifyContent="center" w="100%" h="100px" overflow={'hidden'} display={['flex', 'flex', 'none', 'none']}>
-                            <Image
-                                src={eventImage}
-                                alt={eventTitle}
-                                w="100px"
-                                h="100px"
-                                objectFit="cover"
-                                borderRadius={'20px'}
-                            />
-                        </HStack>
-                        {/* Ticket Types */}
-                        <VStack spaceY={4} px={['10px', '10px', '0px', '0px']} w="full" h="auto">
-                            {event?.productTypeData?.map((ticket) => {
+                        {selectedTickets?.length < 1 && (
+                            <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
+                                <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                            </VStack>
+                        )}
 
-                                return (
-                                    <Box
-                                        key={ticket.ticketType}
-                                        w="full"
-                                        h="100px"
-                                        border="1px solid"
-                                        borderRadius="lg"
-                                        p={4}
-                                        bg={getTicket(ticket?.ticketType) ? "blue.50" : "white"}
-                                        borderWidth={getTicket(ticket?.ticketType)?.ticketType ? "2px" : "1px"}
-                                        borderStyle={getTicket(ticket?.ticketType) ? "solid" : "solid"}
-                                        borderColor={getTicket(ticket?.ticketType) ? "blue.400" : "gray.200"}
-                                    >
-                                        <Flex justify="space-between" align="center" justifyContent={'center'} h="full">
-                                            <Box flex="1">
-                                                <HStack spaceX={3} mb={2}>
-                                                    <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType) ? 'black' : 'grey'}>
-                                                        {ticket.ticketType}
-                                                    </Text>
+                        {selectedTickets === null && (
+                            <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
+                                <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                            </VStack>
+                        )}
 
-                                                </HStack>
-                                                {((Number(ticket?.totalNumberOfTickets) - Number(ticket?.ticketsSold) === 0) || (new Date(Number(ticket?.endDate)) < new Date())) ? (
-                                                    <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
-                                                        Tickets sold out
-                                                    </Badge>
-                                                ) : ticket.ticketType === 'Early Bird' ? (
-                                                    <Badge colorPalette="red" fontSize="sm" mt={1} >
-                                                        Sales end on {new Date(ticket.endDate as number).toDateString()}
-                                                    </Badge>
-                                                )
-                                                    :
-                                                    (
-                                                        <Badge colorPalette="blue" fontSize="sm" mt={1} >
-                                                            Total Tickets available - {totalTickets}
-                                                        </Badge>
-                                                    )
-                                                }
-                                            </Box>
+                        {/* Order Summary */}
+                        {selectedTickets?.length > 0 && (
+                            <Box p="20px">
+                                {/* <Divider mb={4} /> */}
+                                <Text fontSize="lg" fontWeight="bold" mb={4}>
+                                    Order summary
+                                </Text>
 
-                                            <HStack spaceX={1}>
-                                                <IconButton
-                                                    aria-label="Decrease quantity"
-                                                    size="sm"
-                                                    variant="outline"
-                                                    borderRadius="full"
-                                                    disabled={!getTicket(ticket.ticketType)}
-                                                    onClick={() => decrement(ticket.ticketType)}
-                                                >
-                                                    <Minus size="16" />
-                                                </IconButton>
-
-                                                <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType)?.quantity ? 'black' : 'grey'} >
-                                                    {getTicket(ticket.ticketType)?.quantity ? getTicket(ticket?.ticketType)?.quantity : 0}
-                                                </Text>
-
-                                                <IconButton
-                                                    aria-label="Increase quantity"
-                                                    size="sm"
-                                                    variant="outline"
-                                                    borderRadius="full"
-                                                    disabled={(new Date(Number(ticket?.endDate)) < new Date())}
-                                                    onClick={() => increment(ticket.ticketType)}
-                                                >
-                                                    <Add size="16px" />
-                                                </IconButton>
-                                            </HStack>
+                                <VStack spaceY={3} align="stretch">
+                                    {selectedTickets !== null && selectedTickets.length > 0 && selectedTickets.map((item) => (
+                                        <Flex justify="space-between" mb="10px">
+                                            <Text>
+                                                {item?.quantity} x {item?.ticketType}
+                                            </Text>
+                                            <Text fontWeight="semibold">
+                                                {formatNumber((getTicketPrice(item.ticketType) as number) * item.quantity)}
+                                            </Text>
                                         </Flex>
-                                    </Box>
-                                );
-                            })}
+                                    ))}
 
-                            <HStack fontFamily={'Raleway-Regular'} w="full">
-                                <Text color="grey" fontSize={'14px'}>Powered by</Text>
-                                <Text color="primaryColor" fontSize={'16px'} fontStyle={'italic'} fontWeight={600}>Chasescroll</Text>
-                            </HStack>
+                                    {/* <Divider /> */}
 
-
-                        </VStack>
-
-
-
-
-                    </VStack>
-
-                    <HStack w="full" h="70px" borderTopWidth={'2px'} borderTopColor={'lightgrey'} justifyContent={'flex-end'} mt="20px">
-                        <Button
-                            bgColor="primaryColor"
-                            size="lg"
-                            w="35%"
-                            h="45px"
-                            borderRadius="full"
-                            onClick={() => handleNext()}
-                            disabled={selectedTickets === null || selectedTickets?.length < 1}
-                            mt="10px"
-                            display={['none', 'none', 'block', 'block']}
-                        >
-                            Get Ticket
-                        </Button>
-                    </HStack>
-                </Flex>
-
-                {/* Left Side - Event Image */}
-                <Box flex="0.45" position="relative" bgColor="whitesmoke" borderRadius={'10px'} overflow={'hidden'} flexDir={'column'}>
-                    <Box w="100%" h="270px" overflow={'hidden'} display={['none', 'none', 'block', 'block']}>
-                        <Image
-                            src={eventImage}
-                            alt={eventTitle}
-                            w="100%"
-                            h="270px"
-                            objectFit="contain"
-                        />
-                    </Box>
-
-                    {selectedTickets?.length < 1 && (
-                        <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
-                            <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
-                        </VStack>
-                    )}
-
-                    {selectedTickets === null && (
-                        <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
-                            <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
-                        </VStack>
-                    )}
-
-                    {/* Order Summary */}
-                    {selectedTickets?.length > 0 && (
-                        <Box p="20px">
-                            {/* <Divider mb={4} /> */}
-                            <Text fontSize="lg" fontWeight="bold" mb={4}>
-                                Order summary
-                            </Text>
-
-                            <VStack spaceY={3} align="stretch">
-                                {selectedTickets !== null && selectedTickets.length > 0 && selectedTickets.map((item) => (
-                                    <Flex justify="space-between" mb="10px">
+                                    <Flex justify="space-between" fontSize="lg" fontWeight="bold">
+                                        <Text>Total</Text>
                                         <Text>
-                                            {item?.quantity} x {item?.ticketType}
-                                        </Text>
-                                        <Text fontWeight="semibold">
-                                            {formatNumber((getTicketPrice(item.ticketType) as number) * item.quantity)}
+                                            NGN {calculateTotal()}
                                         </Text>
                                     </Flex>
-                                ))}
+                                </VStack>
 
-                                {/* <Divider /> */}
-
-                                <Flex justify="space-between" fontSize="lg" fontWeight="bold">
-                                    <Text>Total</Text>
-                                    <Text>
-                                        NGN {calculateTotal()}
-                                    </Text>
-                                </Flex>
-                            </VStack>
-
-                            <Button
-                                bgColor="primaryColor"
-                                size="lg"
-                                w="100%"
-                                h="60px"
-                                borderRadius="full"
-                                onClick={() => handleNext()}
-                                disabled={selectedTickets === null}
-                                _disabled={{
-                                    bg: "gray.300",
-                                    color: "gray.500",
-                                    cursor: "not-allowed"
-                                }}
-                                display={['block', 'block', 'none', 'none']}
-                                mt="20px"
-                            >
-                                Get Ticket
-                            </Button>
-                        </Box>
-                    )}
-
-                </Box>
+                                {/* <Button
+                                    bgColor="primaryColor"
+                                    size="lg"
+                                    w="100%"
+                                    h="60px"
+                                    borderRadius="full"
+                                    onClick={() => handleNext()}
+                                    disabled={selectedTickets === null}
+                                    _disabled={{
+                                        bg: "gray.300",
+                                        color: "gray.500",
+                                        cursor: "not-allowed"
+                                    }}
+                                    display={['block', 'block', 'none', 'none']}
+                                    mt="20px"
+                                >
+                                    Get Ticket
+                                </Button> */}
+                            </Box>
+                        )}
+                    </Flex>
+                    <Flex w={"full"} justifyContent={"end"} pt={"4"} px={"4"} borderTopWidth={"1px"} mt={"auto"} >
+                        <CustomButton height={"35px"} onClick={handleNext} fontSize={"14px"} width={"fit-content"} text={"Get Ticket"} px={"6"} borderRadius={"999px"} />
+                    </Flex>
+                </Flex>
             </Flex>
-        </Box>
+            <Flex w={"full"} h={"70vh"} display={["none", "none", "flex"]} justifyContent={"center"} alignItems={"center"} >
+                <Flex p={"5"} h={"full"} borderWidth={"1px"} rounded={"2xl"} gap={"4"} w={"full"} maxW={"1032px"} >
+                    <Flex flexDir={"column"} alignItems={"center"} gap={"7"} px={"3"} w={"full"} >
+                        <Flex flexDirection={"column"} textAlign={"center"} w={"full"} pb={"2"} borderBottomWidth={"1px"} gap={"1"} >
+                            <Text fontWeight={"700"} fontSize={"25px"} >{event?.eventName}</Text>
+                            <Text fontSize={"14px"} >{dateFormat(event?.startDate)}</Text>
+                        </Flex>
+                        <Flex flexDir={"column"} h={"full"} w={"full"} overflowY={"auto"} pr={"4"} >
+                            <Flex flexDir={"column"} h={"auto"} gap={"3"} >
+                                {event?.productTypeData?.map((item, index) => {
+                                    if (new Date(Number(item?.startDate)) <= new Date() && item.ticketType === "Early Bird") {
+                                        return (
+                                            <Flex _hover={{ borderColor: primaryColor }} key={index} w={"full"} borderWidth={"1px"} justifyContent={"space-between"} alignItems={"center"} rounded={"8px"} px={"4"} height={"110px"} >
+                                                <Flex flexDir={"column"} gap={"2"} >
+                                                    <Text fontWeight={"semibold"} >{capitalizeFLetter(item.ticketType)} {formatNumberWithK(item?.ticketPrice, false)}</Text>
+                                                    {item.ticketType === "Early Bird" ? (
+                                                        <>
+                                                            {((Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) || (new Date(Number(item?.endDate)) < new Date())) ?
+                                                                <Badge colorPalette={"red"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge colorPalette={"red"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Sales ends on {dateFormat(item.endDate)} {timeFormat(item.endDate)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {(Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) ?
+                                                                <Badge colorPalette={"red"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge colorPalette={"blue"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Total Tickets avaliable - {Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    )}
+                                                </Flex>
+                                                <Flex gap={"3"} alignItems={"center"} >
+                                                    <IconButton
+                                                        disabled={!getTicket(item.ticketType)}
+                                                        onClick={() => decrement(item.ticketType)}
+                                                        bgColor={secondaryBackgroundColor}
+                                                        color={headerTextColor} rounded={"full"} size="sm">
+                                                        {/* <LuMinus /> */}
+                                                        <Text fontWeight={"500"} fontSize={"25px"} >-</Text>
+                                                    </IconButton>
+                                                    {getTicket(item.ticketType)?.quantity ? getTicket(item?.ticketType)?.quantity : 0}
+                                                    <IconButton
+                                                        disabled={(new Date(Number(item?.endDate)) < new Date())}
+                                                        onClick={() => increment(item.ticketType)}
+                                                        bgColor={secondaryBackgroundColor} color={headerTextColor} rounded={"full"} size="sm">
+                                                        <Text fontWeight={"500"} fontSize={"25px"} >+</Text>
+                                                    </IconButton>
+                                                </Flex>
+                                            </Flex>
+                                        )
+                                    } else if (item.ticketType !== "Early Bird") {
+                                        return (
+                                            <Flex _hover={{ borderColor: primaryColor }} key={index} w={"full"} borderWidth={"1px"} justifyContent={"space-between"} alignItems={"center"} rounded={"8px"} px={"4"} height={"110px"} >
+                                                <Flex flexDir={"column"} gap={"2"} >
+                                                    <Text fontWeight={"semibold"} >{capitalizeFLetter(item.ticketType)} {formatNumberWithK(item?.ticketPrice, false)}</Text>
+                                                    {item.ticketType === "Early Bird" ? (
+                                                        <>
+                                                            {((Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) || (new Date(Number(item?.endDate)) < new Date())) ?
+                                                                <Badge colorPalette={"red"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge colorPalette={"red"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Sales ends on {dateFormat(item.endDate)} {timeFormat(item.endDate)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {(Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) === 0) ?
+                                                                <Badge colorPalette={"red"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Tickets sold out
+                                                                </Badge>
+                                                                :
+                                                                <Badge colorPalette={"blue"} fontSize={"sm"} px={"3"} rounded={"full"} >
+                                                                    Total Tickets avaliable - {Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold)}
+                                                                </Badge>
+                                                            }
+                                                        </>
+                                                    )}
+                                                </Flex>
+                                                <Flex gap={"3"} alignItems={"center"} >
+                                                    <IconButton
+                                                        disabled={!getTicket(item.ticketType)}
+                                                        onClick={() => decrement(item.ticketType)}
+                                                        bgColor={secondaryBackgroundColor}
+                                                        color={headerTextColor} rounded={"full"} size="sm">
+                                                        {/* <LuMinus /> */}
+                                                        <Text fontWeight={"500"} fontSize={"25px"} >-</Text>
+                                                    </IconButton>
+                                                    {getTicket(item.ticketType)?.quantity ? getTicket(item?.ticketType)?.quantity : 0}
+                                                    <IconButton
+                                                        disabled={(new Date(Number(item?.endDate)) < new Date())}
+                                                        onClick={() => increment(item.ticketType)}
+                                                        bgColor={secondaryBackgroundColor} color={headerTextColor} rounded={"full"} size="sm">
+                                                        <Text fontWeight={"500"} fontSize={"25px"} >+</Text>
+                                                    </IconButton>
+                                                </Flex>
+                                            </Flex>
+                                        )
+                                    }
+                                })}
+                            </Flex>
+                        </Flex>
+                        <Text fontWeight={"medium"} mr={"auto"} >Powered by <span style={{ color: primaryColor, fontStyle: "italic" }} >Chasescroll.com</span></Text>
+                        <Flex w={"full"} justifyContent={"end"} pt={"4"} borderTopWidth={"1px"} mt={"auto"} >
+                            <CustomButton height={"35px"} onClick={handleNext} fontSize={"14px"} width={"fit-content"} text={"Get Ticket"} px={"6"} borderRadius={"999px"} />
+                        </Flex>
+                    </Flex>
+                    <Flex bgColor={secondaryBackgroundColor} rounded={"8px"} w={"fit-content"} flexDir={"column"} gap={"4"} >
+                        <Flex w={"350px"} >
+                            <ProductImageScroller objectFit={"cover"} images={event?.picUrls} height={"200px"} />
+                        </Flex>
+
+                        {selectedTickets?.length < 1 && (
+                            <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
+                                <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                            </VStack>
+                        )}
+
+                        {selectedTickets === null && (
+                            <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
+                                <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                            </VStack>
+                        )}
+
+                        {/* Order Summary */}
+                        {selectedTickets?.length > 0 && (
+                            <Box p="20px">
+                                {/* <Divider mb={4} /> */}
+                                <Text fontSize="lg" fontWeight="bold" mb={4}>
+                                    Order summary
+                                </Text>
+
+                                <VStack spaceY={3} align="stretch">
+                                    {selectedTickets !== null && selectedTickets.length > 0 && selectedTickets.map((item) => (
+                                        <Flex justify="space-between" mb="10px">
+                                            <Text>
+                                                {item?.quantity} x {item?.ticketType}
+                                            </Text>
+                                            <Text fontWeight="semibold">
+                                                {formatNumber((getTicketPrice(item.ticketType) as number) * item.quantity)}
+                                            </Text>
+                                        </Flex>
+                                    ))}
+
+                                    {/* <Divider /> */}
+
+                                    <Flex justify="space-between" fontSize="lg" fontWeight="bold">
+                                        <Text>Total</Text>
+                                        <Text>
+                                            NGN {calculateTotal()}
+                                        </Text>
+                                    </Flex>
+                                </VStack>
+
+                                {/* <Button
+                                    bgColor="primaryColor"
+                                    size="lg"
+                                    w="100%"
+                                    h="60px"
+                                    borderRadius="full"
+                                    onClick={() => handleNext()}
+                                    disabled={selectedTickets === null}
+                                    _disabled={{
+                                        bg: "gray.300",
+                                        color: "gray.500",
+                                        cursor: "not-allowed"
+                                    }}
+                                    display={['block', 'block', 'none', 'none']}
+                                    mt="20px"
+                                >
+                                    Get Ticket
+                                </Button> */}
+                            </Box>
+                        )}
+                    </Flex>
+                </Flex>
+            </Flex></>
     );
 };
 
