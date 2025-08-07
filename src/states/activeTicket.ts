@@ -4,7 +4,7 @@ import { ITicketCreatedModel } from '@/models/TicketCreatedModel';
 import { atom } from 'jotai';
 
 export const activeTicketAtom = atom<IProductTypeData | null>(null);
-export const activeEventAtom = atom<IEventType | null>(null);
+export const activeEventAtom = atom<IEventType>({} as IEventType);
 export const ticketurchaseStepAtom = atom(1);
 export const ticketCountAtom = atom(1);
 export const currentUrlAtom = atom<string | null>(null);
