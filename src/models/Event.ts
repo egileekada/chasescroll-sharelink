@@ -7,7 +7,7 @@ export interface IEventType {
     createdBy: IUser;
     lastModifiedDate?: number;
     isDeleted: boolean;
-    picUrls: string[],
+    picUrls: Array<any>,
     eventMemberRole: string;
     eventName: string;
     joinSetting: string;
