@@ -1,0 +1,48 @@
+
+import useCustomTheme from "@/hooks/useTheme"; 
+import { IEventType } from "@/models/Event";
+import { textLimit } from "@/utils/textlimiter";
+import { Flex, Text } from "@chakra-ui/react";
+import { LinkIcon } from "lucide-react";
+import { LocationStroke } from "../svg";
+
+export default function EventLocation(
+    {
+        data,
+        limit = 0,
+        showLink,
+        fontSize
+    } :{ data: IEventType, limit?: number, showLink: boolean, fontSize?: string}
+) {
+
+    const {
+        location = {
+            toBeAnnounced: false,
+            locationDetails: "",
+            link: "string",
+            links: [],
+            address: "string",
+            latlng: "string",
+            placeIds: "string",
+        }
+    } = data
+
+    const { secondaryBackgroundColor } = useCustomTheme()
+
+    return (
+        <Flex w={"full"} gap={"2"} flexDir={"column"} >
+            <Flex maxW={showLink ? "400px" : "full"} rounded={"32px"} py={"2"} px={showLink? "3" : "0px"} bgColor={showLink ? secondaryBackgroundColor : "transparent"} w={"full"} gap={showLink ? "2" : "1"}>
+                <Flex w={"fit-content"} >
+                <LocationStroke />
+                </Flex>
+                <Text fontSize={fontSize ?? "14px"} fontWeight={"500"} whiteSpace={"none"} lineBreak={"anywhere"} >{location?.toBeAnnounced ? "To Be Announced" : textLimit(location?.locationDetails+"", limit)}</Text>
+            </Flex>
+            {(location?.link && showLink)&& (
+                <Flex maxW={["400px"]} rounded={"32px"} py={"2"} px={"3"} bgColor={secondaryBackgroundColor} w={"full"} gap={"2"} alignItems={"center"} >
+                    <LinkIcon />
+                    <Text fontSize={"14px"} fontWeight={"500"} ><a target="_blank" href={location?.link} >Click Me</a></Text>
+                </Flex>
+            )}
+        </Flex>
+    )
+}

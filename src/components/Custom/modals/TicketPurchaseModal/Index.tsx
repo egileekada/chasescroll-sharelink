@@ -61,19 +61,19 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
         <Dialog.Root lazyMount open={isOpen} onOpenChange={() => {
             setCurrentStep(1);
             setQuantity(1);
-            setSelectedTickets(null);
+            setSelectedTickets([]);
             localStorage.clear();
             // sessionStorage.clear();
             // signOut()
             localStorage.removeItem(STORAGE_KEYS.SELECTED_TICKETS);
             onClose();
-        }} size={currentStep === 3 ? 'sm' : 'xl'} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false} >
+        }} size={currentStep === 3 ? 'sm' : ["full", 'xl', 'xl']} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false} >
             <Portal>
                 <Dialog.Backdrop />
-                <Dialog.Positioner>
-                    <Dialog.Content borderRadius={'16px'} bgColor="white" p="0">
+                <Dialog.Positioner  >
+                    <Dialog.Content borderRadius={'16px'} minH={["full", "full", "608px"]} bgColor="white" p="0">
                         <Dialog.Body p="0px" minH={"608px"}>
-                            <Box w="full" h="full">
+                            <Box w="full" h="fit">
                                 {currentStep === 1 && (
                                     <TicketSelection eventTitle={event?.eventName} eventDate={event?.startDate} eventImage={`${RESOURCE_URL}/${event?.currentPicUrl}`} />
                                 )}

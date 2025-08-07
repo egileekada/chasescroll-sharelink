@@ -141,13 +141,199 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     }
 
     return (
-        <Box w="full" bg="white" borderRadius="xl" overflow="hidden" p="20px" h="608px">
+        <Box w="full" bg="white" borderRadius="xl" overflow={["auto", "auto", "hidden"]} p="20px" maxH={["100vh", "100vh", "608px"]} h={["full", "full", "608px"]}>
+            <Flex flexDir={'column'} display={["flex", "flex", "none", "none"]} >
+                <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb={["0px", "0px", "20px", "20px"]} pb="10px" pt="20px">
+                    <CustomText type='HEADER' fontSize={'26px'} text={event?.eventName as string} width={'auto'} color={'black'} />
+                    <CustomText type='REGULAR' fontSize={'16px'} text={new Date(event?.endDate).toDateString()} width={'auto'} color={'black'} />
+                </VStack>
+                <VStack spaceY={[4, 4, 6, 6]} w="full" p={[0, 0, 0, 0]} flex={[0.8, 0.8, 1, 1]}>
+                    <HStack alignItems={'center'} justifyContent="center" w="100%" h="100px" overflow={'hidden'} display={['flex', 'flex', 'none', 'none']}>
+                        <Image
+                            src={eventImage}
+                            alt={eventTitle}
+                            w="100px"
+                            h="100px"
+                            objectFit="cover"
+                            borderRadius={'20px'}
+                        />
+                    </HStack>
+                    {/* Ticket Types */}
+                    <VStack spaceY={4} px={['10px', '10px', '0px', '0px']} w="full" h="auto">
+                        {event?.productTypeData?.map((ticket) => {
+                            return (
+                                <Box
+                                    key={ticket.ticketType}
+                                    w="full"
+                                    h="100px"
+                                    border="1px solid"
+                                    borderRadius="lg"
+                                    p={4}
+                                    bg={getTicket(ticket?.ticketType) ? "blue.50" : "white"}
+                                    borderWidth={getTicket(ticket?.ticketType)?.ticketType ? "2px" : "1px"}
+                                    borderStyle={getTicket(ticket?.ticketType) ? "solid" : "solid"}
+                                    borderColor={getTicket(ticket?.ticketType) ? "blue.400" : "gray.200"}
+                                >
+                                    <Flex justify="space-between" align="center" justifyContent={'center'} h="full">
+                                        <Box flex="1">
+                                            <HStack spaceX={3} mb={2}>
+                                                <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType) ? 'black' : 'grey'}>
+                                                    {ticket.ticketType}
+                                                </Text>
 
-            <Flex w="full" flexDirection={['column', 'column', 'row', 'row']} spaceX={['0px', '0px', '20px', '20px']} h="full">
+                                            </HStack>
+                                            {((Number(ticket?.totalNumberOfTickets) - Number(ticket?.ticketsSold) === 0) || (new Date(Number(ticket?.endDate)) < new Date())) ? (
+                                                <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                    Tickets sold out
+                                                </Badge>
+                                            ) : ticket.ticketType === 'Early Bird' ? (
+                                                <Badge colorPalette="red" fontSize="sm" mt={1} >
+                                                    Sales end on {new Date(ticket.endDate as number).toDateString()}
+                                                </Badge>
+                                            ) : (
+                                                <Badge colorPalette="blue" fontSize="sm" mt={1} >
+                                                    Total Tickets available - {totalTickets}
+                                                </Badge>
+                                            )
+                                            }
+                                        </Box>
+
+                                        <HStack spaceX={1}>
+                                            <IconButton
+                                                aria-label="Decrease quantity"
+                                                size="sm"
+                                                variant="outline"
+                                                borderRadius="full"
+                                                disabled={!getTicket(ticket.ticketType)}
+                                                onClick={() => decrement(ticket.ticketType)}
+                                            >
+                                                <Minus size="16" />
+                                            </IconButton>
+
+                                            <Text fontSize="lg" fontWeight="semibold" color={getTicket(ticket?.ticketType)?.quantity ? 'black' : 'grey'} >
+                                                {getTicket(ticket.ticketType)?.quantity ? getTicket(ticket?.ticketType)?.quantity : 0}
+                                            </Text>
+
+                                            <IconButton
+                                                aria-label="Increase quantity"
+                                                size="sm"
+                                                variant="outline"
+                                                borderRadius="full"
+                                                disabled={(new Date(Number(ticket?.endDate)) < new Date())}
+                                                onClick={() => increment(ticket.ticketType)}
+                                            >
+                                                <Add size="16px" />
+                                            </IconButton>
+                                        </HStack>
+                                    </Flex>
+                                </Box>
+                            );
+                        })}
+
+                        <HStack fontFamily={'Raleway-Regular'} w="full">
+                            <Text color="grey" fontSize={'14px'}>Powered by</Text>
+                            <Text color="primaryColor" fontSize={'16px'} fontStyle={'italic'} fontWeight={600}>Chasescroll</Text>
+                        </HStack>
 
 
+                    </VStack>
+
+
+
+
+                </VStack>
+
+                <HStack w="full" h="70px" borderTopWidth={'2px'} borderTopColor={'lightgrey'} justifyContent={'flex-end'} mt="20px">
+                    <Button
+                        bgColor="primaryColor"
+                        size="lg"
+                        w="35%"
+                        h="45px"
+                        borderRadius="full"
+                        onClick={() => handleNext()}
+                        disabled={selectedTickets === null || selectedTickets?.length < 1}
+                        mt="10px"
+                        display={['none', 'none', 'block', 'block']}
+                    >
+                        Get Ticket
+                    </Button>
+                </HStack>
+                <Box w="100%" h="270px" overflow={'hidden'} display={['none', 'none', 'block', 'block']}>
+                    <Image
+                        src={eventImage}
+                        alt={eventTitle}
+                        w="100%"
+                        h="270px"
+                        objectFit="contain"
+                    />
+                </Box>
+
+                {selectedTickets?.length < 1 && (
+                    <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
+                        <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                    </VStack>
+                )}
+
+                {selectedTickets === null && (
+                    <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
+                        <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
+                    </VStack>
+                )}
+
+                {/* Order Summary */}
+                {selectedTickets?.length > 0 && (
+                    <Box p="20px">
+                        {/* <Divider mb={4} /> */}
+                        <Text fontSize="lg" fontWeight="bold" mb={4}>
+                            Order summary
+                        </Text>
+
+                        <VStack spaceY={3} align="stretch">
+                            {selectedTickets !== null && selectedTickets.length > 0 && selectedTickets.map((item) => (
+                                <Flex justify="space-between" mb="10px">
+                                    <Text>
+                                        {item?.quantity} x {item?.ticketType}
+                                    </Text>
+                                    <Text fontWeight="semibold">
+                                        {formatNumber((getTicketPrice(item.ticketType) as number) * item.quantity)}
+                                    </Text>
+                                </Flex>
+                            ))}
+
+                            {/* <Divider /> */}
+
+                            <Flex justify="space-between" fontSize="lg" fontWeight="bold">
+                                <Text>Total</Text>
+                                <Text>
+                                    NGN {calculateTotal()}
+                                </Text>
+                            </Flex>
+                        </VStack>
+
+                        <Button
+                            bgColor="primaryColor"
+                            size="lg"
+                            w="100%"
+                            h="60px"
+                            borderRadius="full"
+                            onClick={() => handleNext()}
+                            disabled={selectedTickets === null}
+                            _disabled={{
+                                bg: "gray.300",
+                                color: "gray.500",
+                                cursor: "not-allowed"
+                            }}
+                            display={['block', 'block', 'none', 'none']}
+                            mt="20px"
+                        >
+                            Get Ticket
+                        </Button>
+                    </Box>
+                )}
+            </Flex>
+            <Flex w="full" display={["none", "none", "flex", "flex"]} flexDirection={['column', 'column', 'row', 'row']} spaceX={['0px', '0px', '20px', '20px']} h={["full"]}>
                 {/* Right Side - Ticket Selection */}
-                <Flex flexDir={'column'} flex="0.55" overflowY={'auto'}>
+                <Flex flexDir={'column'} flex="0.55" overflowY={['auto']}>
                     <VStack w="full" borderBottomWidth={'1px'} borderBottomColor={'lightgrey'} mb={["0px", "0px", "20px", "20px"]} pb="10px" pt="20px">
                         <CustomText type='HEADER' fontSize={'26px'} text={event?.eventName as string} width={'auto'} color={'black'} />
                         <CustomText type='REGULAR' fontSize={'16px'} text={new Date(event?.endDate).toDateString()} width={'auto'} color={'black'} />
@@ -188,7 +374,11 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                                     </Text>
 
                                                 </HStack>
-                                                {ticket.ticketType === 'Early Bird' ? (
+                                                {((Number(ticket?.totalNumberOfTickets) - Number(ticket?.ticketsSold) === 0) || (new Date(Number(ticket?.endDate)) < new Date())) ? (
+                                                    <Badge maxW={"100%"} w={"fit-content"} colorPalette={"red"} fontSize={"xs"} px={"3"} rounded={"full"} >
+                                                        Tickets sold out
+                                                    </Badge>
+                                                ) : ticket.ticketType === 'Early Bird' ? (
                                                     <Badge colorPalette="red" fontSize="sm" mt={1} >
                                                         Sales end on {new Date(ticket.endDate as number).toDateString()}
                                                     </Badge>
@@ -223,6 +413,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                                     size="sm"
                                                     variant="outline"
                                                     borderRadius="full"
+                                                    disabled={(new Date(Number(ticket?.endDate)) < new Date())}
                                                     onClick={() => increment(ticket.ticketType)}
                                                 >
                                                     <Add size="16px" />
@@ -264,7 +455,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                 </Flex>
 
                 {/* Left Side - Event Image */}
-                <Box flex="0.45" position="relative" bgColor="whitesmoke" borderRadius={'10px'} overflow={'hidden'} display={'flex'} flexDir={'column'}>
+                <Box flex="0.45" position="relative" bgColor="whitesmoke" borderRadius={'10px'} overflow={'hidden'} flexDir={'column'}>
                     <Box w="100%" h="270px" overflow={'hidden'} display={['none', 'none', 'block', 'block']}>
                         <Image
                             src={eventImage}
@@ -275,19 +466,14 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                         />
                     </Box>
 
-                    {/* <VStack alignItems={'center'} borderBottomWidth={'2px'} borderBottomColor={'lightgrey'} pb="10px" h="70px" justifyContent={'center'}>
-                        <Text fontFamily={'Raleway-Bold'} fontSize={'18px'}>{totalTickets}</Text>
-                        <Text fontSize={'14px'}>Tickets available for this event</Text>
-                    </VStack> */}
-
                     {selectedTickets?.length < 1 && (
-                        <VStack flex={1} justifyContent={'center'} alignItems={'center'}>
+                        <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
                             <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
                         </VStack>
                     )}
 
                     {selectedTickets === null && (
-                        <VStack flex={1} justifyContent={'center'} alignItems={'center'}>
+                        <VStack flex={1} py={"6"} justifyContent={'center'} alignItems={'center'}>
                             <ShoppingCart size="60px" variant='Outline' color="lightgrey" />
                         </VStack>
                     )}

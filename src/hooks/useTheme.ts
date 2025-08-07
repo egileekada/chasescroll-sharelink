@@ -1,4 +1,4 @@
-import {useColorModeValue} from "@chakra-ui/react";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 export default function useCustomTheme() {
     const mainBackgroundColor = useColorModeValue( 'white', '#18191A');
