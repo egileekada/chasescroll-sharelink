@@ -70,6 +70,20 @@ function FundRaiserAccountSetup() {
 
     const { data: session, status } = useSession();
 
+    React.useEffect(() => {
+        if (userDetails) {
+            // setShowLink(true);
+            // create custom order
+            createCustomOrder.mutate({
+                seller: activeFundRaider?.createdBy?.userId || '',
+                price: amount,
+                currency: 'NGN',
+                orderType: 'DONATION',
+                typeID: activeFundRaider?.id || ''
+            });
+        }
+    }, [userDetails])
+
 
     const { renderForm, values, setFieldValue, setValues } = useForm({
         defaultValues: {
@@ -95,7 +109,7 @@ function FundRaiserAccountSetup() {
                     currency: 'NGN',
                     orderType: 'DONATION',
                     typeID: activeFundRaider?.id || ''
-                })
+                });
                 return;
             } else if (googleAuthUsed) {
                 // login with google
@@ -306,9 +320,22 @@ function FundRaiserAccountSetup() {
                                 <Box w="full">
                                     <Text>Donation Amount</Text>
                                     <Input
-                                        type="number"
+                                        type="text"
                                         value={amount}
-                                        onChange={(e) => setAmount(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            // Only allow positive numbers
+                                            if (/^\d*$/.test(value)) {
+                                                setAmount(Number(value))
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            // Prevent non-numeric keys except backspace, delete, arrows
+                                            if (!/^\d$/.test(e.key) &&
+                                                !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         width='full'
                                         height={'60px'}
                                         color="black"
@@ -324,15 +351,15 @@ function FundRaiserAccountSetup() {
                                 <Flex flexDir={['column', 'column', 'row', 'row']} spaceX={[0, 0, 4, 4]} spaceY={[3, 3, 0, 0]} w="full">
 
                                     <Box w="full">
-                                        <CustomInput name="firstName" label='First Name' isPassword={false} />
+                                        <CustomInput name="firstName" label='First Name' isPassword={false} type='text' />
                                     </Box>
 
                                     <Box w="full">
-                                        <CustomInput name="lastName" label='Last Name' isPassword={false} />
+                                        <CustomInput name="lastName" label='Last Name' isPassword={false} type='text' />
                                     </Box>
                                 </Flex>
                                 <Box w="full">
-                                    <CustomInput name="email" label='Email' isPassword={false} />
+                                    <CustomInput name="email" label='Email' isPassword={false} type='email' />
                                     {showLink && (
                                         <HStack mt="10px">
                                             <Text color="red">You already have an account on chasecroll, for security reasons</Text>

@@ -1,5 +1,5 @@
 import { activeEventAtom, activeTicketAtom, canPayAtom, createdTicketAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
-import { Dialog, Portal, CloseButton } from '@chakra-ui/react';
+import { Dialog, Portal, CloseButton, Box, Text } from '@chakra-ui/react';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import React from 'react'
 import LoginModal from '../TicketPurchaseModal/LoginModal';
@@ -8,6 +8,8 @@ import TicketPurchaseSuccessModal from '../TicketPurchaseModal/TicketPurchaseSuc
 import { STORAGE_KEYS } from '@/utils/StorageKeys';
 import FundRaiserAccountSetup from './FundRaiserAccountSetup';
 import { activeFundRaiserAtom, donationAmountAtom } from '@/states/activeFundraiser';
+import { Check, TickCircle } from 'iconsax-reactjs';
+import { formatNumber } from '@/utils/formatNumber';
 
 const titles = [
     'Select Tickets',
@@ -77,19 +79,65 @@ function FundRaiserModal({ isOpen, onClose }: IProps) {
                                     }} />
                             )}
                             {currentStep === 3 && (
-                                <TicketPurchaseSuccessModal
-                                    email={createdTicket?.content?.buyer?.email}
-                                    orderNumber={createdTicket?.content?.orderCode}
-                                    onClose={() => {
-                                        localStorage.clear();
-                                        setCurrentStep(1);
-                                        setQuantity(1);
-                                        setEvent(null)
-                                        setActiveTicket(null);
-                                        onClose();
-                                    }}
-                                    type='FUNDRAISER'
-                                />
+                                <Box
+                                    w="full"
+                                    p={8}
+                                    display="flex"
+                                    flexDirection="column"
+                                    alignItems="center"
+                                    gap={6}
+                                    bgColor="white"
+                                    borderRadius={'20px'}
+                                >
+                                    <Box
+                                        w={20}
+                                        h={20}
+                                        borderRadius="full"
+                                        bg="green.100"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                    >
+                                        <TickCircle color="green" variant='Outline' size={'25px'} />
+                                    </Box>
+
+                                    <Text
+                                        fontSize="2xl"
+                                        fontWeight="bold"
+                                        color="gray.800"
+                                        textAlign="center"
+                                    >
+                                        Donation Successful!
+                                    </Text>
+
+                                    <Text
+                                        color="gray.600"
+                                        textAlign="center"
+                                    >
+                                        Thank you for your generous contribution. Your donation will make a difference!
+                                    </Text>
+
+                                    <Box
+                                        mt={4}
+                                        p={4}
+                                        bg="gray.50"
+                                        borderRadius="md"
+                                        w="full"
+                                        textAlign="center"
+                                    >
+                                        <Text color="gray.600" fontSize="sm">
+                                            Amount Donated
+                                        </Text>
+                                        <Text
+                                            fontSize="xl"
+                                            fontWeight="bold"
+                                            color="gray.800"
+                                            mt="10px"
+                                        >
+                                            {formatNumber(amount)}
+                                        </Text>
+                                    </Box>
+                                </Box>
                             )}
                         </Dialog.Body>
                         <Dialog.CloseTrigger asChild>
