@@ -1,5 +1,5 @@
 import { activeEventAtom, activeTicketAtom, createdTicketAtom, selectedTicketsAtom, ticketCountAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
-import { Dialog, HStack, Portal, CloseButton, Box } from '@chakra-ui/react';
+import { Dialog, HStack, Portal, CloseButton, Box, Flex } from '@chakra-ui/react';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import React from 'react'
 import { RESOURCE_URL } from '@/constants';
@@ -70,10 +70,10 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
         }} size={currentStep === 3 ? 'sm' : ["full", 'xl', 'xl']} placement={'center'} closeOnEscape={false} closeOnInteractOutside={false} modal={false} >
             <Portal>
                 <Dialog.Backdrop />
-                <Dialog.Positioner  >
-                    <Dialog.Content borderRadius={'16px'} minH={["full", "full", "608px"]} bgColor="white" p="0">
-                        <Dialog.Body p="0px" minH={"608px"}>
-                            <Box w="full" h="fit">
+                <Dialog.Positioner  p={"2"}  >
+                    <Dialog.Content borderRadius={'16px'} minH={["fit-content", "fit-content", "fit-content"]} bgColor="white" p="0">
+                        <Dialog.Body p="0px" >
+                            <Flex w="full" h={"auto"}>
                                 {currentStep === 1 && (
                                     <TicketSelection eventTitle={event?.eventName} eventDate={event?.startDate} eventImage={`${RESOURCE_URL}/${event?.currentPicUrl}`} />
                                 )}
@@ -95,13 +95,13 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                                             localStorage.clear();
                                             setCurrentStep(1);
                                             setQuantity(1);
-                                            setEvent(null)
+                                            setEvent({} as any)
                                             setActiveTicket(null);
                                             onClose();
                                         }}
                                     />
                                 )}
-                            </Box>
+                            </Flex>
                         </Dialog.Body>
                         <Dialog.CloseTrigger asChild>
                             <CloseButton bg="gray.100" color={'gray.700'} size="sm" />
