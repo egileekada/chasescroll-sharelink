@@ -250,7 +250,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                                         </>
                                                     )}
                                                 </Flex>
-                                                <Flex gap={"3"} alignItems={"center"} >
+                                                <Flex gap={"3"} alignItems={"center"} mx={"auto"} >
                                                     <IconButton
                                                         disabled={!getTicket(item.ticketType)}
                                                         onClick={() => decrement(item.ticketType)}
@@ -510,25 +510,6 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                                         </Text>
                                     </Flex>
                                 </VStack>
-
-                                {/* <Button
-                                    bgColor="primaryColor"
-                                    size="lg"
-                                    w="100%"
-                                    h="60px"
-                                    borderRadius="full"
-                                    onClick={() => handleNext()}
-                                    disabled={selectedTickets === null}
-                                    _disabled={{
-                                        bg: "gray.300",
-                                        color: "gray.500",
-                                        cursor: "not-allowed"
-                                    }}
-                                    display={['block', 'block', 'none', 'none']}
-                                    mt="20px"
-                                >
-                                    Get Ticket
-                                </Button> */}
                             </Box>
                         )}
                     </Flex>
