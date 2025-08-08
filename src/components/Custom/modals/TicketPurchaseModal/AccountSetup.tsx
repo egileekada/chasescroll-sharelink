@@ -304,7 +304,7 @@ function AccountSetup() {
     });
 
     return renderForm(
-        <Box w="full" bg="white" borderRadius="xl" overflow="hidden">
+        <Box w="full" bg="white" maxH={["100vh", "100vh", "70vh"]} borderRadius="xl" overflow="hidden">
             <Flex w="full" flexDir={['column', 'column', 'row', 'row']}>
                 {/* Left Side - Checkout Form */}
                 <Box flex="0.6">
