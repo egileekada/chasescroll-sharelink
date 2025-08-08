@@ -134,7 +134,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
 
                             <HStack display={['none', 'none', 'flex', 'flex']} w="auto" h={['50px', '50px', '40px', '45px']} borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
                                 <Location size={25} variant='Outline' color="blue" />
-                                <Text>{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
+                                <Text  fontSize={"14px"} >{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
                             </HStack>
 
                             {!event?.location?.toBeAnnounced && (
@@ -196,7 +196,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                             <EventDate {...event} />
                             <HStack display={['flex', 'flex', 'none', 'none']} w="auto" h={['50px', '50px', '40px', '45px']} borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
                                 <Location size={25} variant='Outline' color="blue" />
-                                <Text>{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
+                                <Text fontSize={"14px"} >{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
                             </HStack>
                             {!event?.location?.toBeAnnounced && (
                                 <Box w="full" display={['block', 'block', 'none', 'none']}>
