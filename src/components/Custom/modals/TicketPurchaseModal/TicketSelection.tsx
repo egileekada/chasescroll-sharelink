@@ -149,7 +149,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
             });
             return;
         }
-        setStep((prev) => prev + 1);
+        setStep((prev) => prev + 1)
     }
 
     return ( 
@@ -343,6 +343,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                     <Flex w={"full"} justifyContent={"end"} pt={"4"} px={"4"} borderTopWidth={"1px"} mt={"auto"} >
                         <CustomButton height={"35px"} onClick={handleNext} fontSize={"14px"} width={"fit-content"} text={"Get Ticket"} px={"6"} borderRadius={"999px"} />
                     </Flex>
+                    <Flex w={"full"} h={"300px"} />
                 </Flex>
             </Flex>
             <Flex w={"full"} h={"70vh"} display={["none", "none", "flex"]} justifyContent={"center"} alignItems={"center"} >
