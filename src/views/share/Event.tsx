@@ -216,8 +216,9 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                                                 position="absolute"
                                                 top="30%"
                                                 left="-105%"
-
                                                 ml="20px"
+                                                onClick={() => router.push('/share/fundraiser?id=' + pinnedFundraiser[0]?.fundRaiser?.id)}
+
                                             >
                                                 Donate now
                                             </Button>
@@ -340,7 +341,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                             </VStack>
 
                             {!productLoading && !productError && pinnedProducts?.length > 0 && (
-                                <>
+                                <Box cursor={'pointer'} onClick={() => router.push('/share/product?id=' + pinnedProducts[0]?.returnProductDto?.id)}>
                                     <Text mt="20px" fontWeight={500}>Shop the {event?.eventName} kiosk</Text>
                                     <VStack w="200px" h="200px" mt="10px" alignItems={'flex-start'}>
                                         <Box w="full" h="60%" bg="gray.100">
@@ -349,7 +350,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                                         <Text fontWeight={500}>{pinnedProducts[0]?.returnProductDto?.name}</Text>
                                         <Text>{formatNumber(pinnedProducts[0]?.returnProductDto?.price)}</Text>
                                     </VStack>
-                                </>
+                                </Box>
                             )}
                         </Flex>
                     </Flex>
