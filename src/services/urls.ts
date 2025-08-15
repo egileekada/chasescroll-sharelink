@@ -9,6 +9,8 @@ export const URLS = {
     address: '/addresses',
     order: '/orders',
     donation: '/donation',
+    pinned_fundraiser: '/pinned-fundraisers',
+    pinned_event: '/pin-item/search',
 
     LOGIN: '/auth/signin',
     SIGNUP: '/auth/signup',
