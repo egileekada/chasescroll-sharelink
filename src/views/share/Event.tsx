@@ -1,7 +1,7 @@
 'use client';
 import httpService from '@/services/httpService';
 import { URLS } from '@/services/urls';
-import { Box, Button, Container, Flex, Heading, HStack, Skeleton, VStack, Menu, Portal, Avatar } from '@chakra-ui/react';
+import { Box, Button, Container, Flex, Heading, HStack, Skeleton, VStack, Menu, Portal, Avatar, ProgressCircle, AbsoluteCenter } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import { Image, Text } from "@chakra-ui/react"
 import React from 'react'
@@ -24,6 +24,10 @@ import { STORAGE_KEYS } from '@/utils/StorageKeys';
 import EventDate from '@/components/Custom/eventDate';
 import EventCreator from '@/components/Custom/eventCreator';
 import DescriptionCard from '@/components/Custom/description';
+import { IPinnedFundrasier } from '@/models/PinnedFundraiser';
+import { IPinnedProduct } from '@/models/PinnedProduct';
+import { formatNumber } from '@/utils/formatNumber';
+import CustomText from '@/components/Custom/CustomText';
 
 export const currentIdAtom = atom<string | null>(null);
 export const showTicketModalAtom = atom(false);
@@ -39,6 +43,8 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
     const setActiveTicket = useSetAtom(activeTicketAtom);
     const setActiveEvent = useSetAtom(activeEventAtom);
     const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
+    const [pinnedFundraiser, setPinnedFundraiser] = React.useState<IPinnedFundrasier[]>([]);
+    const [pinnedProducts, setPinnedProducts] = React.useState<IPinnedProduct[]>([]);
 
     // state 
     const setAffilateID = useSetAtom(affiliateIDAtom);
@@ -46,7 +52,6 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
     if (affiliateID) {
         setAffilateID(affiliateID);
     }
-
 
     const { isLoading, data, isError, error } = useQuery<AxiosResponse<PaginatedResponse<IEventType>>>({
         queryKey: ['get-external-events', id],
@@ -56,6 +61,35 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
             }
         })
     });
+
+    const { isLoading: fundRaiserLoading, data: fundRaiserData, isError: fundRaiserError } = useQuery({
+        queryKey: [`Get-pinned-fundraisers-${id}`],
+        queryFn: () => httpService.get(`${URLS.pinned_fundraiser}/get-pinned-event-fundraising/${id}`, {
+
+        })
+    });
+
+    const { isLoading: productLoading, data: productData, isError: productError } = useQuery({
+        queryKey: [`Get-pinned-product-${id}`],
+        queryFn: () => httpService.get(`${URLS.pinned_event}`, {
+            params: {
+                typeId: id
+            }
+        })
+    });
+
+    React.useEffect(() => {
+        if (!productLoading && !productError && productData?.data) {
+            setPinnedProducts(productData?.data);
+
+        }
+    }, [productLoading, productData, productError])
+
+    React.useEffect(() => {
+        if (!fundRaiserLoading && !fundRaiserError && fundRaiserData?.data) {
+            setPinnedFundraiser(fundRaiserData?.data);
+        }
+    }, [fundRaiserLoading, fundRaiserData, fundRaiserError])
 
     React.useEffect(() => {
         // INITIALIZE VALUES IF THEY EXIST
@@ -134,8 +168,65 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
 
                             <HStack display={['none', 'none', 'flex', 'flex']} w="auto" h={['50px', '50px', '40px', '45px']} borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
                                 <Location size={25} variant='Outline' color="blue" />
-                                <Text  fontSize={"14px"} >{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
+                                <Text fontSize={"14px"} >{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
                             </HStack>
+
+                            {!fundRaiserLoading && !fundRaiserError && pinnedFundraiser?.length > 0 && (
+                                <>
+                                    <Text mt="20px" mb="10px" fontWeight={600}>Fundraising available</Text>
+                                    <Flex w="full" h="150px" borderRadius={'16px'} borderWidth="1px" borderColor="gray.200" p="10px" >
+                                        <Box w="30%" h="full" bg="gray.100" borderRadius="16px" overflow="hidden">
+                                            <Image w="full" h="full" objectFit="cover" src={(RESOURCE_URL as string) + (pinnedFundraiser[0]?.fundRaiser?.bannerImage as string)} />
+                                        </Box>
+                                        <Box flex={1} h="full" p="10px">
+                                            <Box w="full" h="50%" divideX={'2px'} borderBottomWidth={'1px'} borderBottomColor='gray.200'>
+                                                <Text fontWeight={600}>{pinnedFundraiser[0]?.fundRaiser?.name}</Text>
+                                            </Box>
+                                            <HStack w="full" h="auto" justifyContent={'space-between'} mt='10px'>
+                                                <VStack>
+                                                    <CustomText type='MEDIUM' fontSize={'16px'} text="Target" textAlign={'center'} width={'auto'} color="black" />
+                                                    <CustomText type='REGULAR' fontSize={'14px'} color='black' text={String(formatNumber(pinnedFundraiser[0]?.fundRaiser?.goal || 0))} textAlign={'center'} width={'auto'} />
+                                                </VStack>
+
+                                                <VStack alignItems={'center'}>
+                                                    <CustomText type='MEDIUM' fontSize={'16px'} text="Raised" textAlign={'center'} width={'auto'} color="black" />
+                                                    <CustomText type='REGULAR' fontSize={'14px'} color='black' text={String(formatNumber(pinnedFundraiser[0]?.fundRaiser?.total) || 0)} textAlign={'center'} width={'auto'} />
+                                                </VStack>
+
+                                                <ProgressCircle.Root value={(pinnedFundraiser[0]?.fundRaiser?.total as number / ((pinnedFundraiser[0]?.fundRaiser?.goal as number || 0) || 1)) * 100} size={'lg'}>
+                                                    <ProgressCircle.Circle css={{ "--thickness": "4px" }}>
+                                                        <ProgressCircle.Track />
+                                                        <ProgressCircle.Range stroke={'primaryColor'} />
+                                                    </ProgressCircle.Circle>
+                                                    <AbsoluteCenter>
+                                                        <ProgressCircle.ValueText />
+                                                    </AbsoluteCenter>
+                                                </ProgressCircle.Root>
+                                            </HStack>
+
+                                        </Box>
+                                        <Box w="55px" h="full" position="relative" >
+                                            <Button
+                                                w="130px"
+                                                h="55px"
+                                                borderRadius={'full'}
+                                                color="white"
+                                                bg="primaryColor"
+                                                transform="rotate(-90deg)"
+                                                position="absolute"
+                                                top="30%"
+                                                left="-105%"
+                                                ml="20px"
+                                                onClick={() => router.push('/share/fundraiser?id=' + pinnedFundraiser[0]?.fundRaiser?.id)}
+
+                                            >
+                                                Donate now
+                                            </Button>
+                                        </Box>
+
+                                    </Flex>
+                                </>
+                            )}
 
                             {!event?.location?.toBeAnnounced && (
                                 <Box w="full" display={['none', 'none', 'block', 'block']}>
@@ -177,70 +268,90 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                             )}
                         </Box>
 
-                        <Flex flex={1} flexDir={"column"} h="full" gap={"3"} borderWidth={['0px', '0px', '1px', '1px']} borderColor="gray.200" p={['10px', '10px', '20px', '20px']} borderRadius={'16px'} w="full">
-                            <Heading fontSize={["14px", "14px", '24px']}>{event?.eventName}</Heading>
-                            <Flex w={"full"} display={["flex", "flex", "none"]} gap={"2"} >
-                                <Flex w={"full"} >
+                        <Flex flex={1} flexDir={"column"} h="full" w="full">
+                            <Flex flex={1} flexDir={"column"} h="full" gap={"3"} borderWidth={['0px', '0px', '1px', '1px']} borderColor="gray.200" p={['10px', '10px', '20px', '20px']} borderRadius={'16px'} w="full">
+                                <Heading fontSize={["14px", "14px", '24px']}>{event?.eventName}</Heading>
+                                <Flex w={"full"} display={["flex", "flex", "none"]} gap={"2"} >
+                                    <Flex w={"full"} >
+                                        <EventCreator {...event} />
+                                    </Flex>
+                                    <Flex flexDir={"column"} w={['100%', '100%', '50%', '50%']} alignItems={"center"} gap={"3"} borderRadius={'16px'} borderWidth={'1px'} borderColor={'gray.200'} p='3'>
+                                        <Text fontWeight={'700'} fontSize={["sm"]} >See available tickets</Text>
+                                        <Button onClick={handlePayment} w="full" h="45px" borderRadius={'full'} bgColor="chasescrollBlue" fontWeight={"semibold"} fontSize={"14px"} color="white">Select Ticket Here</Button>
+                                    </Flex>
+                                </Flex>
+
+                                <DescriptionCard limit={200} label='Event Details' description={event?.eventDescription} />
+                                <Flex display={["none", "none", "flex"]} >
                                     <EventCreator {...event} />
                                 </Flex>
-                                <Flex flexDir={"column"} w={['100%', '100%', '50%', '50%']} alignItems={"center"} gap={"3"} borderRadius={'16px'} borderWidth={'1px'} borderColor={'gray.200'} p='3'>
+                                <EventDate {...event} />
+                                <HStack display={['flex', 'flex', 'none', 'none']} w="auto" h={['50px', '50px', '40px', '45px']} borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
+                                    <Location size={25} variant='Outline' color="blue" />
+                                    <Text fontSize={"14px"} >{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
+                                </HStack>
+                                {!event?.location?.toBeAnnounced && (
+                                    <Box w="full" display={['block', 'block', 'none', 'none']}>
+                                        <Heading fontSize={'16px'} mt="20px">Location and surrounding</Heading>
+
+                                        <Button
+                                            variant={'solid'}
+                                            width="auto"
+                                            height="45px"
+                                            mt='20px'
+                                            borderRadius={'full'}
+                                            color="white"
+                                            bgColor="primaryColor"
+                                            onClick={() => {
+                                                if (event?.location?.latlng) {
+                                                    const [lat, lng] = event.location.latlng.split(' ');
+                                                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                                                }
+                                            }}
+                                            disabled={!event?.location?.latlng}
+                                        >
+                                            Direction
+                                        </Button>
+                                        <Box height={'20px'} />
+                                        {event?.location?.latlng ? (
+                                            <MapComponent
+                                                lat={parseFloat(event.location.latlng.split(' ')[0])}
+                                                lng={parseFloat(event.location.latlng.split(' ')[1])}
+                                                width="100%"
+                                                height="200px"
+                                                zoom={15}
+                                                borderRadius="16px"
+                                                markerTitle={event?.eventName || 'Event Location'}
+                                            />
+                                        ) : (
+                                            <Box w='full' h="200px" mt='20px' borderRadius={'16px'} bgColor="gray.100"></Box>
+                                        )}
+                                    </Box>
+                                )}
+
+                                <Flex flexDir={"column"} w={['100%', '100%', '50%', '50%']} display={["none", "none", "flex"]} alignItems={"center"} gap={"3"} borderRadius={'16px'} borderWidth={'1px'} borderColor={'gray.200'} p='3'>
                                     <Text fontWeight={'700'} fontSize={["sm"]} >See available tickets</Text>
-                                    <Button onClick={handlePayment} w="full" h="45px" borderRadius={'full'} bgColor="chasescrollBlue" fontWeight={"semibold"} fontSize={"14px"} color="white">Select Ticket Here</Button>
+                                    <Button onClick={handlePayment} w="full" h="45px" borderRadius={'full'} bgColor="chasescrollBlue" color="white">Select Ticket Here</Button>
                                 </Flex>
                             </Flex>
 
-                            <DescriptionCard limit={200} label='Event Details' description={event?.eventDescription} />
-                            <Flex display={["none", "none", "flex"]} >
-                                <EventCreator {...event} />
-                            </Flex>
-                            <EventDate {...event} />
-                            <HStack display={['flex', 'flex', 'none', 'none']} w="auto" h={['50px', '50px', '40px', '45px']} borderRadius={"full"} spaceX={3} justifyContent={'flex-start'} alignItems={'center'} px={2} bgColor={'gray.100'} mt="20px">
-                                <Location size={25} variant='Outline' color="blue" />
-                                <Text fontSize={"14px"} >{event?.location?.toBeAnnounced ? 'To be announced' : event?.location.locationDetails}</Text>
-                            </HStack>
-                            {!event?.location?.toBeAnnounced && (
-                                <Box w="full" display={['block', 'block', 'none', 'none']}>
-                                    <Heading fontSize={'16px'} mt="20px">Location and surrounding</Heading>
+                            <VStack alignItems={'flex-start'} mt="20px">
+                                <Text fontWeight={'600'}>Apply to be a PR</Text>
+                                <Button w="130px" h="55px" borderRadius={'full'} bg="primaryColor" color="white">Apply now</Button>
+                            </VStack>
 
-                                    <Button
-                                        variant={'solid'}
-                                        width="auto"
-                                        height="45px"
-                                        mt='20px'
-                                        borderRadius={'full'}
-                                        color="white"
-                                        bgColor="primaryColor"
-                                        onClick={() => {
-                                            if (event?.location?.latlng) {
-                                                const [lat, lng] = event.location.latlng.split(' ');
-                                                window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-                                            }
-                                        }}
-                                        disabled={!event?.location?.latlng}
-                                    >
-                                        Direction
-                                    </Button>
-                                    <Box height={'20px'} />
-                                    {event?.location?.latlng ? (
-                                        <MapComponent
-                                            lat={parseFloat(event.location.latlng.split(' ')[0])}
-                                            lng={parseFloat(event.location.latlng.split(' ')[1])}
-                                            width="100%"
-                                            height="200px"
-                                            zoom={15}
-                                            borderRadius="16px"
-                                            markerTitle={event?.eventName || 'Event Location'}
-                                        />
-                                    ) : (
-                                        <Box w='full' h="200px" mt='20px' borderRadius={'16px'} bgColor="gray.100"></Box>
-                                    )}
+                            {!productLoading && !productError && pinnedProducts?.length > 0 && (
+                                <Box cursor={'pointer'} onClick={() => router.push('/share/product?id=' + pinnedProducts[0]?.returnProductDto?.id)}>
+                                    <Text mt="20px" fontWeight={500}>Shop the {event?.eventName} kiosk</Text>
+                                    <VStack w="200px" h="200px" mt="10px" alignItems={'flex-start'}>
+                                        <Box w="full" h="60%" bg="gray.100">
+                                            <Image src={RESOURCE_URL + pinnedProducts[0]?.returnProductDto?.images[0]} w="full" h="full" objectFit={'cover'} />
+                                        </Box>
+                                        <Text fontWeight={500}>{pinnedProducts[0]?.returnProductDto?.name}</Text>
+                                        <Text>{formatNumber(pinnedProducts[0]?.returnProductDto?.price)}</Text>
+                                    </VStack>
                                 </Box>
                             )}
-
-                            <Flex flexDir={"column"} w={['100%', '100%', '50%', '50%']} display={["none", "none", "flex"]} alignItems={"center"} gap={"3"} borderRadius={'16px'} borderWidth={'1px'} borderColor={'gray.200'} p='3'>
-                                <Text fontWeight={'700'} fontSize={["sm"]} >See available tickets</Text>
-                                <Button onClick={handlePayment} w="full" h="45px" borderRadius={'full'} bgColor="chasescrollBlue" color="white">Select Ticket Here</Button>
-                            </Flex>
                         </Flex>
                     </Flex>
                 )}
