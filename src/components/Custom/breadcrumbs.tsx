@@ -4,7 +4,7 @@ import { IDonationList } from "@/models/donation"
 import { IEventType } from "@/models/Event"
 import { textLimit } from "@/utils/textlimiter"
 import { Flex, Text } from "@chakra-ui/react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { IoIosArrowForward } from "react-icons/io"
 
 export default function BreadCrumbs(
@@ -14,27 +14,11 @@ export default function BreadCrumbs(
     } : IEventType | IDonationList | any
 ) {
 
-    const { back, push } = useRouter()
-    const { primaryColor } = useCustomTheme()
+    const { back } = useRouter()
+    const { primaryColor } = useCustomTheme() 
 
-    const query = useSearchParams();
-    const pathname = usePathname()
-    const edit = query?.get('edit');
-
-    const clickHandler = () => {
-        if(edit) { 
-            if(name) {
-                push("/product/fundraising")
-            } else {
-                push("/product/events")
-            }
-        } else {
-            if(pathname?.includes("event")) {
-                push("/product/events")
-            } else {
-                back()
-            }
-        }
+    const clickHandler = () => { 
+        back() 
     }
 
     return (
