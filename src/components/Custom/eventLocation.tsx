@@ -9,25 +9,16 @@ import { LocationStroke } from "../svg";
 export default function EventLocation(
     {
         data,
-        limit = 0,
+        limit = 40,
         showLink,
         fontSize
-    } :{ data: IEventType, limit?: number, showLink: boolean, fontSize?: string}
-) {
-
-    const {
-        location = {
-            toBeAnnounced: false,
-            locationDetails: "",
-            link: "string",
-            links: [],
-            address: "string",
-            latlng: "string",
-            placeIds: "string",
-        }
-    } = data
+    } :{ data: IEventType | any, limit?: number, showLink: boolean, fontSize?: string}
+) { 
 
     const { secondaryBackgroundColor } = useCustomTheme()
+
+    console.log(data?.location?.locationDetails);
+    
 
     return (
         <Flex w={"full"} gap={"2"} flexDir={"column"} >
@@ -35,12 +26,12 @@ export default function EventLocation(
                 <Flex w={"fit-content"} >
                 <LocationStroke />
                 </Flex>
-                <Text fontSize={fontSize ?? "14px"} fontWeight={"500"} whiteSpace={"none"} lineBreak={"anywhere"} >{location?.toBeAnnounced ? "To Be Announced" : textLimit(location?.locationDetails+"", limit)}</Text>
+                <Text fontSize={fontSize ?? "14px"} fontWeight={"500"} whiteSpace={"none"} lineBreak={"anywhere"} >{data?.location?.toBeAnnounced ? "To Be Announced" : textLimit(data?.location?.locationDetails, limit)}</Text>
             </Flex>
-            {(location?.link && showLink)&& (
+            {(data?.location?.link && showLink)&& (
                 <Flex maxW={["400px"]} rounded={"32px"} py={"2"} px={"3"} bgColor={secondaryBackgroundColor} w={"full"} gap={"2"} alignItems={"center"} >
                     <LinkIcon />
-                    <Text fontSize={"14px"} fontWeight={"500"} ><a target="_blank" href={location?.link} >Click Me</a></Text>
+                    <Text fontSize={"14px"} fontWeight={"500"} ><a target="_blank" href={data?.location?.link} >Click Me</a></Text>
                 </Flex>
             )}
         </Flex>
