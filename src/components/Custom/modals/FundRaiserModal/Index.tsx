@@ -66,7 +66,7 @@ function FundRaiserModal({ isOpen, onClose }: IProps) {
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content borderRadius={'16px'} bgColor="white" p="0">
+                    <Dialog.Content w={currentStep === 2 ? "fit" : "full"} borderRadius={'16px'} bgColor="white" p="0">
                         <Dialog.Body p="0px">
                             {currentStep === 1 && (
                                 <FundRaiserAccountSetup />

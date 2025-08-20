@@ -3,7 +3,7 @@ import React from 'react'
 import CustomText from './CustomText'
 import { useFormikContext } from 'formik';
 import { Eye, EyeSlash } from 'iconsax-reactjs';
-import { Input, InputGroup } from '@chakra-ui/react'
+import { Flex, Input, InputGroup } from '@chakra-ui/react'
 
 interface IProps {
     name: string;
@@ -23,7 +23,7 @@ function CustomInput({ name, label, isPassword = false, type = 'text' }: IProps)
 
     // colors
     return (
-        <div className='w-full flex flex-col items-start'>
+        <Flex w={"full"} flexDir={"column"} gap={"1"} >
             <CustomText type='REGULAR' fontSize='14' text={label} color="black" />
             <div className='relative w-full'>
                 <InputGroup endElement={isPassword && (
@@ -59,13 +59,12 @@ function CustomInput({ name, label, isPassword = false, type = 'text' }: IProps)
                             handleBlur(e);
                         }}
                         width='full'
-                        height={'60px'}
+                        height={'45px'}
                         color="black"
                         borderWidth='2px'
                         borderColor={errors[name] && touched[name] ? "red.300" : "#E5E5E5"}
                         bgColor="#F5F5F5"
-                        borderRadius={"full"}
-                        mt="10px"
+                        borderRadius={"full"} 
                         onClick={() => setIsActive(true)}
                         pr={isPassword ? "50px" : "16px"}
 
@@ -73,9 +72,9 @@ function CustomInput({ name, label, isPassword = false, type = 'text' }: IProps)
                 </InputGroup>
             </div>
             {errors[name] && touched[name] && (
-                <CustomText type="LIGHT" fontSize='12px' text={errors[name as string] as string} color="red" />
+                <CustomText type="REGULAR" mt={"-1"} fontSize='12px' text={errors[name as string] as string} color="red" />
             )}
-        </div>
+        </Flex>
     )
 }
 
