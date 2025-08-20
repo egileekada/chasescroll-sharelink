@@ -26,8 +26,7 @@ export default function EventCreator(props: IEventType) {
                     <Avatar.Root size={"md"} rounded={"full"} roundedTopRight={"0px"} >
                         <Avatar.Fallback rounded={"full"} roundedTopRight={"0px"} name={`${createdBy?.firstName} ${createdBy?.lastName}`} />
                         <Avatar.Image rounded={"full"} roundedTopRight={"0px"} src={`${RESOURCE_URL}${createdBy?.data?.imgMain?.value}`} />
-                    </Avatar.Root>
-
+                    </Avatar.Root> 
                 </Flex>
                 <Box >
                     <Text textAlign={"left"} display={["none", "block"]} fontWeight={"medium"} >{capitalizeFLetter(createdBy?.firstName) + " " + capitalizeFLetter(createdBy?.lastName)}</Text>
