@@ -9,7 +9,8 @@ const CircularProgressBar = ({ progress, size = 67, strokeWidth = 10, isEvent, f
     return (
         <Flex w={"fit-content"} pos={"relative"} >
             <Flex w={"full"} h={"full"}  pos={"absolute"} inset={"0px"} justifyContent={"center"} alignItems={"center"} > 
-                <Text fontSize={[isEvent ? fontSize ?? "10px" : fontSize ?? "14px", fontSize ?? "14px", fontSize ?? "10px"]} >{progress}%</Text>
+                <Text fontSize={[isEvent ? fontSize ?? "10px" : fontSize ?? "14px", fontSize ?? "10px", fontSize ?? "10px"]} >{progress}%</Text>
+                {/* <Text fontSize={"14px"} >{progress}</Text> */}
             </Flex>
             <svg
                 width={size}
