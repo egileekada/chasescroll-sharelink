@@ -1,31 +1,31 @@
 import {
-    Box,
-    Button,
-    Image,
-    VStack,
-    HStack,
-    Flex,
-    Text,
-    IconButton,
-    Grid,
-    GridItem,
-    SimpleGrid,
-    Avatar,
-    Spinner,
-} from '@chakra-ui/react'
-import React from 'react'
-import { useAtomValue } from 'jotai'
-import { activeEventAtom, ticketCountAtom } from '@/states/activeTicket'
-import { CloseSquare, DocumentDownload, TickCircle } from 'iconsax-reactjs'
-import { ITicketCreatedModel } from '@/models/TicketCreatedModel'
-import { IEventTicket, IProductTypeData } from '@/models/Event'
-import { STORAGE_KEYS } from '@/utils/StorageKeys'
-import { useQuery } from '@tanstack/react-query'
-import httpService from '@/services/httpService'
-import { URLS } from '@/services/urls'
-import { QrCode } from "@chakra-ui/react"
-import { RESOURCE_URL } from '@/constants'
-import { IUser } from '@/models/User'
+  Box,
+  Button,
+  Image,
+  VStack,
+  HStack,
+  Flex,
+  Text,
+  IconButton,
+  Grid,
+  GridItem,
+  SimpleGrid,
+  Avatar,
+  Spinner,
+} from "@chakra-ui/react";
+import React from "react";
+import { useAtomValue } from "jotai";
+import { activeEventAtom, ticketCountAtom } from "@/states/activeTicket";
+import { CloseSquare, DocumentDownload, TickCircle } from "iconsax-reactjs";
+import { ITicketCreatedModel } from "@/models/TicketCreatedModel";
+import { IEventTicket, IProductTypeData } from "@/models/Event";
+import { STORAGE_KEYS } from "@/utils/StorageKeys";
+import { useQuery } from "@tanstack/react-query";
+import httpService from "@/services/httpService";
+import { URLS } from "@/services/urls";
+import { QrCode } from "@chakra-ui/react";
+import { RESOURCE_URL } from "@/constants";
+import { IUser } from "@/models/User";
 
 // Print styles for PDF generation
 const printStyles = `
@@ -221,220 +221,363 @@ const printStyles = `
 `;
 
 interface TicketPurchaseSuccessModalProps {
-    onClose?: () => void;
-    orderNumber?: string;
-    email?: string;
-    type?: 'EVENT' | 'FUNDRAISER' | 'PRODUCT'
+  onClose?: () => void;
+  orderNumber?: string;
+  email?: string;
+  type?: "EVENT" | "FUNDRAISER" | "PRODUCT";
 }
 
-
 function TicketPurchaseSuccessModal({
-    onClose,
-    orderNumber = '#12844567363',
-    email = 'otuekongdomino@gmail.com',
-    type = 'EVENT'
+  onClose,
+  orderNumber = "#12844567363",
+  email = "otuekongdomino@gmail.com",
+  type = "EVENT",
 }: TicketPurchaseSuccessModalProps) {
-    const event = useAtomValue(activeEventAtom);
-    const quantity = useAtomValue(ticketCountAtom);
-    const [tickets, setTicket] = React.useState<IProductTypeData[]>([])
-    const [userDetails, setUserDetails] = React.useState<IUser>(() => {
-        const item = localStorage.getItem(STORAGE_KEYS.USER_DETAILS);
-        if (item) {
-            return JSON.parse(item)
-        } else {
-            return null;
-        }
-    });
-    const [userId, setUserId] = React.useState(() => {
-        const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
-        if (userId) {
-            return userId;
-        } else {
-            return null;
-        }
-    })
+  const event = useAtomValue(activeEventAtom);
+  const quantity = useAtomValue(ticketCountAtom);
+  const [tickets, setTicket] = React.useState<IProductTypeData[]>([]);
+  const [userDetails, setUserDetails] = React.useState<IUser>(() => {
+    const item = localStorage.getItem(STORAGE_KEYS.USER_DETAILS);
+    if (item) {
+      return JSON.parse(item);
+    } else {
+      return null;
+    }
+  });
+  const [userId, setUserId] = React.useState(() => {
+    const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
+    if (userId) {
+      return userId;
+    } else {
+      return null;
+    }
+  });
 
-    // Inject print styles
-    React.useEffect(() => {
-        const styleElement = document.createElement('style')
-        styleElement.textContent = printStyles
-        document.head.appendChild(styleElement)
+  // Inject print styles
+  React.useEffect(() => {
+    const styleElement = document.createElement("style");
+    styleElement.textContent = printStyles;
+    document.head.appendChild(styleElement);
 
-        return () => {
-            document.head.removeChild(styleElement)
-        }
-    }, [])
-
-    const { isError, isFetching, data } = useQuery({
-        queryKey: [`get-tickets-${userDetails?.userId}`, userDetails?.userId],
-        queryFn: () => httpService.get(`${URLS.event}/get-users-tickets`, {
-            params: {
-                userID: userId ? userId : userDetails?.userId,
-                eventID: event?.id
-            }
-        }),
-    });
-
-    // EFFECTS
-    React.useEffect(() => {
-        if (!isFetching && !isError && data?.data) {
-            console.log('This is the data my people', data?.data?.content[0]?.event?.productTypeData);
-            setTicket(data?.data?.content[0]?.event?.productTypeData);
-        }
-    }, [isFetching, isError, data])
-
-    const formatEventDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric'
-        });
+    return () => {
+      document.head.removeChild(styleElement);
     };
+  }, []);
 
-    const formatEventTime = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        });
-    };
+  const { isError, isFetching, data } = useQuery({
+    queryKey: [`get-tickets-${userDetails?.userId}`, userDetails?.userId],
+    queryFn: () =>
+      httpService.get(`${URLS.event}/get-users-tickets`, {
+        params: {
+          userID: userId ? userId : userDetails?.userId,
+          eventID: event?.id,
+        },
+      }),
+  });
 
+  // EFFECTS
+  React.useEffect(() => {
+    if (!isFetching && !isError && data?.data) {
+      console.log(
+        "This is the data my people",
+        data?.data?.content[0]?.event?.productTypeData
+      );
+      setTicket(data?.data?.content[0]?.event?.productTypeData);
+    }
+  }, [isFetching, isError, data]);
 
-    return (
-        <Box
-            w="full"
-            borderRadius="2xl"
-            overflow="hidden"
-            position="relative"
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatEventTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  return (
+    <Box w="full" borderRadius="2xl" overflow="hidden" position="relative">
+      {/* Print-only header */}
+      <Box className="print-only">
+        <Text className="print-title">Event Tickets</Text>
+        <Text className="print-subtitle">
+          Chasescroll - Your Digital Event Experience
+        </Text>
+      </Box>
+
+      <Box p={[2, 2, 8, 8]}>
+        {/* Success Header */}
+        <HStack mb={8} spaceX={4}>
+          <Box
+            w="50px"
+            h="50px"
+            bg="green.500"
+            borderRadius="full"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <TickCircle size="24" color="white" variant="Bold" />
+          </Box>
+          <VStack align="start" spaceY={1}>
+            <Text fontSize="2xl" fontWeight="bold" color="black">
+              Thanks for order!
+            </Text>
+            <Text fontSize="lg" color="gray.600">
+              #{orderNumber}
+            </Text>
+          </VStack>
+        </HStack>
+
+        <HStack
+          w="full"
+          justifyContent={"center"}
+          alignItems={"center"}
+          mb="30px"
         >
-            {/* Print-only header */}
-            <Box className="print-only">
-                <Text className="print-title">Event Tickets</Text>
-                <Text className="print-subtitle">Chasescroll - Your Digital Event Experience</Text>
+          <Text
+            fontSize="sm"
+            color="gray.600"
+            mb={2}
+            textTransform="uppercase"
+            letterSpacing="wide"
+            textAlign={"center"}
+            fontWeight={800}
+          >
+            Ticket Details
+          </Text>
+
+          {!isFetching && !isError && tickets.length > 0 && (
+            <Box
+              className="no-print"
+              as="button"
+              onClick={() => {
+                window.print();
+              }}
+              cursor="pointer"
+              display="flex"
+              alignItems="center"
+            >
+              <DocumentDownload
+                size={"30px"}
+                color={"blue"}
+                variant="Outline"
+              />
             </Box>
+          )}
+        </HStack>
 
-            <Box p={[2, 2, 8, 8]}>
-                {/* Success Header */}
-                <HStack mb={8} spaceX={4}>
+        {/* Event Details Section */}
+        <Flex
+          mb={8}
+          w="full"
+          justifyContent={"center"}
+          flexDir={"column"}
+          alignItems={"center"}
+        >
+          {/* Event Info Grid */}
+          {isFetching && (
+            <VStack
+              w="full"
+              h="50px"
+              justifyContent={"center"}
+              alignItems={"center"}
+            >
+              <Spinner size="md" colorPalette={"primaryColor"} />
+              <Text fontSize={"20px"}>Loading Tickets</Text>
+            </VStack>
+          )}
+          {!isFetching &&
+            !isError &&
+            tickets.map((item, index) => (
+              <Flex
+                key={index.toString()}
+                className="ticket-container"
+                w={["100%", "100%", "70%", "70%"]}
+                h="200px"
+                borderRadius={"15px"}
+                bgColor="gray.100"
+                p="10px"
+                mb="20px"
+                alignItems={"center"}
+              >
+                <Flex
+                  className="ticket-left"
+                  flex={0.7}
+                  borderRightWidth={"1px"}
+                  borderRightColor={"grey"}
+                  borderRightStyle={"dashed"}
+                  h="full"
+                  p="10px"
+                >
+                  <Box
+                    className="event-image-container"
+                    w="150px"
+                    h="full"
+                    borderWidth={"1px"}
+                    borderRadius="10px"
+                    borderColor="gray.300"
+                    p="0px"
+                    display={"flex"}
+                    justifyContent={"center"}
+                  >
                     <Box
-                        w="50px"
-                        h="50px"
-                        bg="green.500"
-                        borderRadius="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
+                      className="event-image"
+                      w="70%"
+                      h="full"
+                      bg="gray.200"
+                      borderRadius={"10px"}
+                      overflow={"hidden"}
                     >
-                        <TickCircle size="24" color="white" variant="Bold" />
+                      <Image
+                        src={RESOURCE_URL + event?.currentPicUrl}
+                        w="full"
+                        h="full"
+                        objectFit={"contain"}
+                      />
                     </Box>
-                    <VStack align="start" spaceY={1}>
-                        <Text fontSize="2xl" fontWeight="bold" color="black">
-                            Thanks for order!
-                        </Text>
-                        <Text fontSize="lg" color="gray.600">
-                            #{orderNumber}
-                        </Text>
-                    </VStack>
-                </HStack>
-
-                <HStack w="full" justifyContent={'center'} alignItems={'center'} mb="30px">
-                    <Text fontSize="sm" color="gray.600" mb={2} textTransform="uppercase" letterSpacing="wide" textAlign={'center'} fontWeight={800}>
-                        Ticket Details
+                  </Box>
+                  <VStack
+                    className="event-details"
+                    flex="1"
+                    justifyContent={"center"}
+                  >
+                    <Text
+                      className="event-title"
+                      fontFamily="Raleway-Medium"
+                      fontSize={"20px"}
+                      fontWeight="600"
+                    >
+                      {" "}
+                      {event?.eventName}
                     </Text>
+                    <HStack className="date-time-container">
+                      <HStack
+                        className="date-time-badge"
+                        borderWidth={"1px"}
+                        borderColor="gray.300"
+                        borderRadius={"full"}
+                        justifyContent={"center"}
+                        alignItems="center"
+                        p="5px"
+                      >
+                        <Text fontSize="10px">
+                          {new Date(event?.startDate).toDateString()}
+                        </Text>
+                      </HStack>
 
-                    {!isFetching && !isError && tickets.length > 0 && (
-                        <Box
-                            className="no-print"
-                            as="button"
-                            onClick={() => {
-                                window.print();
-                            }}
-                            cursor="pointer"
-                            display="flex"
-                            alignItems="center"
+                      <HStack
+                        className="date-time-badge"
+                        borderWidth={"1px"}
+                        borderColor="gray.300"
+                        borderRadius={"full"}
+                        justifyContent={"center"}
+                        alignItems="center"
+                        p="5px"
+                      >
+                        <Text fontSize="10px">
+                          {new Date(event?.startTime).toLocaleTimeString()}
+                        </Text>
+                      </HStack>
+                    </HStack>
+
+                    <HStack className="ticket-info-container">
+                      <VStack
+                        className="ticket-info-item"
+                        justifyContent={"center"}
+                        alignItems="center"
+                        spaceY={-2}
+                      >
+                        <Text
+                          className="ticket-info-label"
+                          fontWeight={"700"}
+                          fontSize={"12px"}
                         >
-                            <DocumentDownload size={'30px'} color={'blue'} variant='Outline' />
-                        </Box>
-                    )}
-                </HStack>
+                          Ticket Type
+                        </Text>
+                        <Text className="ticket-info-value" fontSize="10px">
+                          {item?.ticketType}
+                        </Text>
+                      </VStack>
 
-                {/* Event Details Section */}
-                <Flex mb={8} w="full" justifyContent={'center'} flexDir={'column'} alignItems={'center'}>
+                      <VStack
+                        className="ticket-info-item"
+                        justifyContent={"center"}
+                        alignItems="center"
+                        spaceY={-2}
+                      >
+                        <Text
+                          className="ticket-info-label"
+                          fontWeight={"700"}
+                          fontSize={"12px"}
+                        >
+                          Price
+                        </Text>
+                        <Text className="ticket-info-value" fontSize="10px">
+                          {item?.ticketPrice}
+                        </Text>
+                      </VStack>
 
-
-                    {/* Event Info Grid */}
-                    {isFetching && (
-                        <VStack w="full" h="50px" justifyContent={'center'} alignItems={'center'}>
-                            <Spinner size='md' colorPalette={'primaryColor'} />
-                            <Text fontSize={'20px'}>Loading Tickets</Text>
-                        </VStack>
-                    )}
-                    {!isFetching && !isError && tickets.map((item, index) => (
-                        <Flex key={index.toString()} className="ticket-container" w={['100%', '100%', '70%', '70%']} h="200px" borderRadius={'15px'} bgColor="gray.100" p="10px" mb="20px" alignItems={'center'}>
-                            <Flex className="ticket-left" flex={0.7} borderRightWidth={'1px'} borderRightColor={'grey'} borderRightStyle={'dashed'} h="full" p="10px">
-                                <Box className="event-image-container" w="150px" h="full" borderWidth={'1px'} borderRadius="10px" borderColor="gray.300" p="0px" display={'flex'} justifyContent={'center'}>
-                                    <Box className="event-image" w="70%" h="full" bg="gray.200" borderRadius={'10px'} overflow={'hidden'}>
-                                        <Image src={RESOURCE_URL + event?.currentPicUrl} w="full" h="full" objectFit={'contain'} />
-                                    </Box>
-                                </Box>
-                                <VStack className="event-details" flex="1" justifyContent={'center'}>
-                                    <Text className="event-title" fontFamily="Raleway-Medium" fontSize={'20px'} fontWeight="600"> {event?.eventName}</Text>
-                                    <HStack className="date-time-container">
-                                        <HStack className="date-time-badge" borderWidth={'1px'} borderColor="gray.300" borderRadius={'full'} justifyContent={'center'} alignItems="center" p="5px">
-                                            <Text fontSize="10px">{new Date(event?.startDate).toDateString()}</Text>
-                                        </HStack>
-
-                                        <HStack className="date-time-badge" borderWidth={'1px'} borderColor="gray.300" borderRadius={'full'} justifyContent={'center'} alignItems="center" p="5px">
-                                            <Text fontSize="10px">{new Date(event?.startTime).toLocaleTimeString()}</Text>
-                                        </HStack>
-                                    </HStack>
-
-                                    <HStack className="ticket-info-container">
-                                        <VStack className="ticket-info-item" justifyContent={'center'} alignItems="center" spaceY={-2}>
-                                            <Text className="ticket-info-label" fontWeight={'700'} fontSize={'12px'}>Ticket Type</Text>
-                                            <Text className="ticket-info-value" fontSize="10px">{item?.ticketType}</Text>
-                                        </VStack>
-
-                                        <VStack className="ticket-info-item" justifyContent={'center'} alignItems="center" spaceY={-2}>
-                                            <Text className="ticket-info-label" fontWeight={'700'} fontSize={'12px'}>Price</Text>
-                                            <Text className="ticket-info-value" fontSize="10px">{item?.ticketPrice}</Text>
-                                        </VStack>
-
-                                        {/* <VStack justifyContent={'center'} alignItems="center" spaceY={-2}>
+                      {/* <VStack justifyContent={'center'} alignItems="center" spaceY={-2}>
                                             <Text fontWeight={'700'} fontSize={'12px'}>Quantity</Text>
                                             <Text fontSize="10px">{quantity}</Text>
                                         </VStack> */}
-                                    </HStack>
+                    </HStack>
 
-                                    <HStack className="user-info">
-                                        <Avatar.Root className="user-avatar">
-                                            <Avatar.Fallback name={userDetails?.firstName} />
-                                            <Avatar.Image src={RESOURCE_URL + userDetails?.data?.imgMain?.value} />
-                                        </Avatar.Root>
+                    <HStack className="user-info">
+                      <Avatar.Root className="user-avatar">
+                        <Avatar.Fallback name={userDetails?.firstName} />
+                        <Avatar.Image
+                          src={RESOURCE_URL + userDetails?.data?.imgMain?.value}
+                        />
+                      </Avatar.Root>
 
-                                        <Text>{userDetails?.firstName} {userDetails?.lastName}</Text>
-                                    </HStack>
-                                </VStack>
-                            </Flex>
-                            <VStack className="ticket-right" flex={0.3} alignItems={'center'}>
-                                <Box className="qr-code-container">
-                                    <QrCode.Root value="https://www.google.com">
-                                        <QrCode.Frame>
-                                            <QrCode.Pattern />
-                                        </QrCode.Frame>
-                                    </QrCode.Root>
-                                </Box>
-                                <Text className="powered-by" fontSize={'12px'}>Powered by <Text className="powered-by-brand" color="primaryColor" fontStyle={'italic'}>Chasescroll</Text></Text>
-                            </VStack>
-                        </Flex>
-                    ))}
+                      <VStack>
+                        <Text>
+                          {userDetails?.firstName} {userDetails?.lastName}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                  </VStack>
                 </Flex>
-
-            </Box>
-        </Box >
-    )
+                <VStack
+                  className="ticket-right"
+                  flex={0.3}
+                  alignItems={"center"}
+                >
+                  <Box className="qr-code-container">
+                    <QrCode.Root value="https://www.google.com">
+                      <QrCode.Frame>
+                        <QrCode.Pattern />
+                      </QrCode.Frame>
+                    </QrCode.Root>
+                  </Box>
+                  <Text className="powered-by" fontSize={"12px"}>
+                    Powered by{" "}
+                    <Text
+                      className="powered-by-brand"
+                      color="primaryColor"
+                      fontStyle={"italic"}
+                    >
+                      Chasescroll
+                    </Text>
+                  </Text>
+                </VStack>
+              </Flex>
+            ))}
+        </Flex>
+      </Box>
+    </Box>
+  );
 }
 
-export default TicketPurchaseSuccessModal
+export default TicketPurchaseSuccessModal;
