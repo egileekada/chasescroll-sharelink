@@ -23,10 +23,10 @@ export default function DonationGraph({ item, rounded, IsEvent, isPicked, isDona
                 <Text fontWeight={"600"} fontSize={isPicked ? "10px" : ["14px", "14px", "14px"]} >{formatNumberWithK(item?.total, true, "₦")}</Text>
             </Flex>
             <Flex display={["none", "none", "flex"]} >
-                <CircularProgressBar isEvent={IsEvent || isPicked || isDonation} size={(IsEvent || isPicked || isDonation) ? 35 : 67} strokeWidth={(IsEvent || isPicked || isDonation) ? 3 : 10} progress={((Number(item?.total) === 0) && (Number(item?.goal) === 0)) ? 0 : (Number(item?.total) / Number(item?.goal)) * 100 > 100 ? 100 : Number(((Number(item?.total) / Number(item?.goal)) * 100)?.toFixed(2))} />
+                <CircularProgressBar isEvent={IsEvent || isPicked || isDonation} size={(IsEvent || isPicked || isDonation) ? 45 : 67} strokeWidth={(IsEvent || isPicked || isDonation) ? 3 : 10} progress={((Number(item?.total) === 0) && (Number(item?.goal) === 0)) ? 0 : (Number(item?.total) / Number(item?.goal)) * 100 > 100 ? 100 : Number(((Number(item?.total) / Number(item?.goal)) * 100)?.toFixed(2))} />
             </Flex>
             <Flex display={["flex", "flex", "none"]} >
-                <CircularProgressBar isEvent={IsEvent || isPicked || isDonation} size={(IsEvent || isPicked || isDonation)  ? 35 : 67} strokeWidth={(IsEvent || isPicked || isDonation)  ? 3 : 10} progress={((Number(item?.total) === 0) && (Number(item?.goal) === 0)) ? 0 : (Number(item?.total) / Number(item?.goal)) * 100 > 100 ? 100 : Number(((Number(item?.total) / Number(item?.goal)) * 100)?.toFixed(2))} />
+                <CircularProgressBar isEvent={IsEvent || isPicked || isDonation} size={(IsEvent || isPicked || isDonation)  ? 45 : 67} strokeWidth={(IsEvent || isPicked || isDonation)  ? 3 : 10} progress={((Number(item?.total) === 0) && (Number(item?.goal) === 0)) ? 0 : (Number(item?.total) / Number(item?.goal)) * 100 > 100 ? 100 : Number(((Number(item?.total) / Number(item?.goal)) * 100)?.toFixed(2))} />
             </Flex>
         </Flex>
     )
