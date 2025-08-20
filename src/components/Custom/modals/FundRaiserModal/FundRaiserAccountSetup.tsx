@@ -41,6 +41,8 @@ import {
   activeFundRaiserAtom,
   donationAmountAtom,
 } from "@/states/activeFundraiser";
+import { capitalizeFLetter } from "@/utils/capitalizeLetter";
+import useCustomTheme from "@/hooks/useTheme";
 
 export interface ICustomOrderDto {
   seller: string;
@@ -65,6 +67,10 @@ function FundRaiserAccountSetup() {
   const [amount, setAmount] = useAtom(donationAmountAtom);
   const [canPay, setCanPay] = useAtom(canPayAtom);
   const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
+
+  const {
+    primaryColor
+  } = useCustomTheme()
 
   const [token, setToken] = React.useState(() =>
     localStorage.getItem(STORAGE_KEYS.token)
@@ -204,7 +210,7 @@ function FundRaiserAccountSetup() {
   const getPublicProfile = useMutation({
     mutationFn: (data: any) =>
       httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${data}`),
-    onError: (error) => {},
+    onError: (error) => { },
     onSuccess: (data) => {
       const details: IUser = data?.data;
       console.log(`User details`, details);
@@ -336,7 +342,7 @@ function FundRaiserAccountSetup() {
               />
               <VStack align="start" spaceY={1} flex="1">
                 <Text fontWeight="semibold">
-                  {activeFundRaider?.name || "Tech Submit"}
+                  {capitalizeFLetter(activeFundRaider?.name) || "Tech Submit"}
                 </Text>
                 <Text fontSize="sm" color="gray.600">
                   {new Date(activeFundRaider?.endDate).toLocaleString("en-US", {
@@ -349,12 +355,12 @@ function FundRaiserAccountSetup() {
                   })}
                 </Text>
                 <Text fontSize="sm" color="gray.600">
-                  FundRaiser Goal - NGN{" "}
+                  FundRaiser Goal - {" "}
                   {formatNumber(activeFundRaider?.goal as number)}
                 </Text>
                 <HStack>
                   <Text fontSize="xs" color="gray.500">
-                    Donations So far
+                    Amount Raised
                   </Text>
                   <Badge colorScheme="red" fontSize="xs">
                     {formatNumber(activeFundRaider?.total as number)}
@@ -365,12 +371,15 @@ function FundRaiserAccountSetup() {
 
             {/* Contact Information */}
             {!canPay && (
-              <VStack align="start" spaceY={[3, 3, 6, 6]} mb={8}>
-                <Box w="full">
-                  <Text>Donation Amount</Text>
+              <Flex align="start" flexDirection={"column"} gap={"3"} mb={8}>
+                <Flex gap={"1"} flexDir={"column"} w="full">
+                  <Flex gap={"2"} >
+                    <Text>Donation Amount - {formatNumber(amount)}</Text>
+                  </Flex>
                   <Input
                     type="text"
-                    value={amount}
+                    value={amount === 0 ? "" : amount}
+                    placeholder="0"
                     onChange={(e) => {
                       const value = e.target.value;
                       // Only allow positive numbers
@@ -393,27 +402,25 @@ function FundRaiserAccountSetup() {
                       }
                     }}
                     width="full"
-                    height={"60px"}
+                    height={"45px"}
                     color="black"
                     borderWidth="2px"
                     borderColor={"#E5E5E5"}
                     bgColor="#F5F5F5"
                     borderRadius={"full"}
-                    mt="10px"
                   />
-                  <Text
+                  {/* <Text
                     fontWeight="semibold"
                     display={["block", "block", "none", "none"]}
                     mt="10px"
                   >
                     NGN {formatNumber(amount)}
-                  </Text>
-                </Box>
+                  </Text> */}
+                </Flex>
 
                 <Flex
                   flexDir={["column", "column", "row", "row"]}
-                  spaceX={[0, 0, 4, 4]}
-                  spaceY={[3, 3, 0, 0]}
+                  gap={"4"}
                   w="full"
                 >
                   <Box w="full">
@@ -442,23 +449,23 @@ function FundRaiserAccountSetup() {
                     type="email"
                   />
                   {showLink && (
-                    <HStack mt="10px">
+                    <Flex flexDir={["row"]} w={"full"} justifyContent={"space-between"} gap={"2"} mt="10px">
                       <Text color="red">
-                        You already have an account on chasecroll, for security
-                        reasons
+                        This email address already exist. <span onClick={() => setStep(2)} style={{ textDecoration: "underline", color: primaryColor, cursor: "pointer" }} >Sign in</span>
                       </Text>
-                      <Text
+                      {/* <Text
                         color="primaryColor"
                         cursor={"pointer"}
+                        w={""}
                         onClick={() => setStep(2)}
                         textDecorationLine={"underline"}
                       >
-                        Sign in
-                      </Text>
-                    </HStack>
+                        
+                      </Text> */}
+                    </Flex>
                   )}
                 </Box>
-              </VStack>
+              </Flex>
             )}
 
             {/* Footer */}
@@ -466,7 +473,7 @@ function FundRaiserAccountSetup() {
               {!canPay && (
                 <Button
                   w="full"
-                  h="60px"
+                  h="50px"
                   bgColor="primaryColor"
                   size="lg"
                   borderRadius="full"
@@ -478,25 +485,42 @@ function FundRaiserAccountSetup() {
                     getPublicProfile.isPending
                   }
                   type={"submit"}
+                  fontWeight={"semibold"}
                 >
                   Confirm Details
                 </Button>
               )}
               {canPay && (
-                <PaymentButton
-                  reference={paystackDetails?.reference as string}
-                  email={paystackDetails?.email as string}
-                  amount={paystackDetails?.amount as number}
-                  isLoading={createDonation?.isPending}
-                  onSucces={() =>
-                    createDonation.mutate({
-                      userID: userDetails?.userId as string,
-                      amount: amount,
-                      fundRaiserID: activeFundRaider?.id as string,
-                    })
-                  }
-                  text={"Pay"}
-                />
+                <Flex flexDir={"column"} w={"full"} gap={"4"} >
+
+                  {/* Order Summary */}
+                  <Flex display={["flex", "flex", "none"]} flexDir={"column"} gap={"2"} >
+                    <Text fontSize="lg" fontWeight="bold">
+                      Donation summary
+                    </Text> 
+                    <Flex gap={"2"} align="stretch">
+                      <Flex w={"full"} justify="space-between">
+                        <Text>Amount</Text>
+                        <Text fontWeight="semibold">NGN {formatNumber(amount)}</Text>
+                      </Flex>
+                    </Flex>
+                  </Flex>
+                  <PaymentButton
+                    reference={paystackDetails?.reference as string}
+                    email={paystackDetails?.email as string}
+                    amount={paystackDetails?.amount as number}
+                    isLoading={createDonation?.isPending}
+                    bgColor={primaryColor}
+                    onSucces={() =>
+                      createDonation.mutate({
+                        userID: userDetails?.userId as string,
+                        amount: amount,
+                        fundRaiserID: activeFundRaider?.id as string,
+                      })
+                    }
+                    text={"Pay"}
+                  />
+                </Flex>
               )}
             </HStack>
           </Box>
@@ -510,7 +534,7 @@ function FundRaiserAccountSetup() {
           display={["none", "none", "block", "block"]}
         >
           {/* Close Button */}
-          <IconButton
+          {/* <IconButton
             aria-label="Close"
             position="absolute"
             top={4}
@@ -521,7 +545,7 @@ function FundRaiserAccountSetup() {
             _hover={{ bg: "blackAlpha.600" }}
           >
             <CloseSquare size="24" />
-          </IconButton>
+          </IconButton> */}
 
           {/* Event Image */}
           <Box w="100%" h="300px" overflow="hidden">

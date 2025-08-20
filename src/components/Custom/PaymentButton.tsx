@@ -55,7 +55,7 @@ function PaymentButton({ reference, email, amount, bgColor = 'green', textColor 
 
     }, [config, email, reference, amount])
     return (
-        <Button w="full" h="60px" borderRadius={'full'} onClick={handlePayment} bgColor={bgColor} color={textColor} loading={isLoading}>
+        <Button w="full" maxW={"200px"}  h="px" fontWeight={"semibold"} fontSize={"14px"} borderRadius={'full'} onClick={handlePayment} bgColor={bgColor} color={textColor} loading={isLoading}>
             {text}
         </Button>
     )
