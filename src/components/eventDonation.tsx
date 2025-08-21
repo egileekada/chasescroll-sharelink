@@ -22,33 +22,7 @@ export default function EventDonation({ checkbox, item }: { checkbox?: boolean, 
     const { borderColor, bodyTextColor, secondaryBackgroundColor, mainBackgroundColor, primaryColor } = useCustomTheme()
     const router = useRouter()
 
-    const [pinnedFundraiser, setPinnedFundraiser] = React.useState<IPinnedFundrasier[]>([]);
-    const [pinnedProducts, setPinnedProducts] = React.useState<IPinnedProduct[]>([]);
-    
-    const [eventData, setEventData] = useState({} as {
-        "id": string,
-        "createdDate": number,
-        "lastModifiedBy": string,
-        "createdBy": string,
-        "lastModifiedDate": number,
-        "isDeleted": boolean,
-        "status": string,
-        "statusCode": number,
-        "returnMessage": string,
-        "user": string,
-        "fundRaiser": IDonationList,
-        "eventID": string
-    })
-
-    // const { deleteFundraising, open, setOpen } = usePr() 
-
-
-    // const { data, isLoading } = useFetchData<any>({
-    //     name: "all-donation", endpoint: `/pinned-fundraisers/get-pinned-event-fundraising/${item?.id}`, id: item?.id, params: {
-    //         id: item?.id
-    //     }
-    // }); 
-
+    const [pinnedFundraiser, setPinnedFundraiser] = React.useState<IPinnedFundrasier[]>([]);   
 
     const { isLoading: fundRaiserLoading, data: fundRaiserData, isError: fundRaiserError } = useQuery({
         queryKey: [`Get-pinned-fundraisers-${item?.id}`],
