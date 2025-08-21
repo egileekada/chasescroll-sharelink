@@ -37,16 +37,7 @@ export default function EventDonation({ checkbox, item }: { checkbox?: boolean, 
         if (!fundRaiserLoading && !fundRaiserError && fundRaiserData?.data) {
             setPinnedFundraiser(fundRaiserData?.data);
         }
-    }, [fundRaiserLoading, fundRaiserData, fundRaiserError])
-
-    // const removeHandler = () => {
-    //     deleteFundraising?.mutate(data[0]?.id + "")
-    // }
-
-    // const openHandler = (e: any) => {
-    //     e.stopPropagation()
-    //     setOpen(true)
-    // }
+    }, [fundRaiserLoading, fundRaiserData, fundRaiserError]) 
 
     const clickHandler = (item: any) => {
         router?.push('/share/fundraiser?id=' + item)
