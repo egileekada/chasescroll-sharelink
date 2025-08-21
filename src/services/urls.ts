@@ -116,3 +116,8 @@ export const URLS = {
     CREATE_SERVICE: '/service/create',
 }
 
+export const SHARE_URL = process.env.NEXT_PUBLIC_SHAREPAGE_URL as string;
+export const WEBSITE_URL = process.env.NEXT_PUBLIC_WEBSITE_DOMAIN as string;
+export const LANDINGPAGE_URL = process.env.NEXT_PUBLIC_LANDINGPAGE_URL as string;
+export const EVENTPAGE_URL = process.env.NEXT_PUBLIC_EVENTPAGE_URL as string;
+export const DASHBOARDPAGE_URL = process.env.NEXT_PUBLIC_DASHBOARDPAGE_URL as string;
