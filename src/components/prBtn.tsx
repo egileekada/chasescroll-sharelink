@@ -4,13 +4,20 @@ import useCustomTheme from '@/hooks/useTheme'
 import { Button, Flex, Text } from '@chakra-ui/react' 
 import React from 'react' 
 import { IEventType } from '@/models/Event'
+import { useRouter } from 'next/navigation'
+import { LANDINGPAGE_URL } from '@/services/urls'
 
 export default function PrBtn({ data }: { data: IEventType}) {
 
     const { 
         primaryColor, 
     } = useCustomTheme() 
+
+    const router = useRouter()
  
+    const clickHandler = () => {
+        router.push(`${LANDINGPAGE_URL}/auth?eventId=${data?.id}`)
+    }
 
     return (
         <>
@@ -22,7 +29,7 @@ export default function PrBtn({ data }: { data: IEventType}) {
                     {data.eventMemberRole !== "ADMIN" && data.eventMemberRole !== "COLLABORATOR" ? (
                         <Button 
                             // disable={(data?.prStatus === "PENDING" || data?.prStatus === "ACTIVE" || createPr?.isPending) ? true : false}
-                            disabled={true}
+                            onClick={clickHandler}
                             backgroundColor={[data?.prStatus === "PENDING" ? "#FF9500" : primaryColor, data?.prStatus === "PENDING" ? "#FF9500" : primaryColor, data?.prStatus === "PENDING" ? "#FF9500" : primaryColor]}
                             color={["white", "white", "white"]} borderRadius={"999px"} fontSize={["xs", "xs", "sm"]}
                             px={"4"}
@@ -38,7 +45,7 @@ export default function PrBtn({ data }: { data: IEventType}) {
                     ) : (
                         <Button 
                             // disable={(data?.prStatus === "PENDING" || data?.prStatus === "ACTIVE" || createPr?.isPending) ? true : false}
-                            disabled={true}
+                            onClick={clickHandler}
                             backgroundColor={[data?.prStatus === "PENDING" ? "#FF9500" : primaryColor, data?.prStatus === "PENDING" ? "#FF9500" : primaryColor, data?.prStatus === "PENDING" ? "#FF9500" : primaryColor]}
                             color={["white", "white", "white"]} borderRadius={"999px"} fontSize={["xs", "xs", "sm"]}
                             px={"4"}
