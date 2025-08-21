@@ -345,7 +345,8 @@ function Product({ id }: { id: string }) {
                 </Flex>
                 <Flex w={"full"} flexDir={"column"} gap={"4"} >
                     <Flex w={"full"} justifyContent={"space-between"} alignItems={"center"} >
-                        <Text fontSize={["24px", "24px", "32px"]} fontWeight={"700"} >{capitalizeFLetter(product?.name)}</Text>
+                    <Text fontWeight={"700"} fontSize={["16px", "16px", "24px"]} >{capitalizeFLetter(product?.name)}</Text>
+                        {/* <Text fontSize={["24px", "24px", "32px"]} fontWeight={"700"} >{capitalizeFLetter(product?.name)}</Text> */}
                         {/* <Flex w={"8"} h={"8"} justifyContent={"center"} alignItems={"center"} bgColor={secondaryBackgroundColor} rounded={"full"} >
                             <ShareEvent newbtn={true} showText={false} data={item} name={item?.name} id={item?.id} type="KIOSK" eventName={textLimit(item?.name, 17)} />
                         </Flex> */}

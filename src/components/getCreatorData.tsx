@@ -27,6 +27,8 @@ export default function GetCreatorData({ userData, donation, data: donationData}
                 <Flex flexDir={"column"} >
                     <Text textAlign={"left"} display={["none", "block"]} fontWeight={"medium"} >{capitalizeFLetter(userData?.firstName) + " " + capitalizeFLetter(userData?.lastName)}</Text>
                     <Text textAlign={"left"} display={["block", "none"]} fontWeight={"medium"} fontSize={"12px"} >{textLimit(capitalizeFLetter(userData?.firstName) + " " + capitalizeFLetter(userData?.lastName), 10)}</Text>
+                    {/* <Text textAlign={"left"} display={["none", "block"]} fontWeight={"medium"} >{capitalizeFLetter(userData?.firstName) + " " + capitalizeFLetter(userData?.lastName)}</Text>
+                    <Text textAlign={"left"} display={["block", "none"]} fontWeight={"medium"} fontSize={"12px"} >{textLimit(capitalizeFLetter(userData?.firstName) + " " + capitalizeFLetter(userData?.lastName), 10)}</Text> */}
                     {/* <Text textAlign={"left"} mt={"-2px"} fontSize={["13px", "13px", "sm"]} >{data?.data?.numberOfElements} followers</Text> */}
                 </Flex>
             </Flex> 
