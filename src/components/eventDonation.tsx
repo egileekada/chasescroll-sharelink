@@ -19,7 +19,7 @@ import DonationGraph from './donationGraph'
 
 export default function EventDonation({ checkbox, item }: { checkbox?: boolean, item: IEventType }) {
 
-    const { borderColor, bodyTextColor, secondaryBackgroundColor, mainBackgroundColor, primaryColor } = useCustomTheme()
+    const { borderColor, bodyTextColor, secondaryBackgroundColor, mainBackgroundColor } = useCustomTheme()
     const router = useRouter()
 
     const [pinnedFundraiser, setPinnedFundraiser] = React.useState<IPinnedFundrasier[]>([]);   
