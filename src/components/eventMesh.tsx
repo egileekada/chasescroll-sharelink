@@ -19,7 +19,7 @@ export default function EventMesh({
   data: IEventType;
   setMeshSize?: any;
 }) {
-  const { mainBackgroundColor, secondaryBackgroundColor, primaryColor } =
+  const { mainBackgroundColor, secondaryBackgroundColor } =
     useCustomTheme();
   const router = useRouter();
 
