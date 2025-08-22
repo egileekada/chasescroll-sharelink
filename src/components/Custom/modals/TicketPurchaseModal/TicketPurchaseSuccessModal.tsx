@@ -26,6 +26,8 @@ import { URLS } from "@/services/urls";
 import { QrCode } from "@chakra-ui/react";
 import { RESOURCE_URL } from "@/constants";
 import { IUser } from "@/models/User";
+import { IPurchaseTicket } from "@/models/PurchaseTicket";
+import { capitalizeFLetter } from "@/utils/capitalizeLetter";
 
 // Print styles for PDF generation
 const printStyles = `
@@ -235,7 +237,7 @@ function TicketPurchaseSuccessModal({
 }: TicketPurchaseSuccessModalProps) {
   const event = useAtomValue(activeEventAtom);
   const quantity = useAtomValue(ticketCountAtom);
-  const [tickets, setTicket] = React.useState<IProductTypeData[]>([]);
+  const [tickets, setTicket] = React.useState<IPurchaseTicket[]>([]);
   const [userDetails, setUserDetails] = React.useState<IUser>(() => {
     const item = localStorage.getItem(STORAGE_KEYS.USER_DETAILS);
     if (item) {
@@ -282,7 +284,8 @@ function TicketPurchaseSuccessModal({
         "This is the data my people",
         data?.data?.content[0]?.event?.productTypeData
       );
-      setTicket(data?.data?.content[0]?.event?.productTypeData);
+      const item: IPurchaseTicket[] = data?.data?.content;
+      setTicket(item);
     }
   }, [isFetching, isError, data]);
 
@@ -381,8 +384,26 @@ function TicketPurchaseSuccessModal({
           mb={8}
           w="full"
           justifyContent={"center"}
-          flexDir={"column"}
+          flexDir={["row", "row", "column", "column"]}
+          gapX={["20px", "20px", "0px", "0px"]}
           alignItems={"center"}
+          css={{
+            overflowY: ["auto", "auto", "scroll", "scroll"],
+            overflowX: ["scroll", "scroll", "auto", "auto"],
+            maxH: ["auto", "auto", "70vh", "70vh"],
+            maxW: "full",
+            scrollbarWidth: "thin",
+            scrollbarColor: "gray.400 gray.200",
+            _webkit: {
+              scrollbarWidth: "6px",
+              scrollbarHeight: "6px",
+              scrollbarTrackColor: "gray.100",
+              scrollbarTrackRadius: "10px",
+              scrollbarThumbColor: "gray.400",
+              scrollbarThumbRadius: "10px",
+              scrollbarThumbHoverColor: "gray.500",
+            },
+          }}
         >
           {/* Event Info Grid */}
           {isFetching && (
@@ -402,26 +423,31 @@ function TicketPurchaseSuccessModal({
               <Flex
                 key={index.toString()}
                 className="ticket-container"
-                w={["100%", "100%", "70%", "70%"]}
-                h="200px"
+                w={["60%", "60%", "70%", "70%"]}
+                h={["auto", "auto", "200px", "200px"]}
                 borderRadius={"15px"}
                 bgColor="gray.100"
-                p="10px"
+                p={["0px", "0px", "10px", "10px"]}
                 mb="20px"
                 alignItems={"center"}
+                flexDir={["column", "column", "row", "row"]}
               >
                 <Flex
                   className="ticket-left"
-                  flex={0.7}
-                  borderRightWidth={"1px"}
+                  flex={[1, 1, 0.7, 0.7]}
+                  borderRightWidth={["0px", "0px", "1px", "1px"]}
                   borderRightColor={"grey"}
                   borderRightStyle={"dashed"}
+                  borderBottomWidth={["1px", "1px", "0px", "0px"]}
+                  borderBottomColor={"grey"}
+                  borderBottomStyle={"dashed"}
                   h="full"
-                  p="10px"
+                  p={["10px", "10px", "10px", "10px"]}
+                  flexDir={["column", "column", "row", "row"]}
                 >
                   <Box
                     className="event-image-container"
-                    w="150px"
+                    w={["100%", "100%", "100%", "150px"]}
                     h="full"
                     borderWidth={"1px"}
                     borderRadius="10px"
@@ -456,6 +482,7 @@ function TicketPurchaseSuccessModal({
                       fontFamily="Raleway-Medium"
                       fontSize={"20px"}
                       fontWeight="600"
+                      mt={["10px", "10px", "0px", "0px"]}
                     >
                       {" "}
                       {event?.eventName}
@@ -464,13 +491,13 @@ function TicketPurchaseSuccessModal({
                       <HStack
                         className="date-time-badge"
                         borderWidth={"1px"}
-                        borderColor="gray.300"
+                        borderColor="gray.400"
                         borderRadius={"full"}
                         justifyContent={"center"}
                         alignItems="center"
                         p="5px"
                       >
-                        <Text fontSize="10px">
+                        <Text fontSize="10px" fontWeight={600}>
                           {new Date(event?.startDate).toDateString()}
                         </Text>
                       </HStack>
@@ -478,19 +505,19 @@ function TicketPurchaseSuccessModal({
                       <HStack
                         className="date-time-badge"
                         borderWidth={"1px"}
-                        borderColor="gray.300"
+                        borderColor="gray.400"
                         borderRadius={"full"}
                         justifyContent={"center"}
                         alignItems="center"
                         p="5px"
                       >
-                        <Text fontSize="10px">
+                        <Text fontSize="10px" fontWeight={600}>
                           {new Date(event?.startTime).toLocaleTimeString()}
                         </Text>
                       </HStack>
                     </HStack>
 
-                    <HStack className="ticket-info-container">
+                    <HStack className="ticket-info-container" spaceX={2}>
                       <VStack
                         className="ticket-info-item"
                         justifyContent={"center"}
@@ -499,12 +526,16 @@ function TicketPurchaseSuccessModal({
                       >
                         <Text
                           className="ticket-info-label"
-                          fontWeight={"700"}
+                          fontWeight={"400"}
                           fontSize={"12px"}
                         >
                           Ticket Type
                         </Text>
-                        <Text className="ticket-info-value" fontSize="10px">
+                        <Text
+                          className="ticket-info-value"
+                          fontSize="14px"
+                          fontWeight={600}
+                        >
                           {item?.ticketType}
                         </Text>
                       </VStack>
@@ -517,13 +548,17 @@ function TicketPurchaseSuccessModal({
                       >
                         <Text
                           className="ticket-info-label"
-                          fontWeight={"700"}
+                          fontWeight={"400"}
                           fontSize={"12px"}
                         >
                           Price
                         </Text>
-                        <Text className="ticket-info-value" fontSize="10px">
-                          {item?.ticketPrice}
+                        <Text
+                          className="ticket-info-value"
+                          fontSize="14px"
+                          fontWeight={600}
+                        >
+                          {item?.boughtPrice}
                         </Text>
                       </VStack>
 
@@ -542,8 +577,9 @@ function TicketPurchaseSuccessModal({
                       </Avatar.Root>
 
                       <VStack>
-                        <Text>
-                          {userDetails?.firstName} {userDetails?.lastName}
+                        <Text fontWeight={600}>
+                          {capitalizeFLetter(userDetails?.firstName)}{" "}
+                          {capitalizeFLetter(userDetails?.lastName)}
                         </Text>
                       </VStack>
                     </HStack>
@@ -554,22 +590,29 @@ function TicketPurchaseSuccessModal({
                   flex={0.3}
                   alignItems={"center"}
                 >
-                  <Box className="qr-code-container">
+                  <Box
+                    className="qr-code-container"
+                    mt={["10px", "10px", "0px", "0px"]}
+                  >
                     <QrCode.Root value="https://www.google.com">
                       <QrCode.Frame>
                         <QrCode.Pattern />
                       </QrCode.Frame>
                     </QrCode.Root>
                   </Box>
-                  <Text className="powered-by" fontSize={"12px"}>
-                    Powered by{" "}
+                  <Text
+                    className="powered-by"
+                    fontSize={"12px"}
+                    fontWeight={600}
+                  >
+                    Powered by Chasescroll
                     <Text
                       className="powered-by-brand"
                       color="primaryColor"
-                      fontStyle={"italic"}
-                    >
-                      Chasescroll
-                    </Text>
+                      // fontStyle={"italic"}
+                      fontWeight={"700"}
+                      mb={["10px", "10px", "0px", "0px"]}
+                    ></Text>
                   </Text>
                 </VStack>
               </Flex>
