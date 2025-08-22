@@ -348,13 +348,13 @@ function AccountSetup() {
                                         hour12: true
                                     }) : "Thu, Aug 14 • 7:00 pm"}
                                 </Text>
-                                <Text fontSize="sm" color="gray.600">
-                                    NGN {ticket ? formatNumber((ticket.ticketPrice as number) * quantity) : "24000"}
+                                <Text fontSize="sm" color="gray.600"> 
+                                    NGN {calculateTotal()}
                                 </Text>
-                                <HStack>
+                                {/* <HStack>
                                     <Text fontSize="xs" color="gray.500">Ticket Selected</Text>
                                     <Badge colorScheme="red" fontSize="xs">{ticket?.ticketType}</Badge>
-                                </HStack>
+                                </HStack> */}
                             </VStack>
 
                         </HStack>
