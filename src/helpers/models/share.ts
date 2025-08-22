@@ -1,0 +1,2 @@
+
+export type ShareType = 'PROFILE'|'POST'|'COMMUNITY'|'EVENT'|'BUSINESS'|'DONATION'|'RENTAL'|'SERVICE'|'KIOSK';

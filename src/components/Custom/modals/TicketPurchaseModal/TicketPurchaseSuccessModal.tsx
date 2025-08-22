@@ -13,7 +13,7 @@ import {
   Avatar,
   Spinner,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useRef } from "react";
 import { useAtomValue } from "jotai";
 import { activeEventAtom, ticketCountAtom } from "@/states/activeTicket";
 import { CloseSquare, DocumentDownload, TickCircle } from "iconsax-reactjs";
@@ -26,199 +26,21 @@ import { URLS } from "@/services/urls";
 import { QrCode } from "@chakra-ui/react";
 import { RESOURCE_URL } from "@/constants";
 import { IUser } from "@/models/User";
-
-// Print styles for PDF generation
-const printStyles = `
-@media print {
-    * {
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    
-    body {
-        margin: 0;
-        padding: 20px;
-        background: white !important;
-    }
-    
-    .ticket-container {
-        page-break-inside: avoid;
-        margin-bottom: 20px;
-        border: 1px solid #ccc !important;
-        border-radius: 15px !important;
-        background: #f7f7f7 !important;
-        padding: 10px !important;
-        display: flex !important;
-        align-items: center !important;
-        min-height: 200px !important;
-    }
-    
-    .ticket-left {
-        flex: 0.7;
-        border-right: 1px dashed #999 !important;
-        height: 100%;
-        padding: 10px !important;
-        display: flex !important;
-    }
-    
-    .ticket-right {
-        flex: 0.3;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 10px !important;
-    }
-    
-    .event-image-container {
-        width: 150px;
-        height: 100%;
-        border: 1px solid #ccc !important;
-        border-radius: 10px !important;
-        padding: 0;
-        display: flex !important;
-        justify-content: center !important;
-        margin-right: 15px;
-    }
-    
-    .event-image {
-        width: 70%;
-        height: 100%;
-        background: #e2e2e2 !important;
-        border-radius: 10px !important;
-        object-fit: cover !important;
-    }
-    
-    .event-details {
-        flex: 1;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        gap: 10px;
-    }
-    
-    .event-title {
-        font-family: 'Raleway-Medium', sans-serif !important;
-        font-size: 20px !important;
-        font-weight: 600 !important;
-        margin-bottom: 10px !important;
-        color: #000 !important;
-    }
-    
-    .date-time-container {
-        display: flex !important;
-        gap: 10px !important;
-        margin-bottom: 10px !important;
-    }
-    
-    .date-time-badge {
-        border: 1px solid #ccc !important;
-        border-radius: 20px !important;
-        padding: 5px 10px !important;
-        font-size: 10px !important;
-        background: white !important;
-        color: #000 !important;
-    }
-    
-    .ticket-info-container {
-        display: flex !important;
-        gap: 15px !important;
-        margin-bottom: 10px !important;
-    }
-    
-    .ticket-info-item {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        text-align: center !important;
-    }
-    
-    .ticket-info-label {
-        font-weight: 700 !important;
-        font-size: 12px !important;
-        color: #000 !important;
-        margin-bottom: 2px !important;
-    }
-    
-    .ticket-info-value {
-        font-size: 10px !important;
-        color: #333 !important;
-    }
-    
-    .user-info {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-    
-    .user-avatar {
-        width: 30px !important;
-        height: 30px !important;
-        border-radius: 50% !important;
-        background: #ddd !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 12px !important;
-        color: #000 !important;
-    }
-    
-    .qr-code-container {
-        margin-bottom: 10px !important;
-    }
-    
-    .powered-by {
-        font-size: 12px !important;
-        color: #666 !important;
-        text-align: center !important;
-    }
-    
-    .powered-by-brand {
-        color: #007bff !important;
-        font-style: italic !important;
-    }
-    
-    /* Hide non-essential elements during print */
-     .no-print {
-         display: none !important;
-     }
-     
-     /* Show print-only elements */
-     .print-only {
-         display: block !important;
-         text-align: center !important;
-         margin-bottom: 30px !important;
-         padding: 20px !important;
-         border-bottom: 2px solid #ccc !important;
-     }
-     
-     .print-title {
-         font-size: 28px !important;
-         font-weight: bold !important;
-         color: #000 !important;
-         margin-bottom: 10px !important;
-     }
-     
-     .print-subtitle {
-         font-size: 16px !important;
-         color: #666 !important;
-     }
-     
-     /* Ensure QR codes are visible */
-     canvas, svg {
-         -webkit-print-color-adjust: exact !important;
-         color-adjust: exact !important;
-         print-color-adjust: exact !important;
-     }
- }
- 
- @media screen {
-     .print-only {
-         display: none !important;
-     }
- }
-`;
+import { IPurchaseTicket } from "@/models/PurchaseTicket";
+import { capitalizeFLetter } from "@/utils/capitalizeLetter";
+import { textLimit } from "@/utils/textlimiter";
+import { useColorMode } from "@/components/ui/color-mode";
+import useCustomTheme from "@/hooks/useTheme";
+import { useReactToPrint } from "react-to-print";
+import QRCode from "react-qr-code";
+import { IoClose } from "react-icons/io5";
+import CustomButton from "../../customButton";
+import EventImage from "../../eventDetails/EventImage";
+import { dateFormat, timeFormat } from "@/helpers/utils/dateFormat";
+import EventPrice from "../../eventDetails/EventPrice";
+import UserImage from "../../eventDetails/UserImage";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { DownloadTwoIcon } from "@/components/svg";
 
 interface TicketPurchaseSuccessModalProps {
   onClose?: () => void;
@@ -233,9 +55,22 @@ function TicketPurchaseSuccessModal({
   email = "otuekongdomino@gmail.com",
   type = "EVENT",
 }: TicketPurchaseSuccessModalProps) {
+  const {
+    bodyTextColor,
+    primaryColor,
+    secondaryBackgroundColor,
+    mainBackgroundColor,
+    ticketBackgroundColor,
+    headerTextColor,
+  } = useCustomTheme();
+
+  const { colorMode } = useColorMode();
+
+  const [open, setOpen] = React.useState(false);
+  const [total, setTotal] = React.useState(0);
   const event = useAtomValue(activeEventAtom);
   const quantity = useAtomValue(ticketCountAtom);
-  const [tickets, setTicket] = React.useState<IProductTypeData[]>([]);
+  const [tickets, setTicket] = React.useState<IPurchaseTicket[]>([]);
   const [userDetails, setUserDetails] = React.useState<IUser>(() => {
     const item = localStorage.getItem(STORAGE_KEYS.USER_DETAILS);
     if (item) {
@@ -253,10 +88,13 @@ function TicketPurchaseSuccessModal({
     }
   });
 
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const reactToPrintFn = useReactToPrint({ contentRef });
+
   // Inject print styles
   React.useEffect(() => {
     const styleElement = document.createElement("style");
-    styleElement.textContent = printStyles;
     document.head.appendChild(styleElement);
 
     return () => {
@@ -282,7 +120,9 @@ function TicketPurchaseSuccessModal({
         "This is the data my people",
         data?.data?.content[0]?.event?.productTypeData
       );
-      setTicket(data?.data?.content[0]?.event?.productTypeData);
+      const item: IPurchaseTicket[] = data?.data?.content;
+      setTicket(item);
+      setTotal(data?.data?.content?.length);
     }
   }, [isFetching, isError, data]);
 
@@ -304,276 +144,660 @@ function TicketPurchaseSuccessModal({
     });
   };
 
+  const checkEventDay = (item: any) => {
+    return (
+      new Date(item[item?.length - 1])?.getDate() >=
+        new Date(event?.startDate)?.getDate() &&
+      new Date(item[item?.length - 1])?.getDate() <=
+        new Date(event?.endDate)?.getDate()
+    );
+  };
+
+  const isToDay = (item: any) => {
+    return (
+      new Date()?.getDate() === new Date(item)?.getDate() ||
+      new Date(event?.endDate)?.getDate() === new Date(item)?.getDate()
+    );
+  };
+
+  const ref: any = React.useRef(null);
+
+  const scroll = (scrolloffset: number) => {
+    ref.current.scrollLeft += scrolloffset;
+  };
+
   return (
     <Box w="full" borderRadius="2xl" overflow="hidden" position="relative">
-      {/* Print-only header */}
-      <Box className="print-only">
-        <Text className="print-title">Event Tickets</Text>
-        <Text className="print-subtitle">
-          Chasescroll - Your Digital Event Experience
-        </Text>
-      </Box>
-
       <Box p={[2, 2, 8, 8]}>
-        {/* Success Header */}
-        <HStack mb={8} spaceX={4}>
-          <Box
-            w="50px"
-            h="50px"
-            bg="green.500"
-            borderRadius="full"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <TickCircle size="24" color="white" variant="Bold" />
-          </Box>
-          <VStack align="start" spaceY={1}>
-            <Text fontSize="2xl" fontWeight="bold" color="black">
-              Thanks for order!
-            </Text>
-            <Text fontSize="lg" color="gray.600">
-              #{orderNumber}
-            </Text>
-          </VStack>
-        </HStack>
+        {/* Event Details Section */}
 
-        <HStack
-          w="full"
-          justifyContent={"center"}
+        <Flex
+          p={"4"}
+          position={"relative"}
+          h={"100vh"}
+          flexDirection={"column"}
+          bg={mainBackgroundColor}
+          roundedTop={"md"}
+          width={"full"}
           alignItems={"center"}
-          mb="30px"
+          px={"2"}
+          gap={"2"}
         >
-          <Text
-            fontSize="sm"
-            color="gray.600"
-            mb={2}
-            textTransform="uppercase"
-            letterSpacing="wide"
-            textAlign={"center"}
-            fontWeight={800}
+          <Flex
+            bg={mainBackgroundColor}
+            w={"full"}
+            h={"50px"}
+            display={["none", "none", "flex"]}
+            position={"relative"}
+            gap={"4"}
+            px={"4"}
+            mb={"2"}
+            width={"full"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
           >
-            Ticket Details
-          </Text>
-
-          {!isFetching && !isError && tickets.length > 0 && (
-            <Box
-              className="no-print"
-              as="button"
-              onClick={() => {
-                window.print();
-              }}
-              cursor="pointer"
-              display="flex"
-              alignItems="center"
+            <Flex
+              pos={"absolute"}
+              display={["none", "none", "flex"]}
+              w={"full"}
+              justifyContent={"center"}
             >
-              <DocumentDownload
-                size={"30px"}
-                color={"blue"}
-                variant="Outline"
+              <Text fontSize={"20px"} fontWeight={"bold"} textAlign={"center"}>
+                Ticket Details
+              </Text>
+            </Flex>
+            <Box display={["none", "none", "block"]}>
+              <CustomButton
+                width={"fit"}
+                px={"3"}
+                borderRadius={"full"}
+                onClick={() => reactToPrintFn()}
+                text="Download Ticket"
               />
             </Box>
-          )}
-        </HStack>
+          </Flex>
 
-        {/* Event Details Section */}
-        <Flex
-          mb={8}
-          w="full"
-          justifyContent={"center"}
-          flexDir={"column"}
-          alignItems={"center"}
-        >
-          {/* Event Info Grid */}
-          {isFetching && (
-            <VStack
-              w="full"
-              h="50px"
-              justifyContent={"center"}
-              alignItems={"center"}
+          <Box
+            w={"full"}
+            bg={mainBackgroundColor}
+            h={"full"}
+            pos={"relative"}
+            flex={"1"}
+            display={["none", "none", "flex"]}
+          >
+            <Flex
+              ref={contentRef}
+              width={"full"}
+              position={"absolute"}
+              inset={"0px"}
+              flex={"1"}
+              overflowY={"auto"}
+              flexDirection={"column"}
+              gap={"4"}
+              px={["4", "4", "0px"]}
             >
-              <Spinner size="md" colorPalette={"primaryColor"} />
-              <Text fontSize={"20px"}>Loading Tickets</Text>
-            </VStack>
-          )}
-          {!isFetching &&
-            !isError &&
-            tickets.map((item, index) => (
+              {/* {eventData.length > 0 && ( */}
               <Flex
-                key={index.toString()}
-                className="ticket-container"
-                w={["100%", "100%", "70%", "70%"]}
-                h="200px"
-                borderRadius={"15px"}
-                bgColor="gray.100"
-                p="10px"
-                mb="20px"
+                w={"full"}
+                h={"fit-content"}
+                flexDir={"column"}
                 alignItems={"center"}
+                gap={"4"}
               >
-                <Flex
-                  className="ticket-left"
-                  flex={0.7}
-                  borderRightWidth={"1px"}
-                  borderRightColor={"grey"}
-                  borderRightStyle={"dashed"}
-                  h="full"
-                  p="10px"
-                >
-                  <Box
-                    className="event-image-container"
-                    w="150px"
-                    h="full"
-                    borderWidth={"1px"}
-                    borderRadius="10px"
-                    borderColor="gray.300"
-                    p="0px"
-                    display={"flex"}
-                    justifyContent={"center"}
-                  >
-                    <Box
-                      className="event-image"
-                      w="70%"
-                      h="full"
-                      bg="gray.200"
-                      borderRadius={"10px"}
-                      overflow={"hidden"}
+                {tickets?.map((item, index: number) => {
+                  return (
+                    <Flex
+                      key={index}
+                      maxW={"750px"}
+                      w={"full"}
+                      flexDir={["row"]}
+                      rounded={"16px"}
+                      pb={"4"}
+                      p={["4"]}
+                      bg={
+                        index === 0
+                          ? secondaryBackgroundColor
+                          : ticketBackgroundColor
+                      }
+                      alignItems={["center"]}
+                      justifyContent={"center"}
+                      gap={"4"}
                     >
-                      <Image
-                        src={RESOURCE_URL + event?.currentPicUrl}
-                        w="full"
-                        h="full"
-                        objectFit={"contain"}
-                      />
-                    </Box>
-                  </Box>
-                  <VStack
-                    className="event-details"
-                    flex="1"
-                    justifyContent={"center"}
-                  >
-                    <Text
-                      className="event-title"
-                      fontFamily="Raleway-Medium"
-                      fontSize={"20px"}
-                      fontWeight="600"
-                    >
-                      {" "}
-                      {event?.eventName}
-                    </Text>
-                    <HStack className="date-time-container">
-                      <HStack
-                        className="date-time-badge"
-                        borderWidth={"1px"}
-                        borderColor="gray.300"
-                        borderRadius={"full"}
-                        justifyContent={"center"}
-                        alignItems="center"
-                        p="5px"
-                      >
-                        <Text fontSize="10px">
-                          {new Date(event?.startDate).toDateString()}
-                        </Text>
-                      </HStack>
-
-                      <HStack
-                        className="date-time-badge"
-                        borderWidth={"1px"}
-                        borderColor="gray.300"
-                        borderRadius={"full"}
-                        justifyContent={"center"}
-                        alignItems="center"
-                        p="5px"
-                      >
-                        <Text fontSize="10px">
-                          {new Date(event?.startTime).toLocaleTimeString()}
-                        </Text>
-                      </HStack>
-                    </HStack>
-
-                    <HStack className="ticket-info-container">
-                      <VStack
-                        className="ticket-info-item"
-                        justifyContent={"center"}
-                        alignItems="center"
-                        spaceY={-2}
-                      >
-                        <Text
-                          className="ticket-info-label"
-                          fontWeight={"700"}
-                          fontSize={"12px"}
-                        >
-                          Ticket Type
-                        </Text>
-                        <Text className="ticket-info-value" fontSize="10px">
-                          {item?.ticketType}
-                        </Text>
-                      </VStack>
-
-                      <VStack
-                        className="ticket-info-item"
-                        justifyContent={"center"}
-                        alignItems="center"
-                        spaceY={-2}
-                      >
-                        <Text
-                          className="ticket-info-label"
-                          fontWeight={"700"}
-                          fontSize={"12px"}
-                        >
-                          Price
-                        </Text>
-                        <Text className="ticket-info-value" fontSize="10px">
-                          {item?.ticketPrice}
-                        </Text>
-                      </VStack>
-
-                      {/* <VStack justifyContent={'center'} alignItems="center" spaceY={-2}>
-                                            <Text fontWeight={'700'} fontSize={'12px'}>Quantity</Text>
-                                            <Text fontSize="10px">{quantity}</Text>
-                                        </VStack> */}
-                    </HStack>
-
-                    <HStack className="user-info">
-                      <Avatar.Root className="user-avatar">
-                        <Avatar.Fallback name={userDetails?.firstName} />
-                        <Avatar.Image
-                          src={RESOURCE_URL + userDetails?.data?.imgMain?.value}
+                      <Flex w={["fit-content"]} gap={"4"}>
+                        <EventImage
+                          width={["201px"]}
+                          height={["201px"]}
+                          data={event}
                         />
-                      </Avatar.Root>
-
-                      <VStack>
-                        <Text>
-                          {userDetails?.firstName} {userDetails?.lastName}
+                      </Flex>
+                      <Flex
+                        flexDir={"column"}
+                        pos={"relative"}
+                        gap={"4"}
+                        px={["4", "4", "0px"]}
+                      >
+                        <Text
+                          fontSize={"24px"}
+                          lineHeight={"18px"}
+                          fontWeight={"bold"}
+                        >
+                          {capitalizeFLetter(textLimit(event?.eventName, 20))}
                         </Text>
-                      </VStack>
-                    </HStack>
-                  </VStack>
-                </Flex>
-                <VStack
-                  className="ticket-right"
-                  flex={0.3}
-                  alignItems={"center"}
-                >
-                  <Box className="qr-code-container">
-                    <QrCode.Root value="https://www.google.com">
-                      <QrCode.Frame>
-                        <QrCode.Pattern />
-                      </QrCode.Frame>
-                    </QrCode.Root>
-                  </Box>
-                  <Text className="powered-by" fontSize={"12px"}>
-                    Powered by{" "}
-                    <Text
-                      className="powered-by-brand"
-                      color="primaryColor"
-                      fontStyle={"italic"}
-                    >
-                      Chasescroll
-                    </Text>
-                  </Text>
-                </VStack>
+
+                        {isToDay(
+                          item?.scanTimeStamp
+                            ? Array.isArray(item?.scanTimeStamp) &&
+                              item?.scanTimeStamp.length > 0
+                              ? item?.scanTimeStamp[
+                                  item?.scanTimeStamp.length - 1
+                                ]
+                              : ""
+                            : ""
+                        ) && (
+                          <>
+                            {checkEventDay(item?.scanTimeStamp) && (
+                              <Box
+                                width={"fit-content"}
+                                height={"fit-content"}
+                                position={"absolute"}
+                                bottom={"50px"}
+                                right={"0"}
+                                bg={"transparent"}
+                              >
+                                <Image
+                                  src={"/images/approved.svg"}
+                                  alt={"approved"}
+                                  width={"100px"}
+                                  height={"100px"}
+                                  objectFit={"cover"}
+                                />
+                              </Box>
+                            )}
+                          </>
+                        )}
+                        <Flex gap={"4"} alignItems={"center"}>
+                          <Flex
+                            border={`0.5px solid ${
+                              index === 0 ? bodyTextColor : "#5465E0"
+                            }`}
+                            h={"34px"}
+                            justifyContent={"center"}
+                            alignItems={"center"}
+                            px={"3"}
+                            color={
+                              colorMode === "light" ? "#5B5858" : bodyTextColor
+                            }
+                            fontSize={"10px"}
+                            lineHeight={"13.68px"}
+                            rounded={"full"}
+                          >
+                            {dateFormat(event?.startDate)}
+                          </Flex>
+                          <Flex
+                            border={`0.5px solid ${
+                              index === 0 ? bodyTextColor : "#5465E0"
+                            }`}
+                            h={"34px"}
+                            justifyContent={"center"}
+                            alignItems={"center"}
+                            px={"3"}
+                            color={
+                              colorMode === "light" ? "#5B5858" : bodyTextColor
+                            }
+                            fontSize={"10px"}
+                            lineHeight={"13.68px"}
+                            rounded={"full"}
+                          >
+                            {timeFormat(event?.startDate)}
+                          </Flex>
+                        </Flex>
+                        <Flex gap={"4"}>
+                          <Flex flexDirection={"column"}>
+                            <Text
+                              fontWeight={"bold"}
+                              fontSize={"10.26px"}
+                              lineHeight={"16.42px"}
+                              color={"brand.chasescrollBlue"}
+                            >
+                              Ticket Type
+                            </Text>
+                            <Text
+                              color={bodyTextColor}
+                              fontWeight={"semibold"}
+                              fontSize={"10.26px"}
+                              lineHeight={"13.68px"}
+                            >
+                              {item.ticketType}
+                            </Text>
+                          </Flex>
+                          <Flex flexDirection={"column"}>
+                            <Text
+                              fontWeight={"bold"}
+                              fontSize={"10.26px"}
+                              lineHeight={"16.42px"}
+                              color={"brand.chasescrollBlue"}
+                            >
+                              Ticket fee
+                            </Text>
+                            <Text
+                              color={bodyTextColor}
+                              fontSize={"10.26px"}
+                              lineHeight={"13.68px"}
+                            >
+                              <EventPrice
+                                minPrice={item?.boughtPrice}
+                                maxPrice={item?.boughtPrice}
+                                currency={event?.currency}
+                              />
+                            </Text>
+                          </Flex>
+                          <Flex flexDirection={"column"} alignItems={"center"}>
+                            <Text
+                              fontWeight={"bold"}
+                              fontSize={"10.26px"}
+                              lineHeight={"16.42px"}
+                              color={"brand.chasescrollBlue"}
+                            >
+                              Quantity
+                            </Text>
+                            <Text
+                              color={bodyTextColor}
+                              fontSize={"10.26px"}
+                              lineHeight={"13.68px"}
+                            >
+                              {index + 1}/{total}
+                            </Text>
+                          </Flex>
+                        </Flex>
+                        <Flex gap={"4"} fontSize={"xs"}>
+                          <UserImage size={"lg"} user={event?.createdBy} />
+                          <Flex flexDirection={"column"}>
+                            <Text fontWeight={"bold"} color={headerTextColor}>
+                              Name
+                            </Text>
+                            <Text color={bodyTextColor}>
+                              {event?.createdBy?.firstName +
+                                " " +
+                                event?.createdBy?.lastName}
+                            </Text>
+                          </Flex>
+                        </Flex>
+                      </Flex>
+
+                      <Flex
+                        gap={"1"}
+                        borderLeft={["1px dashed black"]}
+                        w={["fit-content"]}
+                        alignItems={"center"}
+                        border={""}
+                        pl={["4"]}
+                        flexDir={"column"}
+                      >
+                        <Box
+                          bg={"white"}
+                          p={"3"}
+                          w={"fit-content"}
+                          rounded={"16px"}
+                        >
+                          <QRCode
+                            style={{
+                              height: "200px",
+                              width: "200px",
+                              zIndex: 20,
+                            }}
+                            value={item?.id}
+                            viewBox={`0 0 256 256`}
+                          />
+                        </Box>
+                        <Text textAlign={"center"} fontSize={"xs"}>
+                          Powered by Chasescroll
+                        </Text>
+                      </Flex>
+                    </Flex>
+                  );
+                })}
               </Flex>
-            ))}
+              {/* )} */}
+            </Flex>
+          </Box>
+
+          {total > 1 && (
+            <Flex
+              w={"full"}
+              top={"200px"}
+              position={"fixed"}
+              display={["flex", "flex", "none"]}
+              zIndex={"1000"}
+              justifyContent={"space-between"}
+              gap={"4"}
+              px={"2"}
+            >
+              <Flex
+                onClick={() => scroll(-400)}
+                as="button"
+                position={"relative"}
+                bgColor={mainBackgroundColor}
+                w={"40px"}
+                h={"40px"}
+                borderWidth={"1px"}
+                borderColor={bodyTextColor}
+                justifyContent={"center"}
+                alignItems={"center"}
+                rounded={"full"}
+              >
+                <FaChevronLeft color={bodyTextColor} />
+              </Flex>
+              <Flex
+                onClick={() => scroll(400)}
+                as="button"
+                bgColor={mainBackgroundColor}
+                w={"40px"}
+                h={"40px"}
+                borderWidth={"1px"}
+                borderColor={bodyTextColor}
+                justifyContent={"center"}
+                alignItems={"center"}
+                rounded={"full"}
+              >
+                <FaChevronRight color={bodyTextColor} />
+              </Flex>
+            </Flex>
+          )}
+
+          <Flex
+            ref={ref}
+            position={"relative"}
+            width={"full"}
+            h={"full"}
+            display={["flex", "flex", "none"]}
+            scrollBehavior={"smooth"}
+            className="hide-scrollbar"
+            flexDirection={"row"}
+            overflowX={"auto"}
+            alignItems={"center"}
+            gap={"4"}
+            pl={["2", "1", "0px"]}
+          >
+            <Flex width={"full"} gap={"6"}>
+              {tickets.map((item, index: number) => {
+                return (
+                  <Flex
+                    key={index}
+                    minW={"90vw"}
+                    flexDir={["column", "column", "row"]}
+                    rounded={"16px"}
+                    pb={"4"}
+                    pt={["4"]}
+                    p={["0px", "0px", "4"]}
+                    bg={
+                      index === 0
+                        ? secondaryBackgroundColor
+                        : ticketBackgroundColor
+                    }
+                    alignItems={["start", "start", "center"]}
+                    justifyContent={"center"}
+                  >
+                    <Flex
+                      width={"full"}
+                      justifyContent={"space-between"}
+                      pos={"relative"}
+                      px={"4"}
+                      pt={"4"}
+                      position={"relative"}
+                      mb={"20px"}
+                    >
+                      <Flex
+                        pos={"absolute"}
+                        width={"full"}
+                        pr={"6"}
+                        justifyContent={"center"}
+                      >
+                        <Text
+                          fontSize={"16px"}
+                          fontWeight={"bold"}
+                          textAlign={"center"}
+                        >
+                          Ticket Details
+                        </Text>
+                      </Flex>
+                      <Box
+                        ml={"auto"}
+                        cursor={"pointer"}
+                        pos={"absolute"}
+                        zIndex={"10"}
+                        onClick={() => reactToPrintFn()}
+                        display={["block", "block", "none"]}
+                      >
+                        <DownloadTwoIcon />
+                      </Box>
+                    </Flex>
+                    <Flex
+                      pos={"relative"}
+                      w={["full", "full", "fit-content"]}
+                      gap={"4"}
+                      mt={["4", "4", "0px"]}
+                      px={["4", "4", ""]}
+                    >
+                      <EventImage
+                        width={["full", "full", "201px"]}
+                        height={["201px", "201px", "201px"]}
+                        data={event}
+                      />
+                      {isToDay(
+                        item?.scanTimeStamp
+                          ? Array.isArray(item?.scanTimeStamp) &&
+                            item?.scanTimeStamp.length > 0
+                            ? item?.scanTimeStamp[
+                                item?.scanTimeStamp.length - 1
+                              ]
+                            : ""
+                          : ""
+                      ) && (
+                        <>
+                          {checkEventDay(item?.scanTimeStamp) && (
+                            <Box
+                              width={"fit-content"}
+                              height={"fit-content"}
+                              position={"absolute"}
+                              bottom={"-50px"}
+                              right={"3"}
+                              bg={"transparent"}
+                            >
+                              <Image
+                                src={"/assets/approved.svg"}
+                                alt={"approved"}
+                                width={"100px"}
+                                height={"100px"}
+                                objectFit={"cover"}
+                              />
+                            </Box>
+                          )}
+                        </>
+                      )}
+                    </Flex>
+                    <Flex
+                      pos={"relative"}
+                      flexDir={"column"}
+                      mt={"2"}
+                      gap={"3"}
+                      px={["4", "4", "0px"]}
+                    >
+                      <Text fontSize={"18px"} fontWeight={"semibold"}>
+                        {capitalizeFLetter(textLimit(event?.eventName, 20))}
+                      </Text>
+
+                      <Flex
+                        gap={"4"}
+                        display={["flex", "flex", "none"]}
+                        fontSize={"xs"}
+                      >
+                        <UserImage size={"lg"} user={event?.createdBy} />
+                        <Flex flexDirection={"column"}>
+                          <Text
+                            fontWeight={"bold"}
+                            color={"brand.chasescrollBlue"}
+                          >
+                            Name
+                          </Text>
+                          <Text color={bodyTextColor}>
+                            {event?.createdBy?.firstName +
+                              " " +
+                              event?.createdBy?.lastName}
+                          </Text>
+                        </Flex>
+                      </Flex>
+                      <Flex gap={"4"} alignItems={"center"}>
+                        <Flex
+                          border={`0.5px solid ${
+                            index === 0 ? "#CDD3FD" : "#5465E0"
+                          }`}
+                          h={"34px"}
+                          justifyContent={"center"}
+                          alignItems={"center"}
+                          px={"3"}
+                          color={bodyTextColor}
+                          fontSize={"10px"}
+                          lineHeight={"13.68px"}
+                          rounded={"full"}
+                        >
+                          {dateFormat(event?.startDate)}
+                        </Flex>
+                        <Flex
+                          border={`0.5px solid ${
+                            index === 0 ? "#CDD3FD" : "#5465E0"
+                          }`}
+                          h={"34px"}
+                          justifyContent={"center"}
+                          alignItems={"center"}
+                          px={"3"}
+                          color={bodyTextColor}
+                          fontSize={"10px"}
+                          lineHeight={"13.68px"}
+                          rounded={"full"}
+                        >
+                          {timeFormat(event?.startDate)}
+                        </Flex>
+                      </Flex>
+                      <Flex gap={"4"}>
+                        <Flex flexDirection={"column"}>
+                          <Text
+                            fontWeight={"bold"}
+                            fontSize={"10.26px"}
+                            lineHeight={"16.42px"}
+                            color={"brand.chasescrollBlue"}
+                          >
+                            Ticket Type
+                          </Text>
+                          <Text
+                            color={bodyTextColor}
+                            fontSize={"10.26px"}
+                            lineHeight={"13.68px"}
+                          >
+                            {item.ticketType}
+                          </Text>
+                        </Flex>
+                        <Flex flexDirection={"column"}>
+                          <Text
+                            fontWeight={"bold"}
+                            fontSize={"10.26px"}
+                            lineHeight={"16.42px"}
+                            color={"brand.chasescrollBlue"}
+                          >
+                            Ticket fee
+                          </Text>
+                          <Text
+                            color={bodyTextColor}
+                            fontSize={"10.26px"}
+                            lineHeight={"13.68px"}
+                          >
+                            <EventPrice
+                              minPrice={item?.boughtPrice}
+                              maxPrice={item?.boughtPrice}
+                              currency={event?.currency}
+                            />
+                          </Text>
+                        </Flex>
+                        <Flex flexDirection={"column"}>
+                          <Text
+                            fontWeight={"bold"}
+                            fontSize={"10.26px"}
+                            lineHeight={"16.42px"}
+                            color={"brand.chasescrollBlue"}
+                          >
+                            Number
+                          </Text>
+                          <Text
+                            color={bodyTextColor}
+                            fontSize={"10.26px"}
+                            lineHeight={"13.68px"}
+                          >
+                            {index + 1}/{total}
+                          </Text>
+                        </Flex>
+                      </Flex>
+                      <Flex
+                        gap={"4"}
+                        display={["none", "none", "flex"]}
+                        fontSize={"xs"}
+                      >
+                        <UserImage size={"lg"} user={event?.createdBy} />
+                        <Flex flexDirection={"column"} gap={"2"}>
+                          <Text
+                            fontWeight={"bold"}
+                            color={"brand.chasescrollBlue"}
+                          >
+                            Name
+                          </Text>
+                          <Text color={bodyTextColor}>
+                            {event?.createdBy?.firstName +
+                              " " +
+                              event?.createdBy?.lastName}
+                          </Text>
+                        </Flex>
+                      </Flex>
+                    </Flex>
+
+                    <Flex
+                      gap={"1"}
+                      borderLeft={["", "", "1px dashed black"]}
+                      mt={"2"}
+                      borderTop={[
+                        "1px dashed black",
+                        "1px dashed black",
+                        "0px",
+                      ]}
+                      w={["full", "full", "fit-content"]}
+                      alignItems={"center"}
+                      border={""}
+                      py={["4", "4", "0px"]}
+                      pl={["0px", "0px", "4"]}
+                      flexDir={"column"}
+                    >
+                      <Box
+                        bg={"white"}
+                        p={"3"}
+                        w={"fit-content"}
+                        rounded={"16px"}
+                      >
+                        <QRCode
+                          style={{
+                            height: "200px",
+                            width: "200px",
+                            zIndex: 20,
+                          }}
+                          value={item?.id}
+                          viewBox={`0 0 256 256`}
+                        />
+                      </Box>
+                      <Text textAlign={"center"} fontSize={"xs"}>
+                        Powered by Chasescroll
+                      </Text>
+                    </Flex>
+                  </Flex>
+                );
+              })}
+            </Flex>
+          </Flex>
         </Flex>
       </Box>
     </Box>
