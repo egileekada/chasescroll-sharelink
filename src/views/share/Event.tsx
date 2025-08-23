@@ -183,7 +183,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                                 </Flex>
                             </Flex>
                             <Flex w={"full"} display={["flex", "flex", "none"]} >
-                                <EventLocation showLink={true} data={event} limit={50} />
+                                <EventLocation showLink={true} data={event} />
                             </Flex>
                             <EventDate {...event} />
                             <Flex w={"full"} justifyContent={"space-between"} gap={"4"} >
