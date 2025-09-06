@@ -168,9 +168,7 @@ function TicketPurchaseSuccessModal({
 
   return (
     <Box w="full" borderRadius="2xl" overflow="hidden" position="relative">
-      <Box p={[2, 2, 8, 8]}>
-        {/* Event Details Section */}
-
+      <Box p={[2, 2, 8, 8]}> 
         <Flex
           p={"4"}
           position={"relative"}
