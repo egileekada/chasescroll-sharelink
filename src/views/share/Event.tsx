@@ -1,21 +1,15 @@
 'use client';
 import httpService from '@/services/httpService';
 import { URLS } from '@/services/urls';
-import { Box, Button, Container, Flex, Heading, HStack, Skeleton, VStack, Menu, Portal, Avatar, ProgressCircle, AbsoluteCenter } from '@chakra-ui/react';
+import { Button, Flex } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Text } from "@chakra-ui/react"
-import React, { useState } from 'react'
+import { Text } from "@chakra-ui/react"
+import React from 'react'
 import { AxiosResponse } from 'axios';
 import { PaginatedResponse } from '@/models/PaginatedResponse';
 import { IEventType, IProductTypeData } from '@/models/Event';
-import { RESOURCE_URL } from '@/constants';
-import { ArrowLeft, ArrowLeft2, Location, Calendar1, ArrowDown2 } from 'iconsax-reactjs';
-import ChasescrollBox from '@/components/Custom/ChasescrollBox';
 import MapComponent from '@/components/Custom/MapComponent';
 import { capitalizeFLetter } from '@/utils/capitalizeLetter';
-import { useRouter } from 'next/navigation'
-import { DateTime } from 'luxon';
-import Head from 'next/head';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { activeEventAtom, activeTicketAtom, affiliateIDAtom, ticketurchaseStepAtom } from '@/states/activeTicket';
 import TicketPurchaseModal from '@/components/Custom/modals/TicketPurchaseModal/Index';
@@ -24,10 +18,6 @@ import { STORAGE_KEYS } from '@/utils/StorageKeys';
 import EventDate from '@/components/Custom/eventDate';
 import EventCreator from '@/components/Custom/eventCreator';
 import DescriptionCard from '@/components/Custom/description';
-import { IPinnedFundrasier } from '@/models/PinnedFundraiser';
-import { IPinnedProduct } from '@/models/PinnedProduct';
-import { formatNumber } from '@/utils/formatNumber';
-import CustomText from '@/components/Custom/CustomText';
 import useCustomTheme from '@/hooks/useTheme';
 import EventLocation from '@/components/Custom/eventLocation';
 import ProductImageScroller from '@/components/Custom/productImageScroller';
@@ -143,17 +133,18 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
 
                         <Flex w={"full"} flexDir={"column"} gap={"3"} >
                             <Text fontWeight={"700"} fontSize={["16px", "16px", "24px"]} >{capitalizeFLetter(event?.eventName)}</Text>
-                            <Flex w={"full"} flexDir={["column-reverse", "column-reverse", "column"]} gap={"2"} >
-                                <DescriptionCard limit={200} label='Event Details' description={event?.eventDescription} />
+                            <Flex w={"full"} flexDir={["column-reverse", "column-reverse", "column"]} gap={"2"} > 
+                                <Flex display={["none", "none", "flex"]} >
+                                    <DescriptionCard limit={1000} label='About This Event' description={event?.eventDescription} />
+                                </Flex>
+                                <Flex display={["flex", "flex", "none"]} >
+                                    <DescriptionCard limit={750} label='About This Event' description={event?.eventDescription} />
+                                </Flex>
                                 <Flex flexDir={isAdmin ? "column" : "row"} gap={"2"} w={"full"} >
                                     <Flex w={[isAdmin ? "full" : "fit-content", isAdmin ? "full" : "full", "full"]} alignItems={["start", "start", "center"]} flexDir={["column", "column", "row"]} justifyContent={["start", "start", "space-between"]} gap={"3"} >
                                         <Flex gap={"3"} w={[isAdmin ? "full" : "fit-content", isAdmin ? "full" : "full", "full"]} alignItems={[isAdmin ? "center" : "start", isAdmin ? "center" : "start", "center"]} flexDir={[isAdmin ? "row" : "column", isAdmin ? "row" : "column", "row"]} justifyContent={[isAdmin ? "space-between" : "start", isAdmin ? "space-between" : "start", "space-between"]}  >
                                             <EventCreator {...event} />
                                             <Flex display={["flex", "flex", "none"]} w={"full"} flexDir={"column"} gap={"2"} mr={isAdmin ? "auto" : "0px"} >
-                                                {/* {attendeesVisibility && (
-                                        <InterestedUsers event={props} />
-                                    )} */}
-
                                                 {(!event?.isOrganizer && event?.eventMemberRole !== "ADMIN" && event?.eventMemberRole !== "COLLABORATOR") && (
                                                     <PrBtn data={event} />
                                                 )}
@@ -161,8 +152,6 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                                         </Flex>
                                     </Flex>
                                     <Flex display={["flex", "flex", "none"]} maxW={["full", "full", "full", "430px", "430px"]} flexDir={"column"} gap={"2"} w={"full"} >
-
-
                                         {((event?.eventMemberRole !== "COLLABORATOR") && !event?.isOrganizer && event?.eventMemberRole !== "ADMIN") && (
                                             <Flex bg={mainBackgroundColor} bottom={"0px"} w={"full"} flexDir={"column"} rounded={"16px"} gap={"3"} p={"3"} borderWidth={"1px"} borderColor={"#DEDEDE"} style={{ boxShadow: "0px 20px 70px 0px #C2C2C21A" }} >
                                                 <Flex w={"full"} gap={"2"} flexDir={"column"} >
@@ -173,12 +162,6 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                                                 </Flex>
                                             </Flex>
                                         )}
-                                        {/* {isAdmin && (
-                                            <OrganizeBtn {...props} />
-                                        )}
-                                        {isOrganizer && (
-                                            <VolunteerBtn {...props} />
-                                        )} */}
                                     </Flex>
                                 </Flex>
                             </Flex>
@@ -198,14 +181,8 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                                                     </Flex>
                                                 </Flex>
                                             </Flex>
-                                        )}
-                                        {/* {isAdmin && (
-                                            <OrganizeBtn {...props} />
-                                        )} */}
-                                    </Flex>
-                                    {/* {isOrganizer && (
-                                        <VolunteerBtn {...props} />
-                                    )} */}
+                                        )} 
+                                    </Flex> 
                                     {(!event?.isOrganizer && event?.eventMemberRole !== "ADMIN" && event?.eventMemberRole !== "COLLABORATOR") && (
                                         <Flex w={"fit-content"} >
                                             <PrBtn data={event} />
@@ -223,7 +200,7 @@ function Event({ id, affiliateID }: { id: string, affiliateID?: string }) {
                                 <Flex w={"full"} display={["flex", "flex", "none"]} >
                                     <EventMesh data={event} />
                                 </Flex>
-                                <EventDonation item={event} />  
+                                <EventDonation item={event} />
                             </Flex>
                             <Flex w={"full"} flexDir={"column"} gap={"2"} >
                                 {/* <EventLocation {...event} /> */}
