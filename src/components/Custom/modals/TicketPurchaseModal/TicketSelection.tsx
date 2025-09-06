@@ -209,7 +209,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     <>
       <Flex
         w={"full"}
-        maxH={"100vh"}
+        maxH={"80vh"}
         display={["flex", "flex", "none"]}
         h={"full"}
         overflowY={"auto"}
@@ -230,7 +230,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
               borderBottomWidth={"1px"}
               gap={"1"}
             >
-              <Text fontWeight={"700"} fontSize={"25px"}>
+              <Text fontWeight={"700"} fontSize={"16px"}>
                 {event?.eventName}
               </Text>
               <Text fontSize={"14px"}>{dateFormat(event?.startDate)}</Text>
@@ -612,7 +612,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
               borderBottomWidth={"1px"}
               gap={"1"}
             >
-              <Text fontWeight={"700"} fontSize={"25px"}>
+              <Text fontWeight={"700"} fontSize={"16px"}>
                 {event?.eventName}
               </Text>
               <Text fontSize={"14px"}>{dateFormat(event?.startDate)}</Text>
