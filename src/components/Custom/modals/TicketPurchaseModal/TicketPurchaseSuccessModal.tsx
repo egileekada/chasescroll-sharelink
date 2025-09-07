@@ -174,7 +174,7 @@ function TicketPurchaseSuccessModal({
         <Flex
           p={"4"}
           position={"relative"}
-          h={"100vh"}
+          h={"80vh"}
           flexDirection={"column"}
           bg={mainBackgroundColor}
           roundedTop={"md"}

@@ -61,6 +61,7 @@ import EventMesh from "@/components/eventMesh";
 import EventDonation from "@/components/eventDonation";
 import PrBtn from "@/components/prBtn";
 
+
 export const currentIdAtom = atom<string | null>(null);
 export const showTicketModalAtom = atom(false);
 function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
@@ -408,6 +409,7 @@ function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
               >
                 <Flex w={"full"} display={["flex", "flex", "none"]}>
                   <EventMesh data={event} />
+
                 </Flex>
                 <EventDonation item={event} />
               </Flex>
