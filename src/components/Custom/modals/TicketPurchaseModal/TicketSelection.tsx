@@ -81,7 +81,23 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
         if (ticket.quantity + 1 > (eventTicket?.maxTicketBuy as number)) {
           toaster.create({
             title: "Error",
-            description: `You can only buy ${eventTicket?.maxTicketBuy} tickets`,
+            description: `Oops! Ticket purchases are limited to ${eventTicket?.maxTicketBuy} per person to ensure fair availability.`,
+            type: "error",
+          });
+          return;
+        }
+
+        if (
+          ticket.quantity + 1 >
+          Number(eventTicket?.totalNumberOfTickets) -
+            Number(eventTicket?.ticketsSold)
+        ) {
+          toaster.create({
+            title: "Error",
+            description: `Oops! We only have ${
+              Number(eventTicket?.totalNumberOfTickets) -
+              Number(eventTicket?.ticketsSold)
+            } of this tickets left. We’ve added the available ticket amount to your cart.`,
             type: "error",
           });
           return;
@@ -161,6 +177,19 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
     });
     setTotalSelectedTicketPrice(total);
     return formatNumber(total);
+  };
+
+  const disabledCheck = (item: IProductTypeData) => {
+    if (new Date(Number(item?.endDate)) < new Date()) {
+      return true;
+    } else if (
+      Number(item?.totalNumberOfTickets) - Number(item?.ticketsSold) ===
+      0
+    ) {
+      return true;
+    } else {
+      return false;
+    }
   };
 
   const handleNext = () => {
@@ -321,9 +350,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                               ? getTicket(item?.ticketType)?.quantity
                               : 0}
                             <IconButton
-                              disabled={
-                                new Date(Number(item?.endDate)) < new Date()
-                              }
+                              disabled={disabledCheck(item)}
                               onClick={() => increment(item.ticketType)}
                               bgColor={secondaryBackgroundColor}
                               color={headerTextColor}
@@ -439,9 +466,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                             ? getTicket(item?.ticketType)?.quantity
                             : 0}
                           <IconButton
-                            disabled={
-                              new Date(Number(item?.endDate)) < new Date()
-                            }
+                            disabled={disabledCheck(item)}
                             onClick={() => increment(item.ticketType)}
                             bgColor={secondaryBackgroundColor}
                             color={headerTextColor}
@@ -532,25 +557,6 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                     <Text>NGN {calculateTotal()}</Text>
                   </Flex>
                 </VStack>
-
-                {/* <Button
-                                    bgColor="primaryColor"
-                                    size="lg"
-                                    w="100%"
-                                    h="60px"
-                                    borderRadius="full"
-                                    onClick={() => handleNext()}
-                                    disabled={selectedTickets === null}
-                                    _disabled={{
-                                        bg: "gray.300",
-                                        color: "gray.500",
-                                        cursor: "not-allowed"
-                                    }}
-                                    display={['block', 'block', 'none', 'none']}
-                                    mt="20px"
-                                >
-                                    Get Ticket
-                                </Button> */}
               </Box>
             )}
           </Flex>
@@ -713,9 +719,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                             ? getTicket(item?.ticketType)?.quantity
                             : 0}
                           <IconButton
-                            disabled={
-                              new Date(Number(item?.endDate)) < new Date()
-                            }
+                            disabled={disabledCheck(item)}
                             onClick={() => increment(item.ticketType)}
                             bgColor={secondaryBackgroundColor}
                             color={headerTextColor}
@@ -819,9 +823,7 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                             ? getTicket(item?.ticketType)?.quantity
                             : 0}
                           <IconButton
-                            disabled={
-                              new Date(Number(item?.endDate)) < new Date()
-                            }
+                            disabled={disabledCheck(item)}
                             onClick={() => increment(item.ticketType)}
                             bgColor={secondaryBackgroundColor}
                             color={headerTextColor}
