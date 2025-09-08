@@ -68,7 +68,7 @@ function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
   const setCurrentId = useSetAtom(currentIdAtom);
 
   setCurrentId(id);
-  const [event, setEvent] = React.useState<IEventType | any>(null);
+  const [event, setEvent] = React.useState<IEventType>({} as IEventType);
   const [ticketType, setTicketType] = React.useState<string | null>(null);
   const [tickets, setTickets] = React.useState<IProductTypeData[]>([]);
   const [showModal, setShowModal] = useAtom(showTicketModalAtom);
@@ -294,7 +294,7 @@ function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
                               fontWeight={"500"}
                               fontSize={["xs", "xs", "sm"]}
                             >
-                              See ticket available for this event
+                              See ticket{event?.productTypeData?.length > 1 ? "s" : ""} available for this event
                             </Text>
                             <Flex w={"full"} justifyContent={"end"}>
                               <Button
@@ -361,7 +361,7 @@ function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
                               fontWeight={"500"}
                               fontSize={["xs", "xs", "sm"]}
                             >
-                              See ticket available for this event
+                              See ticket{event?.productTypeData?.length > 1 ? "s" : ""} available for this event
                             </Text>
                             <Flex w={"full"} justifyContent={"end"}>
                               <Button
