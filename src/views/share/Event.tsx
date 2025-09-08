@@ -207,11 +207,12 @@ function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
                                 flexDir={["column-reverse", "column-reverse", "column"]}
                                 gap={"2"}
                             >
-                                <DescriptionCard
-                                    limit={200}
-                                    label="Event Details"
-                                    description={event?.eventDescription}
-                                />
+                                <Flex display={["none", "none", "flex"]} >
+                                    <DescriptionCard limit={1000} label='About This Event' description={event?.eventDescription} />
+                                </Flex>
+                                <Flex display={["flex", "flex", "none"]} >
+                                    <DescriptionCard limit={750} label='About This Event' description={event?.eventDescription} />
+                                </Flex>
                                 <Flex flexDir={isAdmin ? "column" : "row"} gap={"2"} w={"full"}>
                                     {/* <Flex flex={"1"} display={["none", "none", "flex"]} >
                                         <EventCreator {...event} />
@@ -232,7 +233,7 @@ function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
                                                 isAdmin ? "center" : "start",
                                                 isAdmin ? "center" : "start",
                                                 "center",
-                                            ]} 
+                                            ]}
                                             flexDir={[
                                                 isAdmin ? "row" : "column",
                                                 isAdmin ? "row" : "column",
