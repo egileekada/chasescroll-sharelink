@@ -264,8 +264,8 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                       >
                         <Flex flexDir={"column"} gap={"2"}>
                           <Text fontWeight={"semibold"}>
-                            {capitalizeFLetter(item.ticketType)}{" "}
-                            {formatNumberWithK(item?.ticketPrice, false)}
+                            {capitalizeFLetter(item.ticketType)}{" - "}
+                            {formatNumber(item?.ticketPrice)}
                           </Text>
                           {item.ticketType === "Early Bird" ? (
                             <>
@@ -381,8 +381,8 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                       >
                         <Flex flexDir={"column"} gap={"2"}>
                           <Text fontWeight={"semibold"}>
-                            {capitalizeFLetter(item.ticketType)}{" "}
-                            {formatNumberWithK(item?.ticketPrice, false)}
+                            {capitalizeFLetter(item.ticketType)}{" - "}
+                            {formatNumber(item?.ticketPrice)}
                           </Text>
                           {item.ticketType === "Early Bird" ? (
                             <>
@@ -644,8 +644,8 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                       >
                         <Flex flexDir={"column"} gap={"2"}>
                           <Text fontWeight={"semibold"}>
-                            {capitalizeFLetter(item.ticketType)}{" "}
-                            {formatNumberWithK(item?.ticketPrice, false)}
+                            {capitalizeFLetter(item.ticketType)}{" - "}
+                            {formatNumber(item?.ticketPrice)}
                           </Text>
                           {item.ticketType === "Early Bird" ? (
                             <>
@@ -748,8 +748,8 @@ const TicketSelection: React.FC<TicketSelectionProps> = ({
                       >
                         <Flex flexDir={"column"} gap={"2"}>
                           <Text fontWeight={"semibold"}>
-                            {capitalizeFLetter(item.ticketType)}{" "}
-                            {formatNumberWithK(item?.ticketPrice, false)}
+                            {capitalizeFLetter(item.ticketType)}{" - "}
+                            {formatNumber(item?.ticketPrice)}
                           </Text>
                           {item.ticketType === "Early Bird" ? (
                             <>
