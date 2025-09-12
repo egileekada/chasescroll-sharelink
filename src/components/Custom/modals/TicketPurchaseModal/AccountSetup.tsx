@@ -153,7 +153,6 @@ function AccountSetup() {
         });
         return;
       } else {
-        alert("Not an affliate");
         createTicket({
           eventID: event?.id as string,
           ticketBuyObjectList: selectedTickets?.map((item) => ({

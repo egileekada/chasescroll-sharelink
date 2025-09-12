@@ -23,7 +23,11 @@ import { AxiosResponse } from "axios";
 import { PaginatedResponse } from "@/models/PaginatedResponse";
 import { IEventType, IProductTypeData } from "@/models/Event"; 
 import MapComponent from "@/components/Custom/MapComponent";
-import { capitalizeFLetter } from "@/utils/capitalizeLetter"; 
+import { capitalizeFLetter } from "@/utils/capitalizeLetter";
+import { useRouter } from "next/navigation";
+import { DateTime } from "luxon";
+// Metadata is now handled at the page level in Next.js 13+ app directory
+
 import { atom, useAtom, useSetAtom } from "jotai";
 import {
     activeEventAtom,
@@ -143,28 +147,6 @@ function Event({ id, affiliateID }: { id: string; affiliateID?: string }) {
 
     return (
         <>
-            <Head>
-                <title>{event?.eventName ? `${event.eventName} | Chasescroll` : 'Chasescroll | Event'}</title>
-                <meta name="description" content={event?.eventDescription || 'Join this amazing event on Chasescroll'} />
-                
-                {/* Open Graph / Facebook */}
-                <meta property="og:type" content="website" />
-                <meta property="og:title" content={event?.eventName || 'Event on Chasescroll'} />
-                <meta property="og:description" content={event?.eventDescription || 'Join this amazing event on Chasescroll'} />
-                <meta property="og:image" content={event?.currentPicUrl || event?.picUrls?.[0] || '/logo.png'} />
-                <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
-                <meta property="og:site_name" content="Chasescroll" />
-                
-                {/* Twitter */}
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={event?.eventName || 'Event on Chasescroll'} />
-                <meta name="twitter:description" content={event?.eventDescription || 'Join this amazing event on Chasescroll'} />
-                <meta name="twitter:image" content={event?.currentPicUrl || event?.picUrls?.[0] || '/logo.png'} />
-                
-                {/* Additional meta tags */}
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
-            </Head>
             {!isLoading && (
                 <Flex
                     w={"full"}
