@@ -27,6 +27,7 @@ import { capitalizeFLetter } from "@/utils/capitalizeLetter";
 import { useRouter } from "next/navigation";
 import { DateTime } from "luxon";
 // Metadata is now handled at the page level in Next.js 13+ app directory
+
 import { atom, useAtom, useSetAtom } from "jotai";
 import {
     activeEventAtom,
