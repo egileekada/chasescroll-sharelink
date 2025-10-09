@@ -29,14 +29,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
                 const title = `${event.eventName} | Chasescroll`
                 const description = event.eventDescription || 'Join this amazing event on Chasescroll'
-                const pageUrl = `${BASE_URL}/share/event?id=${id}`
+                // const pageUrl = `${BASE_URL}/share/event?id=${id}`
 
                 return {
                     title,
                     description,
                     openGraph: {
                         type: 'website',
-                        url: pageUrl,
+                        // url: pageUrl,
                         title,
                         description,
                         images: [
@@ -55,9 +55,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
                         description,
                         images: [imageUrl],
                     },
-                    alternates: {
-                        canonical: pageUrl,
-                    },
+                    // alternates: {
+                    //     canonical: pageUrl,
+                    // },
                 }
             }
         } catch (error) {
