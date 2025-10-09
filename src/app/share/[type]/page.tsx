@@ -23,7 +23,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
         console.log(event);
   
-        if (event) {
+        if (event?.eventName) {
           const imageUrl = event.currentPicUrl?.startsWith('http')
             ? event.currentPicUrl
             : `${RESOURCE_URL}${event.currentPicUrl || '/logo.png'}`
