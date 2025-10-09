@@ -1,7 +1,5 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import httpService, { unsecureHttpService } from '@/services/httpService'
-import { URLS } from '@/services/urls'
 import { RESOURCE_URL } from '@/constants'
 
 interface Props {
@@ -9,84 +7,116 @@ interface Props {
     searchParams: { id: string; affiliateID?: string }
 }
 
-// Your site base URL — update this to your production domain
+const BASE_URL_API = process.env.NEXT_PUBLIC_BASE_URL
+
+// ✅ Force server-side rendering for proper OG metadata
+export const dynamic = 'force-static'
+export const revalidate = 60
+
+// ✅ Your production domain
 const BASE_URL = 'https://chasescroll.com'
 
+// ✅ Generate metadata for OG / Twitter / WhatsApp previews
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { type } = params
     const { id } = searchParams
-  
-    if (type?.toLowerCase() === 'event' && id) {
-      try {
-        const response = await unsecureHttpService.get(`${URLS.event}/events`, { params: { id } })
-        const event = response.data?.content[0]
 
-        console.log(event);
-  
-        if (event?.eventName) {
-          const imageUrl = event.currentPicUrl?.startsWith('http')
-            ? event.currentPicUrl
-            : `${RESOURCE_URL}${event.currentPicUrl || '/logo.png'}`
-  
-          const title = `${event.eventName} | Chasescroll`
-          const description = event.eventDescription || 'Join this amazing event on Chasescroll'
-          const pageUrl = `${BASE_URL}/share/event?id=${id}`
-  
-          return {
-            metadataBase: new URL(BASE_URL),
-            title,
-            description,
-            openGraph: {
-              type: 'website',
-              url: pageUrl,
-              title,
-              description,
-              images: [
-                {
-                  url: imageUrl,
-                  width: 1200,
-                  height: 630,
-                  alt: event.eventName || 'Event Image',
+    if (type === 'event' && id) {
+        try {
+            // ✅ Use fetch instead of httpService
+            const res = await fetch(`${BASE_URL_API}/events?id=${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-              ],
-              siteName: 'Chasescroll',
-            },
-            twitter: {
-              card: 'summary_large_image',
-              title,
-              description,
-              images: [imageUrl],
-            },
-            alternates: { canonical: pageUrl },
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching event metadata:', error)
-      }
-    }
-  
-    // fallback
-    return {
-      metadataBase: new URL(BASE_URL),
-      title: 'Chasescroll | Share',
-      description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-      openGraph: {
-        type: 'website',
-        url: `${BASE_URL}/share`,
-        title: 'Chasescroll | Share',
-        description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-        images: [{ url: `${BASE_URL}/logo.png`, width: 1200, height: 630 }],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: 'Chasescroll | Share',
-        description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-        images: [`${BASE_URL}/logo.png`],
-      },
-    }
-  }
-  
+                // force cache for static generation
+                next: { revalidate: 60 },
+            })
 
+            if (!res.ok) {
+                throw new Error(`Failed to fetch event metadata: ${res.status}`)
+            }
+
+            const data = await res.json()
+            const event = data?.content?.[0]
+
+            console.log(event);
+            
+
+            if (event?.eventName) {
+                const imageUrl = event.currentPicUrl?.startsWith('http')
+                    ? event.currentPicUrl
+                    : `${RESOURCE_URL}${event.currentPicUrl || '/logo.png'}`
+
+                const title = `${event.eventName} | Chasescroll`
+                const description = event.eventDescription || 'Join this amazing event on Chasescroll'
+                const pageUrl = `${BASE_URL}/share/event?id=${id}`
+
+                return {
+                    title,
+                    description,
+                    openGraph: {
+                        type: 'website',
+                        url: pageUrl,
+                        title,
+                        description,
+                        images: [
+                            {
+                                url: imageUrl,
+                                width: 1200,
+                                height: 630,
+                                alt: event.eventName || 'Event Image',
+                            },
+                        ],
+                        siteName: 'Chasescroll',
+                    },
+                    twitter: {
+                        card: 'summary_large_image',
+                        title,
+                        description,
+                        images: [imageUrl],
+                    },
+                    alternates: {
+                        canonical: pageUrl,
+                    },
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching event metadata:', error)
+        }
+    }
+
+    // ✅ Default fallback metadata
+    return {
+        title: 'Chasescroll | Share',
+        description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+        openGraph: {
+            type: 'website',
+            url: `${BASE_URL}/share`,
+            title: 'Chasescroll | Share',
+            description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+            images: [
+                {
+                    url: `${BASE_URL}/logo.png`,
+                    width: 1200,
+                    height: 630,
+                    alt: 'Chasescroll Logo',
+                },
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: 'Chasescroll | Share',
+            description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+            images: [`${BASE_URL}/logo.png`],
+        },
+        alternates: {
+            canonical: `${BASE_URL}/share`,
+        },
+    }
+}
+
+// ✅ Dynamically render the right component
 export default async function SharePage({ params, searchParams }: Props) {
     const { type } = params
     const { id, affiliateID } = searchParams
@@ -96,7 +126,6 @@ export default async function SharePage({ params, searchParams }: Props) {
         notFound()
     }
 
-    // Dynamically import components by type
     const ComponentMap = {
         event: async () => {
             const EventComponent = (await import('@/views/share/Event')).default
