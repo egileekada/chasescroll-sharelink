@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
+import httpService, { unsecureHttpService } from '@/services/httpService'
+import { URLS } from '@/services/urls'
 import { RESOURCE_URL } from '@/constants'
 
 interface Props {
@@ -7,46 +9,32 @@ interface Props {
     searchParams: { id: string; affiliateID?: string }
 }
 
-const BASE_URL_API = process.env.NEXT_PUBLIC_BASE_URL
-
-// ✅ Force server-side rendering for proper OG metadata
+// ✅ Force server-side static generation so crawlers (WhatsApp, LinkedIn, etc.) see OG tags
 export const dynamic = 'force-static'
-export const revalidate = 60
+export const revalidate = 60 // revalidate every 60 seconds
 
-// ✅ Your production domain
+// ✅ Your production domain (important for absolute URLs)
 const BASE_URL = 'https://chasescroll.com'
 
-// ✅ Generate metadata for OG / Twitter / WhatsApp previews
+// ✅ Generate SEO + social metadata server-side
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { type } = params
     const { id } = searchParams
 
-    if (type === 'event' && id) {
+    console.log(type);
+
+
+    if (type === 'event') {
         try {
-            // ✅ Use fetch instead of httpService
-            const res = await fetch(`${BASE_URL_API}/events?id=${id}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                // force cache for static generation
-                next: { revalidate: 60 },
-            })
+            const response = await unsecureHttpService.get(`${URLS.event}/events`, { params: { id } })
+            const event = response.data?.content[0]
 
-            if (!res.ok) {
-                throw new Error(`Failed to fetch event metadata: ${res.status}`)
-            }
 
-            const data = await res.json()
-            const event = data?.content?.[0]
-
-            console.log(event);
-            
 
             if (event?.eventName) {
-                const imageUrl = event.currentPicUrl?.startsWith('http')
-                    ? event.currentPicUrl
-                    : `${RESOURCE_URL}${event.currentPicUrl || '/logo.png'}`
+
+                console.log(RESOURCE_URL + event.currentPicUrl);
+                const imageUrl = `${RESOURCE_URL}${event.currentPicUrl}`
 
                 const title = `${event.eventName} | Chasescroll`
                 const description = event.eventDescription || 'Join this amazing event on Chasescroll'
@@ -116,7 +104,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     }
 }
 
-// ✅ Dynamically render the right component
+// ✅ Render page dynamically by type
 export default async function SharePage({ params, searchParams }: Props) {
     const { type } = params
     const { id, affiliateID } = searchParams
@@ -126,6 +114,7 @@ export default async function SharePage({ params, searchParams }: Props) {
         notFound()
     }
 
+    // ✅ Lazy-load the appropriate share view
     const ComponentMap = {
         event: async () => {
             const EventComponent = (await import('@/views/share/Event')).default
