@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import httpService from '@/services/httpService'
+import httpService, { unsecureHttpService } from '@/services/httpService'
 import { URLS } from '@/services/urls'
 import { RESOURCE_URL } from '@/constants'
 
@@ -12,88 +12,80 @@ interface Props {
 // Your site base URL — update this to your production domain
 const BASE_URL = 'https://chasescroll.com'
 
-// ✅ Dynamically generate metadata for Open Graph, Twitter, and WhatsApp previews
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { type } = params
     const { id } = searchParams
-
+  
     if (type?.toLowerCase() === 'event' && id) {
-        try {
-            const response = await httpService.get(`${URLS.event}/events`, { params: { id } })
-            const event = response.data?.content?.[0]
+      try {
+        const response = await unsecureHttpService.get(`${URLS.event}/events`, { params: { id } })
+        const event = response.data?.content[0]
 
-            if (event) {
-                const imageUrl = event.currentPicUrl?.startsWith('http')
-                    ? event.currentPicUrl
-                    : `${RESOURCE_URL}${event.currentPicUrl || '/logo.png'}`
-
-                const title = `${event.eventName} | Chasescroll`
-                const description = event.eventDescription || 'Join this amazing event on Chasescroll'
-                // const pageUrl = `${BASE_URL}/share/event?id=${id}`
-
-                return {
-                    title,
-                    description,
-                    openGraph: {
-                        type: 'website',
-                        // url: pageUrl,
-                        title,
-                        description,
-                        images: [
-                            {
-                                url: imageUrl,
-                                width: 1200,
-                                height: 630,
-                                alt: event.eventName || 'Event Image',
-                            },
-                        ],
-                        siteName: 'Chasescroll',
-                    },
-                    twitter: {
-                        card: 'summary_large_image',
-                        title,
-                        description,
-                        images: [imageUrl],
-                    },
-                    // alternates: {
-                    //     canonical: pageUrl,
-                    // },
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching event metadata:', error)
+        console.log(event);
+  
+        if (event?.eventName) {
+          const imageUrl = event.currentPicUrl?.startsWith('http')
+            ? event.currentPicUrl
+            : `${RESOURCE_URL}${event.currentPicUrl || '/logo.png'}`
+  
+          const title = `${event.eventName} | Chasescroll`
+          const description = event.eventDescription || 'Join this amazing event on Chasescroll'
+          const pageUrl = `${BASE_URL}/share/event?id=${id}`
+  
+          return {
+            metadataBase: new URL(BASE_URL),
+            title,
+            description,
+            openGraph: {
+              type: 'website',
+              url: pageUrl,
+              title,
+              description,
+              images: [
+                {
+                  url: imageUrl,
+                  width: 1200,
+                  height: 630,
+                  alt: event.eventName || 'Event Image',
+                },
+              ],
+              siteName: 'Chasescroll',
+            },
+            twitter: {
+              card: 'summary_large_image',
+              title,
+              description,
+              images: [imageUrl],
+            },
+            alternates: { canonical: pageUrl },
+          }
         }
+      } catch (error) {
+        console.error('Error fetching event metadata:', error)
+      }
     }
-
-    // Default fallback metadata
+  
+    // fallback
     return {
+      metadataBase: new URL(BASE_URL),
+      title: 'Chasescroll | Share',
+      description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+      openGraph: {
+        type: 'website',
+        url: `${BASE_URL}/share`,
         title: 'Chasescroll | Share',
         description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-        openGraph: {
-            type: 'website',
-            url: `${BASE_URL}/share`,
-            title: 'Chasescroll | Share',
-            description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-            images: [
-                {
-                    url: `${BASE_URL}/logo.png`,
-                    width: 1200,
-                    height: 630,
-                    alt: 'Chasescroll Logo',
-                },
-            ],
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: 'Chasescroll | Share',
-            description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-            images: [`${BASE_URL}/logo.png`],
-        },
-        alternates: {
-            canonical: `${BASE_URL}/share`,
-        },
+        images: [{ url: `${BASE_URL}/logo.png`, width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Chasescroll | Share',
+        description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+        images: [`${BASE_URL}/logo.png`],
+      },
     }
-}
+  }
+  
 
 export default async function SharePage({ params, searchParams }: Props) {
     const { type } = params
