@@ -9,84 +9,102 @@ interface Props {
     searchParams: { id: string; affiliateID?: string }
 }
 
-// Your site base URL — update this to your production domain
+// ✅ Force server-side static generation so crawlers (WhatsApp, LinkedIn, etc.) see OG tags
+export const dynamic = 'force-static'
+export const revalidate = 60 // revalidate every 60 seconds
+
+// ✅ Your production domain (important for absolute URLs)
 const BASE_URL = 'https://chasescroll.com'
 
+// ✅ Generate SEO + social metadata server-side
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { type } = params
     const { id } = searchParams
-  
-    if (type?.toLowerCase() === 'event' && id) {
-      try {
-        const response = await unsecureHttpService.get(`${URLS.event}/events`, { params: { id } })
-        const event = response.data?.content[0]
 
-        console.log(event);
-  
-        if (event?.eventName) {
-          const imageUrl = event.currentPicUrl?.startsWith('http')
-            ? event.currentPicUrl
-            : `${RESOURCE_URL}${event.currentPicUrl || '/logo.png'}`
-  
-          const title = `${event.eventName} | Chasescroll`
-          const description = event.eventDescription || 'Join this amazing event on Chasescroll'
-          const pageUrl = `${BASE_URL}/share/event?id=${id}`
-  
-          return {
-            metadataBase: new URL(BASE_URL),
-            title,
-            description,
-            openGraph: {
-              type: 'website',
-              url: pageUrl,
-              title,
-              description,
-              images: [
-                {
-                  url: imageUrl,
-                  width: 1200,
-                  height: 630,
-                  alt: event.eventName || 'Event Image',
-                },
-              ],
-              siteName: 'Chasescroll',
-            },
-            twitter: {
-              card: 'summary_large_image',
-              title,
-              description,
-              images: [imageUrl],
-            },
-            alternates: { canonical: pageUrl },
-          }
+    console.log(type);
+
+
+    if (type === 'event') {
+        try {
+            const response = await unsecureHttpService.get(`${URLS.event}/events`, { params: { id } })
+            const event = response.data?.content[0]
+
+
+
+            if (event?.eventName) {
+
+                console.log(RESOURCE_URL + event.currentPicUrl);
+                const imageUrl = `${RESOURCE_URL}${event.currentPicUrl}`
+
+                const title = `${event.eventName} | Chasescroll`
+                const description = event.eventDescription || 'Join this amazing event on Chasescroll'
+                const pageUrl = `${BASE_URL}/share/event?id=${id}`
+
+                return {
+                    title,
+                    description,
+                    openGraph: {
+                        type: 'website',
+                        url: pageUrl,
+                        title,
+                        description,
+                        images: [
+                            {
+                                url: imageUrl,
+                                width: 1200,
+                                height: 630,
+                                alt: event.eventName || 'Event Image',
+                            },
+                        ],
+                        siteName: 'Chasescroll',
+                    },
+                    twitter: {
+                        card: 'summary_large_image',
+                        title,
+                        description,
+                        images: [imageUrl],
+                    },
+                    alternates: {
+                        canonical: pageUrl,
+                    },
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching event metadata:', error)
         }
-      } catch (error) {
-        console.error('Error fetching event metadata:', error)
-      }
     }
-  
-    // fallback
-    return {
-      metadataBase: new URL(BASE_URL),
-      title: 'Chasescroll | Share',
-      description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-      openGraph: {
-        type: 'website',
-        url: `${BASE_URL}/share`,
-        title: 'Chasescroll | Share',
-        description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-        images: [{ url: `${BASE_URL}/logo.png`, width: 1200, height: 630 }],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: 'Chasescroll | Share',
-        description: 'Discover amazing events, fundraisers, and services on Chasescroll',
-        images: [`${BASE_URL}/logo.png`],
-      },
-    }
-  }
-  
 
+    // ✅ Default fallback metadata
+    return {
+        title: 'Chasescroll | Share',
+        description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+        openGraph: {
+            type: 'website',
+            url: `${BASE_URL}/share`,
+            title: 'Chasescroll | Share',
+            description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+            images: [
+                {
+                    url: `${BASE_URL}/logo.png`,
+                    width: 1200,
+                    height: 630,
+                    alt: 'Chasescroll Logo',
+                },
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: 'Chasescroll | Share',
+            description: 'Discover amazing events, fundraisers, and services on Chasescroll',
+            images: [`${BASE_URL}/logo.png`],
+        },
+        alternates: {
+            canonical: `${BASE_URL}/share`,
+        },
+    }
+}
+
+// ✅ Render page dynamically by type
 export default async function SharePage({ params, searchParams }: Props) {
     const { type } = params
     const { id, affiliateID } = searchParams
@@ -96,7 +114,7 @@ export default async function SharePage({ params, searchParams }: Props) {
         notFound()
     }
 
-    // Dynamically import components by type
+    // ✅ Lazy-load the appropriate share view
     const ComponentMap = {
         event: async () => {
             const EventComponent = (await import('@/views/share/Event')).default
