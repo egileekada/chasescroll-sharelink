@@ -8,7 +8,7 @@ interface Props {
 }
 
 // ✅ Force server-side static generation so crawlers (WhatsApp, LinkedIn, etc.) see OG tags
-export const dynamic = 'force-static'
+// export const dynamic = 'force-static'
 // export const revalidate = 60 // revalidate every 60 seconds
 
 // ✅ Your production domain (important for absolute URLs) 
@@ -100,8 +100,8 @@ export const dynamic = 'force-static'
 // }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata | undefined> {
-    const { type } = params
-    const { id } = searchParams
+    const { type } = await params
+    const { id } = await searchParams
     const url = process.env.NEXT_PUBLIC_BASE_URL as string
 
 
