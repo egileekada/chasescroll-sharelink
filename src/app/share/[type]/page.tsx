@@ -29,8 +29,6 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
             const response = await unsecureHttpService.get(`${URLS.event}/events`, { params: { id } })
             const event = response.data?.content[0]
 
-
-
             if (event?.eventName) {
 
                 console.log(RESOURCE_URL + event.currentPicUrl);
