@@ -491,7 +491,7 @@ function AccountSetup() {
                     <HStack mt="10px">
                       <Text color="red">
                         You already have an account on chasecroll, For security
-                        reasons <span onClick={() => setStep(3)} style={{ cursor: "pointer" }} >{("Login")?.replace("", " ")}</span>
+                        reasons <span onClick={() => setStep(3)} style={{ cursor: "pointer", color: "primaryColor", textDecoration: "underline", fontWeight: "bold" }} >{("Login")?.replace("", " ")}</span>
                       </Text>
                       {/* <Text
                         color="primaryColor"
