@@ -519,6 +519,7 @@ function AccountSetup() {
                   h="60px"
                   bgColor="primaryColor"
                   size="lg"
+                  color={"white"}
                   borderRadius="full"
                   px={8}
                   disabled={values?.email && values?.firstName && values?.lastName ? false : true}
