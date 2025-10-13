@@ -39,6 +39,7 @@ import { STORAGE_KEYS } from "@/utils/StorageKeys";
 import { ITicketCreatedModel } from "@/models/TicketCreatedModel";
 import PaymentButton from "../../PaymentButton";
 import { IUser } from "@/models/User";
+import useCustomTheme from "@/hooks/useTheme";
 
 function AccountSetup() {
   const [step, setStep] = useAtom(ticketurchaseStepAtom);
@@ -48,6 +49,9 @@ function AccountSetup() {
   const [canPay, setCanPay] = useAtom(canPayAtom);
   const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
   const [selectedTickets, setSelectedTickets] = useAtom(selectedTicketsAtom);
+
+  const { primaryColor } = useCustomTheme()
+
   const [createTicketIsLoading, setCreateTicketIsLoading] =
     React.useState(false);
   const setCreatedTicket = useSetAtom(createdTicketAtom);
@@ -491,7 +495,7 @@ function AccountSetup() {
                     <HStack mt="10px">
                       <Text color="red">
                         You already have an account on chasecroll, For security
-                        reasons <span onClick={() => setStep(3)} style={{ cursor: "pointer", color: "primaryColor", textDecoration: "underline", fontWeight: "bold" }} >{("Login")?.replace("", " ")}</span>
+                        reasons <span onClick={() => setStep(3)} style={{ cursor: "pointer", color: primaryColor, textDecoration: "underline", fontWeight: "bold" }} >{("Login")?.replace("", " ")}</span>
                       </Text>
                       {/* <Text
                         color="primaryColor"
