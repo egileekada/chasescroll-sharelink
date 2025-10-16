@@ -32,7 +32,7 @@ export default async function EventDetailsPage(props: Props) {
 
   // ✅ If it's a crawler, redirect to static OG HTML version
   if (isCrawler) {
-    redirect(`/events/${id}/opengraph`);
+    redirect(`/share/event/${id}/opengraph`);
   }
 
   // ✅ Otherwise, render your full Event page for humans
