@@ -62,18 +62,11 @@ export async function GET(
       </html>
     `;
 
-    // Convert to binary so Next.js returns it as raw data
-    const arrayBuffer = await res.arrayBuffer();
-
-    // Detect image type from response headers
-    const contentType = res.headers.get("content-type") || "image/*";
-
-    // Return the binary response directly
-    return new NextResponse(Buffer.from(arrayBuffer), {
+    return new NextResponse(html, {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=86400, immutable",
-        "Access-Control-Allow-Origin": "*", // allow crawlers from anywhere
+        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
