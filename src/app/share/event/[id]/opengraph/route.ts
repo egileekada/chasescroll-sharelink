@@ -35,8 +35,7 @@ export async function GET(
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           
-          <title>${event.eventName}</title>
-          <meta name="description" content="${event.eventDescription}" />
+          <title>${event.eventName}</title> 
 
           <!-- ✅ Open Graph -->
           <meta property="og:type" content="website" />
@@ -46,8 +45,7 @@ export async function GET(
 
           <!-- ✅ Twitter -->
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="${event.eventName}" />
-          <meta name="twitter:description" content="${event.eventDescription}" />
+          <meta name="twitter:title" content="${event.eventName}" /> 
           <meta name="twitter:image" content="${RESOURCE_URL + event.currentPicUrl}" />
 
           <meta http-equiv="refresh" content="0; url=${baseUrl}/share/event/${eventId}" />
