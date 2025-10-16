@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 // import { URLS } from "@/services/urls"
 
 type Props = {
-  params: Promise<{ slug: string }>
+  params: Promise<{ id: string }>
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   // read route params
-  const id = params.slug
+  const id = params.id
   const url = process.env.NEXT_PUBLIC_BASE_URL as string
 
   // fetch data
@@ -50,7 +50,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function EventDetailsPage(props: Props) {
   const params = await props.params;
 
-  const id = params.slug;
+  const id = params.id;
   const searchParams = (await props.searchParams) || {};
   const affiliateID = typeof searchParams['affiliate_id'] === 'string'
     ? searchParams['affiliate_id']
