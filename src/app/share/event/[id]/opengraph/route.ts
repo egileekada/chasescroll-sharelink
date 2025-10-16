@@ -40,8 +40,7 @@ export async function GET(
 
           <!-- ✅ Open Graph -->
           <meta property="og:type" content="website" />
-          <meta property="og:title" content="${capitalizeFLetter(event.eventName)}" />
-          // <meta property="og:description" content="${event.eventDescription}" />
+          <meta property="og:title" content="${capitalizeFLetter(event.eventName)}" /> 
           <meta property="og:image" content="${RESOURCE_URL + event.currentPicUrl}" />
           <meta property="og:url" content="${baseUrl}/events/${eventId}" />
 

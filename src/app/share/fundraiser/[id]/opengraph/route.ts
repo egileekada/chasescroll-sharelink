@@ -27,8 +27,12 @@ export async function GET(
     const event = data?.content?.[0];
 
     if (!event) {
-      return new NextResponse("Event not found", { status: 404 });
+      return new NextResponse("Funderaiser not found", { status: 404 });
     }
+
+    const imageUrl = event.bannerImage?.startsWith("http")
+      ? event.bannerImage
+      : `${RESOURCE_URL}${event.bannerImage}`;
 
     // Construct Open Graph metadata HTML
     const html = `
@@ -43,22 +47,25 @@ export async function GET(
             <!-- ✅ Open Graph -->
             <meta property="og:type" content="website" />
             <meta property="og:title" content="${capitalizeFLetter(event.name)}" />
-            <meta property="og:image" content="${RESOURCE_URL + event.bannerImage}" />
+            <meta property="og:image" content="${imageUrl}" />
             <meta property="og:description" content="${event.description}" />
-            <meta property="og:url" content="${baseUrl}/events/${id}" />
+            <meta property="og:url" content="/events/${id}" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
   
             <!-- ✅ Twitter -->
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content="${capitalizeFLetter(event.name)}" /> 
-            <meta name="twitter:image" content="${RESOURCE_URL + event.bannerImage}" />
+          <meta name="twitter:description" content="${event.description}" />
+            <meta name="twitter:image" content="${imageUrl}" />
   
-            <meta http-equiv="refresh" content="0; url=${baseUrl}/share/fundraiser?id=${id}" />
+            <meta http-equiv="refresh" content="0; url=${baseUrl}/share/fundraiser/${id}" />
           </head>
           <body>
-            <p>Redirecting to event...</p>
+            <p>Redirecting to fundraiser...</p>
             <script>
               // Fallback redirect for crawlers that ignore meta refresh
-              window.location.href = "/share/fundraiser?id=${id}";
+              window.location.href = "/share/fundraiser/${id}";
             </script>
           </body>
         </html>
