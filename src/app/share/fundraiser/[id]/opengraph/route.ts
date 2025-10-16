@@ -3,43 +3,35 @@ import { RESOURCE_URL } from "@/constants";
 import { capitalizeFLetter } from "@/utils/capitalizeLetter";
 
 // ✅ This route returns static OG HTML for WhatsApp, LinkedIn, etc.
-
-
-interface Props {
-  params: { type: string }
-  searchParams: { id: string; affiliateID?: string }
-}
-
 export async function GET(
   request: Request,
-  { params, searchParams }: Props
+  { params }: {
+    params: { id: string }
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+  }
 ) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL as string;
-  const type = params.type;
-  const { id } = searchParams
+  const id = params.id;
 
   try {
     // Fetch event data from your backend
+    const res = await fetch(`${baseUrl}/fund-raiser/search?id=${id}`, {
+      cache: "no-store",
+    });
 
-    if (type === "fundraiser") {
+    if (!res.ok) {
+      throw new Error(`Failed to fetch event data: ${res.statusText}`);
+    }
 
-      const res = await fetch(`${baseUrl}/fund-raiser/search?id=${id}`, {
-        cache: "no-store",
-      });
+    const data = await res.json();
+    const event = data?.content?.[0];
 
-      if (!res.ok) {
-        throw new Error(`Failed to fetch event data: ${res.statusText}`);
-      }
+    if (!event) {
+      return new NextResponse("Event not found", { status: 404 });
+    }
 
-      const data = await res.json();
-      const event = data?.content?.[0];
-
-      if (!event) {
-        return new NextResponse("Event not found", { status: 404 });
-      }
-
-      // Construct Open Graph metadata HTML
-      const html = `
+    // Construct Open Graph metadata HTML
+    const html = `
         <!DOCTYPE html>
         <html lang="en">
           <head>
@@ -72,10 +64,9 @@ export async function GET(
         </html>
       `;
 
-      return new NextResponse(html, {
-        headers: { "Content-Type": "text/html" },
-      });
-    }
+    return new NextResponse(html, {
+      headers: { "Content-Type": "text/html" },
+    });
   } catch (error) {
     console.error("Error generating OG page:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
