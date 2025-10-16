@@ -105,7 +105,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     const url = process.env.NEXT_PUBLIC_BASE_URL as string
 
 
-    if (type === 'event') {
+    // if (type === 'event') {
         // fetch data
         let product: any
         try {
@@ -136,7 +136,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
                 }],
             },
         }
-    }
+    // }
 }
 
 // ✅ Render page dynamically by type
