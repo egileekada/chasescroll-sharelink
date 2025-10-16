@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { RESOURCE_URL } from "@/constants";
+import { capitalizeFLetter } from "@/utils/capitalizeLetter";
 
 // ✅ This route returns static OG HTML for WhatsApp, LinkedIn, etc.
 export async function GET(
@@ -35,17 +36,17 @@ export async function GET(
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           
-          <title>${event.eventName}</title> 
+          <title>${capitalizeFLetter(event.eventName)}</title> 
 
           <!-- ✅ Open Graph -->
           <meta property="og:type" content="website" />
-          <meta property="og:title" content="${event.eventName}" />
+          <meta property="og:title" content="${capitalizeFLetter(event.eventName)}" />
           <meta property="og:image" content="${RESOURCE_URL + event.currentPicUrl}" />
           <meta property="og:url" content="${baseUrl}/events/${eventId}" />
 
           <!-- ✅ Twitter -->
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="${event.eventName}" /> 
+          <meta name="twitter:title" content="${capitalizeFLetter(event.eventName)}" /> 
           <meta name="twitter:image" content="${RESOURCE_URL + event.currentPicUrl}" />
 
           <meta http-equiv="refresh" content="0; url=${baseUrl}/share/event/${eventId}" />
