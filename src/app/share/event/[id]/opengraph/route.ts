@@ -50,13 +50,13 @@ export async function GET(
           <meta name="twitter:description" content="${event.eventDescription}" />
           <meta name="twitter:image" content="${RESOURCE_URL + event.currentPicUrl}" />
 
-          <meta http-equiv="refresh" content="0; url=${baseUrl}/events/${eventId}" />
+          <meta http-equiv="refresh" content="0; url=${baseUrl}/share/event/${eventId}" />
         </head>
         <body>
           <p>Redirecting to event...</p>
           <script>
             // Fallback redirect for crawlers that ignore meta refresh
-            window.location.href = "${baseUrl}/events/${eventId}";
+            window.location.href = "/share/event/${eventId}";
           </script>
         </body>
       </html>
