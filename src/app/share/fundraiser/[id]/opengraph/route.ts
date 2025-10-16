@@ -49,17 +49,17 @@ export async function GET(
             <meta property="og:title" content="${capitalizeFLetter(event.name)}" />
             <meta property="og:image" content="${imageUrl}" />
             <meta property="og:description" content="${event.description}" />
-            <meta property="og:url" content="/events/${id}" />
+            <meta property="og:url" content="https://share.chasescroll.com/share/fundraiser/${id}" />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
   
             <!-- ✅ Twitter -->
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content="${capitalizeFLetter(event.name)}" /> 
-          <meta name="twitter:description" content="${event.description}" />
+            <meta name="twitter:description" content="${event.description}" />
             <meta name="twitter:image" content="${imageUrl}" />
   
-            <meta http-equiv="refresh" content="0; url=${baseUrl}/share/fundraiser/${id}" />
+            <meta http-equiv="refresh" content="0; url=https://share.chasescroll.com/share/fundraiser/${id}" />
           </head>
           <body>
             <p>Redirecting to fundraiser...</p>

@@ -43,14 +43,14 @@ export async function GET(
           <meta property="og:type" content="website" />
           <meta property="og:title" content="${capitalizeFLetter(event.eventName)}" />
           <meta property="og:image" content="${RESOURCE_URL + event.currentPicUrl}" />
-          <meta property="og:url" content="${baseUrl}/events/${eventId}" />
+          <meta property="og:url" content="https://share.chasescroll.com/share/event/${eventId}" />
 
           <!-- ✅ Twitter -->
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content="${capitalizeFLetter(event.eventName)}" /> 
           <meta name="twitter:image" content="${RESOURCE_URL + event.currentPicUrl}" />
 
-          <meta http-equiv="refresh" content="0; url=${baseUrl}/share/event/${eventId}" />
+          <meta http-equiv="refresh" content="0; url=https://share.chasescroll.com/share/event/${eventId}" />
         </head>
         <body>
           <p>Redirecting to event...</p>
