@@ -7,19 +7,16 @@ type Props = {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-// ✅ Keep dynamic rendering for event content
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
-  const id = params.id;
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const { id } = params;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL as string;
 
   try {
-    // ✅ Ensure server-side fetch so OG tags are visible to crawlers
+    // ✅ Server-side fetch ensures OG tags are visible to WhatsApp, LinkedIn, etc.
     const res = await fetch(`${baseUrl}/events/events?id=${id}`, {
       method: 'GET',
-      // 👇 Important for metadata — static or SSR-friendly caching
       cache: 'no-store',
       next: { revalidate: 60 },
     });
@@ -29,8 +26,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     if (!event) {
       return {
-        title: "Event not found",
-        description: "This event may no longer be available.",
+        title: 'Event not found',
+        description: 'This event may no longer be available.',
       };
     }
 
@@ -52,17 +49,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         ],
       },
       twitter: {
-        card: "summary_large_image",
+        card: 'summary_large_image',
         title: event.eventName,
         description: event.eventDescription,
         images: [RESOURCE_URL + event.currentPicUrl],
       },
     };
   } catch (error) {
-    console.error("Metadata generation error:", error);
+    console.error('Metadata generation error:', error);
     return {
-      title: "Event Details",
-      description: "View details of this event.",
+      title: 'Event Details',
+      description: 'View details of this event.',
     };
   }
 }
