@@ -7,7 +7,9 @@ type Props = {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export const dynamic = 'force-dynamic';
+
+export const dynamic = 'force-static'; // ✅ instead of force-dynamic
+
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
