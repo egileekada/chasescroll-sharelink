@@ -28,6 +28,10 @@ export async function GET(
       return new NextResponse("Event not found", { status: 404 });
     }
 
+    const imageUrl = `https://chasescroll-sharelink.vercel.app/api/og-image/${encodeURIComponent(
+      RESOURCE_URL+event.currentPicUrl
+    )}`; 
+
           // <meta property="og:description" content="${event.eventDescription}" />
     // Construct Open Graph metadata HTML
     const html = `
@@ -42,13 +46,13 @@ export async function GET(
           <!-- ✅ Open Graph -->
           <meta property="og:type" content="website" />
           <meta property="og:title" content="${capitalizeFLetter(event.eventName)}" />
-          <meta property="og:image" content="${RESOURCE_URL + event.currentPicUrl}" />
+          <meta property="og:image" content="${imageUrl}" />
           <meta property="og:url" content="https://share.chasescroll.com/share/event/${eventId}" />
 
           <!-- ✅ Twitter -->
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content="${capitalizeFLetter(event.eventName)}" /> 
-          <meta name="twitter:image" content="${RESOURCE_URL + event.currentPicUrl}" />
+          <meta name="twitter:image" content="${imageUrl}" />
 
           <meta http-equiv="refresh" content="0; url=https://share.chasescroll.com/share/event/${eventId}" />
         </head>
