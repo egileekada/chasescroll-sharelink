@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       description: event.eventDescription,
       openGraph: {
         title: event.eventName,
-        description: event.eventDescription,
+        // description: event.eventDescription,
         url: `${baseUrl}/events/${id}`,
         type: 'website',
         images: [
