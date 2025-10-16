@@ -71,8 +71,19 @@ export async function GET(
         </html>
       `;
 
-    return new NextResponse(html, {
-      headers: { "Content-Type": "text/html" },
+    // Convert to binary so Next.js returns it as raw data
+    const arrayBuffer = await res.arrayBuffer();
+
+    // Detect image type from response headers
+    const contentType = res.headers.get("content-type") || "image/*";
+
+    // Return the binary response directly
+    return new NextResponse(Buffer.from(arrayBuffer), {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=86400, immutable",
+        "Access-Control-Allow-Origin": "*", // allow crawlers from anywhere
+      },
     });
   } catch (error) {
     console.error("Error generating OG page:", error);
