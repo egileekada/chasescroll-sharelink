@@ -13,7 +13,7 @@ export async function GET(
 
   try {
     // Fetch event data from your backend
-    const res = await fetch(`${baseUrl}/events/events?id=${eventId}`, {
+    const res = await fetch(`${baseUrl}/fund-raiser?id=${eventId}`, {
       cache: "no-store",
     });
 
@@ -28,7 +28,6 @@ export async function GET(
       return new NextResponse("Event not found", { status: 404 });
     }
 
-          // <meta property="og:description" content="${event.eventDescription}" />
     // Construct Open Graph metadata HTML
     const html = `
       <!DOCTYPE html>
@@ -42,6 +41,7 @@ export async function GET(
           <!-- ✅ Open Graph -->
           <meta property="og:type" content="website" />
           <meta property="og:title" content="${capitalizeFLetter(event.eventName)}" />
+          // <meta property="og:description" content="${event.eventDescription}" />
           <meta property="og:image" content="${RESOURCE_URL + event.currentPicUrl}" />
           <meta property="og:url" content="${baseUrl}/events/${eventId}" />
 
