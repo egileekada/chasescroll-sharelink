@@ -5,7 +5,8 @@ import { capitalizeFLetter } from "@/utils/capitalizeLetter";
 // ✅ This route returns static OG HTML for WhatsApp, LinkedIn, etc.
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string }
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>; }
 ) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL as string;
   const eventId = params.id;
