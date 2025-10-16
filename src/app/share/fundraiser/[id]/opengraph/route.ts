@@ -104,7 +104,7 @@ export async function GET(
 
           <script>
             // Fallback redirect for browsers
-            window.location.href = "https://share.chasescroll.com/share/fundraiser/${id}";
+            window.location.href = "/share/fundraiser/${id}";
           </script>
         </body>
       </html>
