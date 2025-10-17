@@ -28,9 +28,7 @@ export async function GET(
       return new NextResponse("Event not found", { status: 404 });
     }
 
-    const imageUrl = `https://chasescroll-sharelink.vercel.app/api/og-image/${encodeURIComponent(
-      RESOURCE_URL+event.currentPicUrl
-    )}`; 
+    const imageUrl = `${RESOURCE_URL+event.currentPicUrl}`; 
 
           // <meta property="og:description" content="${event.eventDescription}" />
     // Construct Open Graph metadata HTML
