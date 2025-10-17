@@ -29,9 +29,7 @@ export async function GET(
       return new NextResponse("Fundraiser not found", { status: 404 });
     }
 
-    const imageUrl = `https://chasescroll-sharelink.vercel.app/api/og-image/${encodeURIComponent(
-      RESOURCE_URL+event.bannerImage
-    )}`; 
+    const imageUrl = `${RESOURCE_URL+event.bannerImage }`; 
 
     // ✅ Generate consistent OG metadata HTML
     const html = `
