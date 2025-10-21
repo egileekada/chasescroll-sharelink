@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { RESOURCE_URL } from "@/constants";
 import { capitalizeFLetter } from "@/utils/capitalizeLetter";
 
-// ✅ This route returns static OG HTML for WhatsApp, LinkedIn, etc.
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -11,10 +10,9 @@ export async function GET(
   const eventId = params.id;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const affiliateID = searchParams.get("affiliateID");
+    const url = new URL(request.url);
+    const affiliateID = url.searchParams.get("affiliateID");
 
-    // Fetch event data
     const res = await fetch(`${baseUrl}/events/events?id=${eventId}`, {
       cache: "no-store",
     });
@@ -30,7 +28,7 @@ export async function GET(
       return new NextResponse("Event not found", { status: 404 });
     }
 
-    const imageUrl = `${RESOURCE_URL + event.currentPicUrl}`;
+    const imageUrl = `${RESOURCE_URL}${event.currentPicUrl}`;
     const redirectUrl = `/share/event/${eventId}${
       affiliateID ? `?affiliateID=${affiliateID}` : ""
     }`;
@@ -43,25 +41,24 @@ export async function GET(
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>${capitalizeFLetter(event.eventName)}</title>
 
-          <!-- ✅ Open Graph -->
+          <!-- Open Graph -->
           <meta property="og:type" content="website" />
           <meta property="og:title" content="${capitalizeFLetter(event.eventName)}" />
           <meta property="og:image" content="${imageUrl}" />
           <meta property="og:url" content="${redirectUrl}" />
 
-          <!-- ✅ Twitter -->
+          <!-- Twitter -->
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content="${capitalizeFLetter(event.eventName)}" />
           <meta name="twitter:image" content="${imageUrl}" />
 
-          <!-- ✅ Redirect -->
+          <!-- Immediate redirect -->
           <meta http-equiv="refresh" content="0; url=${redirectUrl}" />
         </head>
         <body>
           <p>Redirecting to event...</p>
           <script>
-            // Fallback redirect for browsers that ignore meta refresh
-            window.location.href = "${redirectUrl}";
+            window.location.replace("${redirectUrl}");
           </script>
         </body>
       </html>
@@ -70,7 +67,7 @@ export async function GET(
     return new NextResponse(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=86400, immutable",
+        "Cache-Control": "no-store",
         "Access-Control-Allow-Origin": "*",
       },
     });
