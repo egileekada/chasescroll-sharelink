@@ -48,7 +48,7 @@ export async function GET(
     const imageUrl = `${RESOURCE_URL}${event.bannerImage}`;
 
     // ✅ Must be absolute for OG crawlers
-    const shareUrl = `/fundraiser/${id}`;
+    const shareUrl = `/share/fundraiser/${id}`;
 
     const html = `<!DOCTYPE html>
 <html lang="en">
