@@ -39,6 +39,8 @@ import { STORAGE_KEYS } from "@/utils/StorageKeys";
 import { ITicketCreatedModel } from "@/models/TicketCreatedModel";
 import PaymentButton from "../../PaymentButton";
 import { IUser } from "@/models/User";
+import useCustomTheme from "@/hooks/useTheme";
+import { useSearchParams } from "next/navigation";
 
 function AccountSetup() {
   const [step, setStep] = useAtom(ticketurchaseStepAtom);
@@ -48,13 +50,19 @@ function AccountSetup() {
   const [canPay, setCanPay] = useAtom(canPayAtom);
   const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
   const [selectedTickets, setSelectedTickets] = useAtom(selectedTicketsAtom);
+
+  const { primaryColor } = useCustomTheme()
+
+  const query = useSearchParams();
+  const affiliateID = query?.get('affiliateID');
+
   const [createTicketIsLoading, setCreateTicketIsLoading] =
     React.useState(false);
   const setCreatedTicket = useSetAtom(createdTicketAtom);
   const [totalSelectedTicketPrice, setTotalSelectedTicketPrice] = useAtom(
     totalAmountForSelectedTicketsAtom
   );
-  const affiliateID = useAtomValue(affiliateIDAtom);
+  // const affiliateID = useAtomValue(affiliateIDAtom);
   const [showLink, setShowLink] = React.useState(false);
 
   const [token, setToken] = React.useState(() =>
@@ -89,7 +97,11 @@ function AccountSetup() {
       lastName: userDetails?.lastName || "",
       email: userDetails?.email || "",
     },
-    onSubmit: (data) => {
+    onSubmit: (data: { 
+    firstName: string,
+    lastName: string,
+    email: string
+  }) => {
       if (isLoggedIn) {
         if (affiliateID) {
           createTicket({
@@ -98,7 +110,7 @@ function AccountSetup() {
               ticketType: item.ticketType,
               numberOfTickets: item.quantity,
             })) as any,
-            affiliateID,
+            affiliateID: affiliateID,
           });
         } else {
           createTicket({
@@ -486,17 +498,17 @@ function AccountSetup() {
                   {showLink && (
                     <HStack mt="10px">
                       <Text color="red">
-                        You already have an account on chasecroll, for security
-                        reasons
+                        You already have an account on chasecroll, For security
+                        reasons <span onClick={() => setStep(3)} style={{ cursor: "pointer", color: primaryColor, textDecoration: "underline", fontWeight: "bold" }} >{("Login")?.replace("", " ")}</span>
                       </Text>
-                      <Text
+                      {/* <Text
                         color="primaryColor"
                         cursor={"pointer"}
-                        onClick={() => setStep(3)}
+                        
+                        fontWeight={"black"}
                         textDecorationLine={"underline"}
                       >
-                        Sign in
-                      </Text>
+                      </Text> */}
                     </HStack>
                   )}
                 </Box>
@@ -511,8 +523,10 @@ function AccountSetup() {
                   h="60px"
                   bgColor="primaryColor"
                   size="lg"
+                  color={"white"}
                   borderRadius="full"
                   px={8}
+                  disabled={values?.email && values?.firstName && values?.lastName ? false : true}
                   loading={
                     isPending ||
                     createTicketIsLoading ||
