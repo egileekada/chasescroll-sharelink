@@ -10,7 +10,7 @@ export async function GET(
     const { id } = await params;
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    const sharebaseUrl = process.env.NEXT_PUBLIC_SHAREPAGE_URL;
+    // const sharebaseUrl = process.env.NEXT_PUBLIC_SHAREPAGE_URL;
 
     if (!baseUrl) {
       console.error("Missing NEXT_PUBLIC_BASE_URL");
@@ -48,7 +48,7 @@ export async function GET(
     const imageUrl = `${RESOURCE_URL}${event.bannerImage}`;
 
     // ✅ Must be absolute for OG crawlers
-    const shareUrl = `${sharebaseUrl}/fundraiser/${id}`;
+    const shareUrl = `/fundraiser/${id}`;
 
     const html = `<!DOCTYPE html>
 <html lang="en">
