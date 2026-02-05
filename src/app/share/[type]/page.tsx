@@ -145,7 +145,7 @@ export default async function SharePage({ params, searchParams }: Props) {
     const { id, affiliateID } = searchParams
 
     const allowedTypes = ['event', 'fundraiser', 'service', 'rental', 'product']
-    if (!allowedTypes.includes(type.toLowerCase())) {
+    if (!allowedTypes?.includes(type?.toLowerCase())) {
         notFound()
     }
 
