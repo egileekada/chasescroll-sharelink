@@ -3,88 +3,111 @@ import { RESOURCE_URL } from "@/constants";
 import { capitalizeFLetter } from "@/utils/capitalizeLetter";
 
 export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL as string;
+  const { id } = await params;
+
   try {
-    const { id } = await params;
+    // ✅ Fetch fundraiser details
+    const res = await fetch(`${baseUrl}/fund-raiser/search?id=${id}`, {
+      cache: "no-store",
+    });
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    // const sharebaseUrl = process.env.NEXT_PUBLIC_SHAREPAGE_URL;
-
-    if (!baseUrl) {
-      console.error("Missing NEXT_PUBLIC_BASE_URL");
-      return new NextResponse("Server Misconfiguration", { status: 500 });
-    }
-
-    const apiUrl = `${baseUrl}/fund-raiser/search?id=${id}`;
-    console.log("Calling backend:", apiUrl);
-
-    const res = await fetch(apiUrl, { cache: "no-store" });
-
-    if (!res.ok) {
-      console.error("Backend fetch failed:", res.status, res.statusText);
-      return new NextResponse("Failed to fetch fundraiser " + id, { status: 500 });
-    }
+    if (!res.ok) throw new Error(`Failed to fetch event data: ${res.statusText}`);
 
     const data = await res.json();
     const event = data?.content?.[0];
 
     if (!event) {
-      console.error("Fundraiser not found for id:", id);
-      return new NextResponse("Not found" + id, { status: 404 });
+      return new NextResponse("Fundraiser not found", { status: 404 });
     }
 
-    // ✅ Escape to avoid HTML breaking OG tags
-    const escape = (str: string) =>
-      str
-        ?.replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+    const imageUrl = `${RESOURCE_URL+event.bannerImage }`; 
 
-    const title = escape(capitalizeFLetter(event.name));
-    const description = escape(event.description || "Support this fundraiser");
-    const imageUrl = `${RESOURCE_URL}${event.bannerImage}`;
+    // ✅ Generate consistent OG metadata HTML
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${capitalizeFLetter(event.name)}</title>
 
-    // ✅ Must be absolute for OG crawlers
-    const shareUrl = `/share/fundraiser/${id}`;
+          <!-- ✅ Open Graph -->
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content="${capitalizeFLetter(event.name)}" />
+          <meta property="og:description" content="${event.description}" />
+          <meta property="og:image" content="${imageUrl}" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:url" content="https://share.chasescroll.com/share/fundraiser/${id}" />
 
-    const html = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>${title}</title>
+          <!-- ✅ Twitter -->
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="${capitalizeFLetter(event.name)}" />
+          <meta name="twitter:description" content="${event.description}" />
+          <meta name="twitter:image" content="${imageUrl}" />
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="${shareUrl}" />
+          <!-- ✅ Redirect -->
+          <meta http-equiv="refresh" content="0; url=https://share.chasescroll.com/share/fundraiser/${id}" />
 
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${imageUrl}" />
+          <style>
+            /* Fallback preview for browsers */
+            body {
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              background-color: #000;
+              color: #fff;
+              font-family: Arial, sans-serif;
+              text-align: center;
+            }
+            .image-container {
+              width: 1200px;
+              height: 630px;
+              max-width: 90%;
+              max-height: 60vh;
+              overflow: hidden;
+              border-radius: 12px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            }
+            .image-container img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              display: block;
+            }
+            h1 {
+              margin-top: 20px;
+              font-size: 1.5rem;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="image-container">
+            <img src="${imageUrl}" alt="${capitalizeFLetter(event.name)}" />
+          </div>
+          <h1>${capitalizeFLetter(event.name)}</h1>
+          <p>${event.description || "Fundraiser details"}</p>
 
-    <!-- Redirect -->
-    <meta http-equiv="refresh" content="0; url=${shareUrl}" />
-  </head>
-  <body>
-    Redirecting…
-
-    <script>
-      window.location.href = "${shareUrl}";
-    </script>
-  </body>
-</html>`;
+          <script>
+            // Fallback redirect for browsers
+            window.location.href = "/share/fundraiser/${id}";
+          </script>
+        </body>
+      </html>
+    `;
 
     return new NextResponse(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "public, max-age=86400, immutable",
+        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
