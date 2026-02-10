@@ -106,7 +106,7 @@ function TicketPurchaseModal({ isOpen, onClose }: IProps) {
                 {currentStep === 2 && <AccountSetup />}
                 {currentStep === 3 && (
                   <LoginModal
-                    callbackUrl={`/share/event?id=${currentId}`}
+                    callbackUrl={`/share/event/${currentId}`}
                     onLoggedIn={() => {
                       setCurrentStep(2);
                     }}
