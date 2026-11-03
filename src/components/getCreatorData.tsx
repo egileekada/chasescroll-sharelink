@@ -8,7 +8,7 @@ import UserImage from './userImage';
 import { capitalizeFLetter } from '@/utils/capitalizeLetter';
 import { textLimit } from '@/utils/textlimiter';
 
-export default function GetCreatorData({ userData, donation, data: donationData}: { userData: IUser, data?: any, donation?: boolean }) {
+export default function GetCreatorData({ userData, donation, data: donationData}: { userData: IUser, data?: any, donation?: boolean, reviewdata?: any, item?: any }) {
  
     const { secondaryBackgroundColor } = useCustomTheme()
     const router = useRouter();

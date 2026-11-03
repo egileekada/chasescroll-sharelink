@@ -4,3 +4,5 @@ import { atom } from 'jotai'
 export const activeProductAtom = atom<IProduct | any>(null);
 export const activeProductQuantityAtom = atom<number>(0);
 export const activeAddressAtom = atom<IAddress | null>(null);
+export const activeProductColorAtom = atom<string | null>(null);
+export const activeProductSizeAtom = atom<string | null>(null);

@@ -1,3 +1,6 @@
+"use client";
+
+import React from "react";
 import {
   Box,
   Button,
@@ -8,21 +11,18 @@ import {
   Text,
   IconButton,
 } from "@chakra-ui/react";
-import React from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useMutation } from "@tanstack/react-query";
+import { usePaystackPayment } from "react-paystack";
 import httpService from "@/services/httpService";
 import { URLS } from "@/services/urls";
 import { toaster } from "@/components/ui/toaster";
 import { useSession } from "next-auth/react";
-import { currentIdAtom } from "@/views/share/Event";
 import {
   activeEventAtom,
   activeTicketAtom,
-  affiliateIDAtom,
-  canPayAtom,
   createdTicketAtom,
-  currentUrlAtom,
+  isPaystackOpenAtom,
   paystackDetailsAtom,
   selectedTicketsAtom,
   ticketCountAtom,
@@ -37,196 +37,151 @@ import { accountCreationSchema } from "@/services/validation";
 import CustomInput from "../../CustomInput";
 import { STORAGE_KEYS } from "@/utils/StorageKeys";
 import { ITicketCreatedModel } from "@/models/TicketCreatedModel";
-import PaymentButton from "../../PaymentButton";
 import { IUser } from "@/models/User";
 import useCustomTheme from "@/hooks/useTheme";
 import { useSearchParams } from "next/navigation";
 
 function AccountSetup() {
-  const [step, setStep] = useAtom(ticketurchaseStepAtom);
-  const [ticket, setTicket] = useAtom(activeTicketAtom);
-  const [event, setActiveEvent] = useAtom(activeEventAtom);
-  const [quantity, setQuantity] = useAtom(ticketCountAtom);
-  const [canPay, setCanPay] = useAtom(canPayAtom);
-  const [paystackDetails, setPaystackDetails] = useAtom(paystackDetailsAtom);
-  const [selectedTickets, setSelectedTickets] = useAtom(selectedTicketsAtom);
-
-  const { primaryColor } = useCustomTheme()
-
-  const query = useSearchParams();
-  const affiliateID = query?.get('affiliateID');
-
-  const [createTicketIsLoading, setCreateTicketIsLoading] =
-    React.useState(false);
+  const [, setStep] = useAtom(ticketurchaseStepAtom);
+  const [ticket] = useAtom(activeTicketAtom);
+  const [event] = useAtom(activeEventAtom);
+  const [quantity] = useAtom(ticketCountAtom);
+  const [, setPaystackDetails] = useAtom(paystackDetailsAtom);
+  const [selectedTickets] = useAtom(selectedTicketsAtom);
   const setCreatedTicket = useSetAtom(createdTicketAtom);
+  const setIsPaystackOpen = useSetAtom(isPaystackOpenAtom);
   const [totalSelectedTicketPrice, setTotalSelectedTicketPrice] = useAtom(
     totalAmountForSelectedTicketsAtom
   );
-  // const affiliateID = useAtomValue(affiliateIDAtom);
+
+  // Reset paystack overlay state on unmount
+  React.useEffect(() => {
+    return () => {
+      setIsPaystackOpen(false);
+    };
+  }, [setIsPaystackOpen]);
+
+  const { primaryColor } = useCustomTheme();
+  const query = useSearchParams();
+  const affiliateID = query?.get("affiliateID") || undefined;
+
+  const [createTicketIsLoading, setCreateTicketIsLoading] = React.useState(false);
   const [showLink, setShowLink] = React.useState(false);
+  const [lastOrderCode, setLastOrderCode] = React.useState<string | null>(null);
 
-  const [token, setToken] = React.useState(() =>
-    localStorage.getItem(STORAGE_KEYS.token)
-  );
-  const [userId, setUserId] = React.useState(() =>
-    localStorage.getItem(STORAGE_KEYS.USER_ID)
-  );
-  const [userDetails, setUserDetails] = React.useState<IUser | null>(() =>
-    JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_DETAILS) as string)
-  );
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
-    const token = localStorage.getItem(STORAGE_KEYS.token);
-    const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
-    return token !== null && user_id !== null;
-  });
-  const [googleAuthUsed, setGoogleAuthUsed] = React.useState(() => {
-    const googleUsed = localStorage.getItem(STORAGE_KEYS.GOOGLE_AUTH);
-    if (googleUsed) {
-      return true;
-    } else {
-      return false;
+  const [userDetails, setUserDetails] = React.useState<IUser | null>(() => {
+    try {
+      const item = localStorage.getItem(STORAGE_KEYS.USER_DETAILS);
+      return item ? JSON.parse(item) : null;
+    } catch {
+      return null;
     }
   });
-  const [renderCount, setRenderCount] = React.useState(0);
 
-  const { data: session, status } = useSession();
-
-  const { renderForm, values, setFieldValue, setValues } = useForm({
-    defaultValues: {
-      firstName: userDetails?.firstName || "",
-      lastName: userDetails?.lastName || "",
-      email: userDetails?.email || "",
-    },
-    onSubmit: (data: { 
-    firstName: string,
-    lastName: string,
-    email: string
-  }) => {
-      if (isLoggedIn) {
-        if (affiliateID) {
-          createTicket({
-            eventID: event?.id as string,
-            ticketBuyObjectList: selectedTickets?.map((item) => ({
-              ticketType: item.ticketType,
-              numberOfTickets: item.quantity,
-            })) as any,
-            affiliateID: affiliateID,
-          });
-        } else {
-          createTicket({
-            eventID: event?.id as string,
-            ticketBuyObjectList: selectedTickets?.map((item) => ({
-              ticketType: item.ticketType,
-              numberOfTickets: item.quantity,
-            })) as any,
-          });
-        }
-
-        return;
-      } else if (googleAuthUsed) {
-        // LOGIN USER
-        const idToken = session?.token?.idToken;
-        googleAuth.mutate(idToken);
-      } else {
-        checkEmailMutation(data);
-      }
-    },
-    validationSchema: accountCreationSchema,
+  const [isLoggedIn] = React.useState(() => {
+    return (
+      Boolean(localStorage.getItem(STORAGE_KEYS.token)) &&
+      Boolean(localStorage.getItem(STORAGE_KEYS.USER_ID))
+    );
   });
 
-  React.useEffect(() => {
-    if (googleAuthUsed) {
-      // LOGIN USER
-      const idToken = session?.token?.idToken;
-      googleAuth.mutate(idToken);
-    }
-  }, [googleAuthUsed]);
+  const { data: session } = useSession();
 
-  React.useEffect(() => {
-    if (userDetails) {
-      setFieldValue("firstName", userDetails?.firstName || "", true).then();
-      setFieldValue("lastName", userDetails?.lastName || "", true).then();
-      setFieldValue("email", userDetails?.email || "", true).then();
-    }
-  }, [userDetails]);
-
-  const createTicketFunc = React.useCallback(() => {
-    const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
-    if (userId !== null && !createTicketIsLoading) {
-      // setIsLoggedIn(true);
-      if (affiliateID) {
-        createTicket({
-          eventID: event?.id as string,
-          ticketBuyObjectList: selectedTickets?.map((item) => ({
-            ticketType: item.ticketType,
-            numberOfTickets: item.quantity,
-          })) as any,
-          affiliateID,
-        });
-        return;
-      } else {
-        createTicket({
-          eventID: event?.id as string,
-          ticketBuyObjectList: selectedTickets?.map((item) => ({
-            ticketType: item.ticketType,
-            numberOfTickets: item.quantity,
-          })) as any,
-        });
-        return;
-      }
-    }
-  }, []);
-
-  React.useEffect(() => {
-    setRenderCount((prev) => prev + 1);
-  }, []); // Empty dependency array to run only
-
-  React.useEffect(() => {
-    if (renderCount === 2) {
-      createTicketFunc();
-    }
-  }, [renderCount]);
+  // Initialize paystack hook
+  const initializePayment = usePaystackPayment({
+    publicKey:
+      process.env.NEXT_PUBLIC_PAYSTACK_KEY ||
+      "pk_test_58a8e726bbe3cce8ade3082f4e49f46089046b5d",
+    email: "",
+    amount: 0,
+    reference: "",
+  });
 
   const getTicketPrice = (ticketType: string) => {
-    const ticket = event?.productTypeData.filter(
-      (item) => item.ticketType === ticketType
-    )[0];
-    return ticket?.ticketPrice;
+    const found = event?.productTypeData?.find((item) => item.ticketType === ticketType);
+    return Number(found?.ticketPrice) || 0;
   };
 
-  const calculateTotal = () => {
+  const calculateTotal = React.useCallback(() => {
     let total = 0;
     selectedTickets?.forEach((item) => {
-      total += (getTicketPrice(item.ticketType) as number) * item.quantity;
+      total += getTicketPrice(item.ticketType) * item.quantity;
     });
     setTotalSelectedTicketPrice(total);
-    return formatNumber(total);
-  };
+    return total;
+  }, [selectedTickets, event?.productTypeData, setTotalSelectedTicketPrice]);
 
+  React.useEffect(() => {
+    calculateTotal();
+  }, [calculateTotal]);
+
+  // Ticket verification after payment
   const validateTicket = useMutation({
-    mutationFn: (data: string) =>
-      httpService.get(`/payments/verifyWebPaystackTx`, {
-        params: {
-          orderCode: data,
-        },
+    mutationFn: (orderCode: string) =>
+      httpService.get("/payments/verifyWebPaystackTx", {
+        params: { orderCode },
       }),
-    onSuccess: (data) => {
+    onSuccess: () => {
       toaster.create({
         title: "Success",
-        description: "Ticket verification successful",
+        description: "Payment verified successfully!",
         type: "success",
       });
       setStep(4);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toaster.create({
-        title: "Error",
-        description: error?.message,
+        title: "Verification Error",
+        description: error?.message || "Failed to verify transaction. Please contact support.",
         type: "error",
       });
+      // Even if webhook verification is delayed, order was created
+      setStep(4);
     },
   });
 
+  // Launch Paystack directly without requiring a second button click
+  const triggerPaystack = React.useCallback(
+    (orderCode: string, buyerEmail: string, orderTotal: number) => {
+      const amountInKobo = Math.round(Number(orderTotal) * 100);
+      setLastOrderCode(orderCode);
+
+      try {
+        setIsPaystackOpen(true);
+        initializePayment({
+          config: {
+            email: buyerEmail,
+            amount: amountInKobo,
+            reference: orderCode,
+          },
+          onSuccess: () => {
+            setIsPaystackOpen(false);
+            validateTicket.mutate(orderCode);
+          },
+          onClose: () => {
+            setIsPaystackOpen(false);
+            setCreateTicketIsLoading(false);
+            toaster.create({
+              title: "Payment Window Closed",
+              description: "Payment was not completed. Click to retry when ready.",
+              type: "info",
+            });
+          },
+        });
+      } catch (err: any) {
+        setIsPaystackOpen(false);
+        setCreateTicketIsLoading(false);
+        toaster.create({
+          title: "Payment Gateway Error",
+          description: err?.message || "Could not launch Paystack. Please try again.",
+          type: "error",
+        });
+      }
+    },
+    [initializePayment, validateTicket, setIsPaystackOpen]
+  );
+
+  // Ticket creation handler
   const createTicket = async (data: {
     eventID: string;
     ticketBuyObjectList: { ticketType: string; numberOfTickets: number }[];
@@ -234,399 +189,380 @@ function AccountSetup() {
   }) => {
     setCreateTicketIsLoading(true);
     try {
-      const res = await httpService.post(
-        `${URLS.event}/create-multi-ticket`,
-        data
-      );
+      const res = await httpService.post(`${URLS.event}/create-multi-ticket`, data);
       const json: ITicketCreatedModel = res.data;
 
-      console.log(json);
       setCreatedTicket(json);
-      if (res?.data) {
-        if (!json.content) {
-          toaster.create({
-            title: "An error occured",
-            description: json?.message,
-            type: "error",
-          });
-          setCreateTicketIsLoading(false);
-          return;
-        }
-        if (totalSelectedTicketPrice === 0) {
-          toaster.create({
-            title: "Success",
-            description: "Ticket purchase was successful!!!!",
-            type: "success",
-          });
-          setStep(4);
-          return;
-        } else {
-          setCanPay(true);
-          setPaystackDetails({
-            email: json?.content?.buyer?.email,
-            reference: json.content?.orderCode,
-            amount: json.content?.orderTotal * 100,
-          });
-          return;
-        }
-      } else {
-        console.log(res);
+
+      if (!json?.content) {
         toaster.create({
-          title: "An error occured",
-          description: "Failed to create ticket",
+          title: "Error",
+          description: json?.message || "Failed to create ticket order",
           type: "error",
         });
+        setCreateTicketIsLoading(false);
+        return;
       }
-      // you can call this function anything
+
+      // If free ticket (0 total), advance directly to step 4
+      if (totalSelectedTicketPrice === 0 || json.content.orderTotal === 0) {
+        toaster.create({
+          title: "Success",
+          description: "Free ticket registered successfully!",
+          type: "success",
+        });
+        setStep(4);
+        return;
+      }
+
+      // Automatically launch Paystack popup
+      const orderCode: string = String(json.content.orderCode || "");
+      const buyerEmail: string = String(
+        json.content.email ||
+          json.content.buyer?.email ||
+          values?.email ||
+          userDetails?.email ||
+          ""
+      );
+      const orderTotal: number = Number(json.content.orderTotal || 0);
+
+      setPaystackDetails({
+        email: buyerEmail,
+        reference: orderCode,
+        amount: orderTotal * 100,
+      });
+
+      triggerPaystack(orderCode, buyerEmail, orderTotal);
+    } catch (error: any) {
+      setIsPaystackOpen(false);
+      toaster.create({
+        title: "Error",
+        description: error?.response?.data?.message || error?.message || "Failed to create ticket",
+        type: "error",
+      });
       setCreateTicketIsLoading(false);
-    } catch (error) {
-      console.log("An error occured while trying to create the tickets");
-      console.log(error);
     }
   };
 
   const getPublicProfile = useMutation({
-    mutationFn: (data: any) =>
-      httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${data}`),
-    onError: (error) => {},
+    mutationFn: (uId: string) => httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${uId}`),
     onSuccess: (data) => {
       const details: IUser = data?.data;
-      console.log(`User details`, details);
       localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
       setUserDetails(details);
-      if (affiliateID) {
-        createTicket({
-          eventID: event?.id as string,
-          ticketBuyObjectList: selectedTickets?.map((item) => ({
-            ticketType: item.ticketType,
-            numberOfTickets: item.quantity,
-          })) as any,
-          affiliateID,
-        });
-        return;
-      } else {
-        createTicket({
-          eventID: event?.id as string,
-          ticketBuyObjectList: selectedTickets?.map((item) => ({
-            ticketType: item.ticketType,
-            numberOfTickets: item.quantity,
-          })) as any,
-        });
-      }
-      // setCanPay(true);
+
+      createTicket({
+        eventID: event?.id as string,
+        ticketBuyObjectList: (selectedTickets || []).map((item) => ({
+          ticketType: item.ticketType,
+          numberOfTickets: item.quantity,
+        })),
+        ...(affiliateID ? { affiliateID } : {}),
+      });
+    },
+    onError: () => {
+      setCreateTicketIsLoading(false);
     },
   });
 
-  const googleAuth = useMutation({
-    mutationFn: async (data: any) =>
-      httpService.get(`${URLS.auth}/signinWithCredentials`, {
-        headers: {
-          Authorization: `Bearer ${data}`,
-        },
-      }),
-    onError: (error) => {
+  const checkEmailMutation = useMutation({
+    mutationFn: async (formData: any) =>
+      httpService.post(`${URLS.auth}/temporary-signup`, formData),
+    onError: (error: any) => {
+      setCreateTicketIsLoading(false);
       toaster.create({
-        title: "Login failed",
-        description: error?.message || "Invalid credentials",
+        title: "Error",
+        description: error?.message || "Could not proceed with checkout details",
         type: "error",
       });
     },
     onSuccess: (data) => {
-      console.log("Login successful", data?.data);
-      localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-      localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
-      localStorage.setItem(
-        STORAGE_KEYS.refreshToken,
-        data?.data?.refresh_token
-      );
-      const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
-      getPublicProfile.mutate(user_id);
-    },
-  });
-
-  const { mutate: checkEmailMutation, isPending } = useMutation({
-    mutationFn: async (data: any) =>
-      httpService.post(`${URLS.auth}/temporary-signup`, data),
-    onError: (error) => {
-      toaster.create({
-        title: "An error occured",
-        description: error?.message,
-        type: "error",
-      });
-      // setStep((prev) => prev + 1);
-    },
-    onSuccess: (data) => {
-      console.log("data", data?.data);
-      if (data?.data["stackTrace"]) {
-        // save everything in local storage
+      if (data?.data?.["stackTrace"]) {
         localStorage.setItem(STORAGE_KEYS.EVENT, JSON.stringify(event));
-        localStorage.setItem(
-          STORAGE_KEYS.ACTIVE_TICKET,
-          JSON.stringify(ticket)
-        );
+        localStorage.setItem(STORAGE_KEYS.ACTIVE_TICKET, JSON.stringify(ticket));
         localStorage.setItem(STORAGE_KEYS.QUANTITY, quantity.toString());
-        localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, step.toString());
-        localStorage.setItem(
-          STORAGE_KEYS.SELECTED_TICKETS,
-          JSON.stringify(selectedTickets)
-        );
+        localStorage.setItem(STORAGE_KEYS.SELECTED_TICKETS, JSON.stringify(selectedTickets));
         setShowLink(true);
+        setCreateTicketIsLoading(false);
       } else {
-        setUserId(data?.data?.user_id);
-        setToken(data?.data?.access_token);
         localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
         localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-        const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
-        getPublicProfile.mutate(user_id);
+        localStorage.setItem(STORAGE_KEYS.refreshToken, data?.data?.refresh_token);
+        getPublicProfile.mutate(data?.data?.user_id);
       }
     },
   });
 
+  const { renderForm, values, setFieldValue } = useForm({
+    defaultValues: {
+      firstName: userDetails?.firstName || "",
+      lastName: userDetails?.lastName || "",
+      email: userDetails?.email || "",
+    },
+    onSubmit: (formData: { firstName: string; lastName: string; email: string }) => {
+      // If payment was previously initiated and user is retrying with same code
+      if (lastOrderCode && totalSelectedTicketPrice > 0) {
+        triggerPaystack(lastOrderCode, formData.email, totalSelectedTicketPrice);
+        return;
+      }
+
+      if (isLoggedIn) {
+        createTicket({
+          eventID: event?.id as string,
+          ticketBuyObjectList: (selectedTickets || []).map((item) => ({
+            ticketType: item.ticketType,
+            numberOfTickets: item.quantity,
+          })),
+          ...(affiliateID ? { affiliateID } : {}),
+        });
+      } else {
+        checkEmailMutation.mutate(formData);
+      }
+    },
+    validationSchema: accountCreationSchema,
+  });
+
+  React.useEffect(() => {
+    if (userDetails) {
+      if (userDetails.firstName) setFieldValue("firstName", userDetails.firstName);
+      if (userDetails.lastName) setFieldValue("lastName", userDetails.lastName);
+      if (userDetails.email) setFieldValue("email", userDetails.email);
+    }
+  }, [userDetails]);
+
+  const isFormLoading =
+    createTicketIsLoading ||
+    checkEmailMutation.isPending ||
+    getPublicProfile.isPending ||
+    validateTicket.isPending;
+
+  const isFormValid = Boolean(values?.email && values?.firstName && values?.lastName);
+
+  const eventBannerUrl = event?.currentPicUrl
+    ? event.currentPicUrl.startsWith("http")
+      ? event.currentPicUrl
+      : `${RESOURCE_URL}${event.currentPicUrl}`
+    : "/images/tech-event.jpg";
+
   return renderForm(
-    <Box
-      w="full"
-      bg="white"
-      maxH={["100vh", "100vh", "650px"]}
-      borderRadius="xl"
-      overflow="hidden"
-    >
-      <Flex w="full" flexDir={["column", "column", "row", "row"]}>
-        {/* Left Side - Checkout Form */}
-        <Box flex="0.6">
-          {/* Header */}
-          <HStack
-            mb={6}
-            borderBottomWidth={"1px"}
-            spaceX={6}
-            borderBottomColor={"lightgrey"}
-            p="10px"
+    <Box w="full" bg="white" borderRadius="2xl" overflow="hidden">
+      {/* Top Header */}
+      <HStack
+        px={["4", "6"]}
+        py="4"
+        borderBottomWidth="1px"
+        borderColor="gray.100"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <HStack gap="3">
+          <IconButton
+            aria-label="Go back"
+            variant="ghost"
+            size="sm"
+            rounded="full"
+            onClick={() => setStep((prev) => Math.max(1, prev - 1))}
           >
-            <IconButton
-              aria-label="Go back"
-              variant="ghost"
-              size="sm"
-              onClick={() => setStep((prev) => prev - 1)}
-            >
-              <ArrowLeft size="20" />
-            </IconButton>
-            <VStack align="start" spaceY={0}>
-              <Text fontSize="xl" fontWeight="bold">
-                Checkout
+            <ArrowLeft size="18" />
+          </IconButton>
+          <VStack align="start" gap="0">
+            <Text fontSize="lg" fontWeight="bold">
+              Buyer Details
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              Provide attendee details to complete your order
+            </Text>
+          </VStack>
+        </HStack>
+      </HStack>
+
+      <Flex w="full" flexDir={["column", "column", "row"]} gap="0">
+        {/* Left Side: Form */}
+        <Box flex="1" p={["4", "6"]}>
+          {/* Compact Event Pill */}
+          <HStack
+            mb="4"
+            p="3"
+            borderRadius="12px"
+            borderWidth="1px"
+            borderColor="gray.200"
+            bgColor="gray.50"
+            gap="3"
+            alignItems="center"
+          >
+            <Image
+              src={eventBannerUrl}
+              alt={event?.eventName || "Event"}
+              w="50px"
+              h="50px"
+              objectFit="cover"
+              borderRadius="8px"
+            />
+            <VStack align="start" gap="0" flex="1">
+              <Text fontWeight="semibold" fontSize="sm" lineClamp={1}>
+                {event?.eventName || "Event"}
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                {event?.startDate
+                  ? new Date(event.startDate).toLocaleString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })
+                  : "Upcoming"}
               </Text>
             </VStack>
+            <Text fontWeight="bold" fontSize="sm" color="primaryColor">
+              {totalSelectedTicketPrice === 0
+                ? "Free"
+                : `NGN ${formatNumber(totalSelectedTicketPrice)}`}
+            </Text>
           </HStack>
 
-          <Box p={["10px", "10px", "20px", "20px"]}>
-            {/* Event Info */}
-            <HStack
-              mb={8}
-              p={4}
-              borderRadius="lg"
-              borderWidth="1px"
-              borderColor={"lightgrey"}
-            >
-              <Image
-                src={
-                  RESOURCE_URL + "/" + event?.currentPicUrl ||
-                  "/images/tech-event.jpg"
-                }
-                alt={event?.eventName}
-                w="120px"
-                h="120px"
-                objectFit="cover"
-                borderRadius="md"
-              />
-              <VStack align="start" spaceY={1} flex="1">
-                <Text fontWeight="semibold">
-                  {event?.eventName || "Tech Submit"}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  {event?.startDate
-                    ? new Date(event.startDate).toLocaleString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : "Thu, Aug 14 • 7:00 pm"}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  NGN {totalSelectedTicketPrice}
-                </Text>
-                {/* <HStack>
-                                    <Text fontSize="xs" color="gray.500">Ticket Selected</Text>
-                                    <Badge colorScheme="red" fontSize="xs">{ticket?.ticketType}</Badge>
-                                </HStack> */}
-              </VStack>
-            </HStack>
-
-            {/* Contact Information */}
-            {!canPay && !isLoggedIn && (
-              <VStack align="start" spaceY={[0, 0, 6, 6]} mb={8}>
-                <Flex
-                  spaceX={[0, 0, 4, 4]}
-                  w="full"
-                  flexDir={["column", "column", "row", "row"]}
-                >
-                  <Box w="full">
-                    <CustomInput
-                      name="firstName"
-                      type="text"
-                      label="First Name"
-                      isPassword={false}
-                    />
-                  </Box>
-
-                  <Box w="full" mt={["10px", "10px", "0px", "0px"]}>
-                    <CustomInput
-                      name="lastName"
-                      type="text"
-                      label="Last Name"
-                      isPassword={false}
-                    />
-                  </Box>
-                </Flex>
-                <Box w="full">
-                  <CustomInput
-                    name="email"
-                    type="email"
-                    label="Email"
-                    isPassword={false}
-                  />
-                  {showLink && (
-                    <HStack mt="10px">
-                      <Text color="red">
-                        You already have an account on chasecroll, For security
-                        reasons <span onClick={() => setStep(3)} style={{ cursor: "pointer", color: primaryColor, textDecoration: "underline", fontWeight: "bold" }} >{("Login")?.replace("", " ")}</span>
-                      </Text>
-                      {/* <Text
-                        color="primaryColor"
-                        cursor={"pointer"}
-                        
-                        fontWeight={"black"}
-                        textDecorationLine={"underline"}
-                      >
-                      </Text> */}
-                    </HStack>
-                  )}
-                </Box>
-              </VStack>
-            )}
-
-            {/* Footer */}
-            <HStack justify="space-between" align="center">
-              {!canPay && (
-                <Button
-                  w="full"
-                  h="60px"
-                  bgColor="primaryColor"
-                  size="lg"
-                  color={"white"}
-                  borderRadius="full"
-                  px={8}
-                  disabled={values?.email && values?.firstName && values?.lastName ? false : true}
-                  loading={
-                    isPending ||
-                    createTicketIsLoading ||
-                    googleAuth.isPending ||
-                    getPublicProfile.isPending
-                  }
-                  type={"submit"}
-                >
-                  {totalSelectedTicketPrice === 0 &&
-                    "Verify Details to get ticket"}
-                  {totalSelectedTicketPrice > 0 &&
-                    isLoggedIn &&
-                    "Proceed to make payment"}
-
-                  {totalSelectedTicketPrice > 0 &&
-                    !isLoggedIn &&
-                    "Confirm Details"}
-                </Button>
-              )}
-              {canPay && (
-                <PaymentButton
-                  onSucces={() =>
-                    validateTicket.mutate(paystackDetails?.reference as string)
-                  }
-                  reference={paystackDetails?.reference as string}
-                  email={paystackDetails?.email as string}
-                  amount={paystackDetails?.amount as number}
-                  text={"Pay"}
+          {/* Form Fields */}
+          <VStack align="stretch" gap="3.5" mb="5">
+            <Flex gap="3" flexDir={["column", "row"]}>
+              <Box flex="1">
+                <CustomInput
+                  name="firstName"
+                  type="text"
+                  label="First Name"
+                  placeholder="Enter first name"
                 />
-              )}
-            </HStack>
+              </Box>
+              <Box flex="1">
+                <CustomInput
+                  name="lastName"
+                  type="text"
+                  label="Last Name"
+                  placeholder="Enter last name"
+                />
+              </Box>
+            </Flex>
 
-            <HStack
-              fontFamily={"Raleway-Regular"}
-              w="full"
-              justifyContent={"center"}
-              mt="20px"
-            >
-              <Text color="grey" fontSize={"14px"}>
-                Powered by
-              </Text>
-              <Text color="primaryColor" fontSize={"16px"} fontWeight={600}>
-                Chasescroll
-              </Text>
-            </HStack>
+            <Box w="full">
+              <CustomInput
+                name="email"
+                type="email"
+                label="Email Address"
+                placeholder="Enter email address"
+              />
+              {showLink && (
+                <Box mt="2" p="2.5" borderRadius="8px" bg="red.50" borderWidth="1px" borderColor="red.200">
+                  <Text fontSize="xs" color="red.600">
+                    An account already exists with this email. For security, please{" "}
+                    <Text
+                      as="span"
+                      onClick={() => setStep(3)}
+                      cursor="pointer"
+                      color="primaryColor"
+                      fontWeight="bold"
+                      textDecoration="underline"
+                    >
+                      Sign In
+                    </Text>{" "}
+                    to continue.
+                  </Text>
+                </Box>
+              )}
+            </Box>
+          </VStack>
+
+          {/* Mobile Order Summary */}
+          <Box display={["block", "block", "none"]} mb="4" p="3" bg="gray.50" rounded="12px" borderWidth="1px" borderColor="gray.100">
+            <Text fontSize="xs" fontWeight="bold" color="gray.500" mb="2" textTransform="uppercase">
+              Order Summary
+            </Text>
+            {selectedTickets?.map((item, idx) => (
+              <Flex key={idx} justify="space-between" fontSize="sm" py="1">
+                <Text color="gray.700">
+                  {item.quantity}x {item.ticketType}
+                </Text>
+                <Text fontWeight="medium">
+                  NGN {formatNumber(getTicketPrice(item.ticketType) * item.quantity)}
+                </Text>
+              </Flex>
+            ))}
           </Box>
+
+          {/* Primary Action Button */}
+          <Button
+            w="full"
+            h="48px"
+            bgColor="primaryColor"
+            size="lg"
+            color="white"
+            borderRadius="full"
+            fontWeight="semibold"
+            disabled={!isFormValid || isFormLoading}
+            loading={isFormLoading}
+            loadingText="Processing..."
+            type="submit"
+            _hover={{ opacity: 0.9 }}
+            transition="all 0.2s"
+          >
+            {totalSelectedTicketPrice === 0
+              ? "Get Free Ticket"
+              : `Pay NGN ${formatNumber(totalSelectedTicketPrice)}`}
+          </Button>
+
+          <HStack w="full" justifyContent="center" mt="3">
+            <Text color="gray.400" fontSize="12px">
+              Secured by
+            </Text>
+            <Text color="primaryColor" fontSize="12px" fontWeight={600}>
+              Paystack
+            </Text>
+          </HStack>
         </Box>
 
-        {/* Right Side - Event Image & Order Summary */}
+        {/* Right Side: Desktop Order Summary */}
         <Box
-          flex="0.4"
-          position="relative"
-          bgColor="whitesmoke"
-          display={["none", "none", "block", "block"]}
+          w="300px"
+          bg="gray.50"
+          p="6"
+          borderLeftWidth="1px"
+          borderColor="gray.200"
+          display={["none", "none", "flex"]}
+          flexDir="column"
+          justifyContent="space-between"
         >
-          {/* Event Image */}
-          <Box w="100%" h="300px" overflow="hidden">
-            <Image
-              src={
-                RESOURCE_URL + "/" + event?.currentPicUrl ||
-                "/images/tech-event.jpg"
-              }
-              alt={event?.eventName}
-              w="100%"
-              h="300px"
-              objectFit="cover"
-            />
-          </Box>
-
-          {/* Order Summary */}
-          <Box p={6}>
-            <Text fontSize="lg" fontWeight="bold" mb={4}>
-              Order summary
+          <Box>
+            <Text fontSize="md" fontWeight="bold" mb="4">
+              Order Summary
             </Text>
 
-            <VStack spaceY={3} align="stretch">
-              {selectedTickets !== null &&
-                selectedTickets.length > 0 &&
-                selectedTickets.map((item) => (
-                  <Flex justify="space-between" mb="10px">
-                    <Text>
-                      {item?.quantity} x {item?.ticketType}
-                    </Text>
-                    <Text fontWeight="semibold">
-                      {formatNumber(
-                        (getTicketPrice(item.ticketType) as number) *
-                          item.quantity
-                      )}
-                    </Text>
-                  </Flex>
-                ))}
+            <VStack align="stretch" gap="3">
+              {selectedTickets?.map((item, index) => (
+                <Flex key={index} justify="space-between" fontSize="sm">
+                  <Text color="gray.600">
+                    {item.quantity}x {item.ticketType}
+                  </Text>
+                  <Text fontWeight="semibold">
+                    NGN {formatNumber(getTicketPrice(item.ticketType) * item.quantity)}
+                  </Text>
+                </Flex>
+              ))}
 
-              {/* <Divider /> */}
+              <Box my="2" borderBottomWidth="1px" borderColor="gray.200" />
 
-              <Flex justify="space-between" fontSize="lg" fontWeight="bold">
+              <Flex justify="space-between" fontSize="md" fontWeight="bold">
                 <Text>Total</Text>
-                <Text>NGN {calculateTotal()}</Text>
+                <Text color="primaryColor">
+                  {totalSelectedTicketPrice === 0
+                    ? "Free"
+                    : `NGN ${formatNumber(totalSelectedTicketPrice)}`}
+                </Text>
               </Flex>
             </VStack>
           </Box>
+
+          <Text fontSize="11px" color="gray.400" textAlign="center">
+            Tickets will be delivered to the provided email address upon confirmation.
+          </Text>
         </Box>
       </Flex>
     </Box>

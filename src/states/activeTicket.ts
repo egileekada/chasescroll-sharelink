@@ -14,3 +14,4 @@ export const paystackDetailsAtom = atom<{ email: string, reference: string, amou
 export const selectedTicketsAtom = atom<ISelectedTicket[]>([]);
 export const totalAmountForSelectedTicketsAtom = atom<number>(0)
 export const affiliateIDAtom = atom<string | null>(null);
+export const isPaystackOpenAtom = atom<boolean>(false);

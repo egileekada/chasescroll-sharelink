@@ -1,212 +1,234 @@
+"use client";
+
 import {
-    Box,
-    Button,
-    Image,
-    VStack,
-    HStack,
-    Text,
-} from '@chakra-ui/react'
-import React from 'react' 
-import { signIn, useSession } from 'next-auth/react'
-import { useMutation } from '@tanstack/react-query'
-import httpService from '@/services/httpService'
-import { URLS } from '@/services/urls'
-import { toaster } from '@/components/ui/toaster'
-import useForm from '@/hooks/useForm'
-import { loginSchema } from '@/services/validation'
-import CustomInput from '../../CustomInput'
-import { STORAGE_KEYS } from '@/utils/StorageKeys'
-import { canPayAtom, ticketurchaseStepAtom } from '@/states/activeTicket'
-import { useAtom } from 'jotai'
-import { IUser } from '@/models/User'
+  Box,
+  Button,
+  Image,
+  VStack,
+  HStack,
+  Text,
+} from "@chakra-ui/react";
+import React from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useMutation } from "@tanstack/react-query";
+import httpService from "@/services/httpService";
+import { URLS } from "@/services/urls";
+import { toaster } from "@/components/ui/toaster";
+import useForm from "@/hooks/useForm";
+import { loginSchema } from "@/services/validation";
+import CustomInput from "../../CustomInput";
+import { STORAGE_KEYS } from "@/utils/StorageKeys";
+import { ticketurchaseStepAtom } from "@/states/activeTicket";
+import { useAtom } from "jotai";
+import { IUser } from "@/models/User";
+import useCustomTheme from "@/hooks/useTheme";
 
 interface LoginModalProps {
-    onClose?: () => void;
-    onSignUpClick?: () => void;
+  onLoggedIn: () => void;
+  callbackUrl: string;
 }
 
-function LoginModal({ onLoggedIn, callbackUrl }: { onLoggedIn: () => void, callbackUrl: string }) {
-    const { data: session, status } = useSession();
-    const [currentStep, setCurrentStep] = useAtom(ticketurchaseStepAtom);
+function LoginModal({ onLoggedIn, callbackUrl }: LoginModalProps) {
+  const { data: session, status } = useSession();
+  const [, setCurrentStep] = useAtom(ticketurchaseStepAtom);
+  const { primaryColor } = useCustomTheme();
 
+  const getPublicProfile = useMutation({
+    mutationFn: (userId: any) =>
+      httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${userId}`),
+    onError: () => {},
+    onSuccess: (data) => {
+      const details: IUser = data?.data;
+      localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
+      onLoggedIn();
+    },
+  });
 
-    const { renderForm } = useForm({
-        defaultValues: {
-            username: '',
-            password: ''
+  const { mutate: loginMutation, isPending } = useMutation({
+    mutationFn: async (data: any) => httpService.post(`${URLS.auth}/signin`, data),
+    onError: (error: any) => {
+      toaster.create({
+        title: "Login failed",
+        description: error?.response?.data?.message || error?.message || "Invalid credentials",
+        type: "error",
+      });
+    },
+    onSuccess: (data) => {
+      localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
+      localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
+      localStorage.setItem(STORAGE_KEYS.refreshToken, data?.data?.refresh_token);
+      const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
+      getPublicProfile.mutate(user_id);
+    },
+  });
+
+  const googleAuth = useMutation({
+    mutationFn: async (data: any) =>
+      httpService.get(`${URLS.auth}/signinWithCredentials`, {
+        headers: {
+          Authorization: `Bearer ${data}`,
         },
-        onSubmit: (data) => {
-            loginMutation(data);
-        },
-        validationSchema: loginSchema,
-    });
+      }),
+    onError: (error: any) => {
+      toaster.create({
+        title: "Login failed",
+        description: error?.message || "Invalid credentials",
+        type: "error",
+      });
+    },
+    onSuccess: (data) => {
+      localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
+      localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
+      localStorage.setItem(STORAGE_KEYS.refreshToken, data?.data?.refresh_token);
+      localStorage.setItem(STORAGE_KEYS.GOOGLE_AUTH, "GOOGLE");
+      const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
+      getPublicProfile.mutate(user_id);
+    },
+  });
 
-    React.useEffect(() => {
-        if (status === 'authenticated') {
-            console.log(`this is the token`, session.token);
-        }
-    }, [status])
+  const { renderForm } = useForm({
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+    onSubmit: (data) => {
+      loginMutation(data);
+    },
+    validationSchema: loginSchema,
+  });
 
-    const { mutate: loginMutation, isPending } = useMutation({
-        mutationFn: async (data: any) => httpService.post(`${URLS.auth}/signin`, data),
-        onError: (error) => {
-            toaster.create({
-                title: 'Login failed',
-                description: error?.message || 'Invalid credentials',
-                type: 'error',
-            })
-        },
-        onSuccess: (data) => {
-            localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-            localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
-            localStorage.setItem(STORAGE_KEYS.refreshToken, data?.data?.refresh_token);
-            const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
-            getPublicProfile.mutate(user_id);
-        }
-    });
+  const handleGoogleSignIn = async () => {
+    try {
+      if (status === "authenticated") {
+        const idToken = session.token?.idToken;
+        googleAuth.mutate(idToken);
+        return;
+      }
+      const result = await signIn("google", {
+        callbackUrl,
+      });
 
-    const getPublicProfile = useMutation({
-        mutationFn: (data: any) => httpService.get(`${URLS.GET_PUBLIC_PROIFLE}/${data}`),
-        onError: (error) => { },
-        onSuccess: (data) => {
-            const details: IUser = data?.data;
-            console.log(`User details`, details);
-            localStorage.setItem(STORAGE_KEYS.USER_DETAILS, JSON.stringify(details));
-            onLoggedIn();
-        },
-    })
+      if (result?.ok) {
+        localStorage.setItem(STORAGE_KEYS.GOOGLE_AUTH, "GOOGLE");
+      }
+    } catch {
+      toaster.create({
+        title: "An error occurred",
+        description: "Failed to sign in with Google",
+        type: "error",
+      });
+    }
+  };
 
-    const googleAuth = useMutation({
-        mutationFn: async (data: any) => httpService.get(`${URLS.auth}/signinWithCredentials`, {
-            headers: {
-                Authorization: `Bearer ${data}`
-            }
-        }),
-        onError: (error) => {
-            toaster.create({
-                title: 'Login failed',
-                description: error?.message || 'Invalid credentials',
-                type: 'error',
-            })
-        },
-        onSuccess: (data) => {
-            console.log('Login successful', data?.data);
-            localStorage.setItem(STORAGE_KEYS.USER_ID, data?.data?.user_id);
-            localStorage.setItem(STORAGE_KEYS.token, data?.data?.access_token);
-            localStorage.setItem(STORAGE_KEYS.refreshToken, data?.data?.refresh_token);
-            const user_id = localStorage.getItem(STORAGE_KEYS.USER_ID);
-            localStorage.setItem(STORAGE_KEYS.GOOGLE_AUTH, 'GOOGLE');
-            getPublicProfile.mutate(user_id);
-        }
-    });
+  const isLoading =
+    isPending || getPublicProfile.isPending || googleAuth.isPending;
 
-    const handleGoogleSignIn = async () => {
-        try {
-            if (status === 'authenticated') {
-                const idToken = session.token?.idToken;
-                googleAuth.mutate(idToken);
-                return;
-            }
-            const result = await signIn('google', {
-                callbackUrl,
-            });
+  return renderForm(
+    <Box w="full" maxW="400px" bg="white" borderRadius="2xl" p={[4, 6]} mx="auto">
+      <VStack gap={5} align="stretch">
+        {/* Header */}
+        <VStack gap={1} textAlign="center">
+          <Text fontSize="xl" fontWeight="bold" color="gray.800">
+            Sign In to Chasescroll
+          </Text>
+          <Text fontSize="xs" color="gray.500">
+            Log in to continue with your ticket checkout
+          </Text>
+        </VStack>
 
-            if (result?.ok) {
-                localStorage.setItem(STORAGE_KEYS.GOOGLE_AUTH, 'GOOGLE');
-            }
-        } catch (error) {
-            toaster.create({
-                title: 'An error occurred',
-                description: 'Failed to sign in with Google',
-                type: 'error',
-            });
-        }
-    };
+        {/* Login Form */}
+        <VStack gap={3.5} align="stretch">
+          <Box w="full">
+            <CustomInput
+              label="Username or Email"
+              type="text"
+              name="username"
+              placeholder="Enter your username or email"
+              isPassword={false}
+            />
+          </Box>
 
-    return renderForm(
-        <Box
-            w="400px"
-            bg="white"
-            borderRadius="2xl"
-            p={8}
-            mx="auto"
-        >
-            <VStack spaceY={6} align="stretch">
-                {/* Header */}
-                <VStack spaceY={2}>
-                    <Text fontSize="2xl" fontWeight="bold" color="black">
-                        Chasescroll
-                    </Text>
-                    <Text fontSize="sm" color="gray.500" textAlign="center">
-                        Login and set get your snapshot
-                    </Text>
-                </VStack>
+          <Box w="full">
+            <CustomInput
+              label="Password"
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              isPassword={true}
+            />
+          </Box>
 
-                {/* Login Form */}
-                <VStack spaceY={4}>
+          {/* Login Button */}
+          <Button
+            type="submit"
+            w="full"
+            h="46px"
+            bgColor="primaryColor"
+            color="white"
+            borderRadius="full"
+            fontSize="sm"
+            fontWeight="semibold"
+            loading={isLoading}
+            loadingText="Signing in..."
+            _hover={{ opacity: 0.9 }}
+            transition="all 0.2s"
+            mt="2"
+          >
+            Sign In
+          </Button>
 
-                    <Box w="full">
-                        <CustomInput label='Username' type='email' name="username" isPassword={false} />
-                    </Box>
+          {/* Divider */}
+          <HStack w="full" my={1} justifyContent="center" alignItems="center">
+            <Box flex="1" borderBottomWidth="1px" borderColor="gray.200" />
+            <Text fontSize="xs" color="gray.400" px={2}>
+              or
+            </Text>
+            <Box flex="1" borderBottomWidth="1px" borderColor="gray.200" />
+          </HStack>
 
-                    <Box w="full">
-                        <CustomInput label='Password' type="email" name="password" isPassword />
-                    </Box>
+          {/* Google Sign In */}
+          <Button
+            w="full"
+            h="46px"
+            bg="gray.50"
+            borderWidth="1px"
+            borderColor="gray.200"
+            color="gray.700"
+            borderRadius="full"
+            fontSize="xs"
+            fontWeight="medium"
+            onClick={handleGoogleSignIn}
+            _hover={{ bg: "gray.100" }}
+          >
+            <Image
+              src="/images/googleicon.png"
+              alt="Google"
+              w="18px"
+              h="18px"
+              mr="2"
+            />
+            Continue with Google
+          </Button>
+        </VStack>
 
-                    {/* Login Button */}
-                    <Button
-                        type="submit"
-                        w="full"
-                        h="50px"
-                        bg="blue.500"
-                        color="white"
-                        borderRadius="full"
-                        fontSize="md"
-                        fontWeight="semibold"
-                        loading={isPending}
-                        loadingText="Logging in..."
-                        _hover={{ bg: 'blue.600' }}
-                        _active={{ bg: 'blue.700' }}
-                    >
-                        Login
-                    </Button>
-
-                    {/* Divider */}
-                    <HStack w="full" my={2} justifyContent={'center'}>
-                        <Text fontSize="sm" color="gray.400" px={3} textAlign={'center'}>
-                            Or
-                        </Text>
-                    </HStack>
-
-                    {/* Google Sign In */}
-                    <Button
-                        w="full"
-                        h="50px"
-                        bg="gray.50"
-                        color="gray.700"
-                        borderRadius="full"
-                        fontSize="sm"
-                        fontWeight="medium"
-                        onClick={handleGoogleSignIn}
-                        _hover={{ bg: 'gray.100' }}
-                    >
-                        <Image
-                            src="/images/googleicon.png"
-                            alt="Google"
-                            w="20px"
-                            h="20px"
-                        />
-                        CONTINUE WITH GOOGLE
-                    </Button>
-
-                    <HStack fontFamily={'Raleway-Regular'}>
-                        <Text color="grey" fontSize={'14px'}>Powered by</Text>
-                        <Text color="primaryColor" fontSize={'16px'} fontWeight={600}>Chasescroll</Text>
-                    </HStack>
-                </VStack>
-            </VStack>
-        </Box>
-    )
+        {/* Footer info */}
+        <HStack justifyContent="center" gap="1.5">
+          <Text color="gray.400" fontSize="11px">
+            Don't want to sign in?
+          </Text>
+          <Text
+            color="primaryColor"
+            fontSize="11px"
+            fontWeight="600"
+            cursor="pointer"
+            onClick={() => setCurrentStep(2)}
+          >
+            Use Guest Checkout
+          </Text>
+        </HStack>
+      </VStack>
+    </Box>
+  );
 }
 
-export default LoginModal
+export default LoginModal;

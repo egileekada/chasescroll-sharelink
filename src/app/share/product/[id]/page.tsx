@@ -4,7 +4,7 @@ import { RESOURCE_URL } from '@/constants'
 import Product from '@/views/share/Product'
 
 interface Props {
-    params: { id: string } 
+    params: Promise<{ id: string }> 
 }
 
 // ✅ Force server-side static generation so crawlers (WhatsApp, LinkedIn, etc.) see OG tags
@@ -141,7 +141,7 @@ interface Props {
 // ✅ Render page dynamically by type
 export default async function SharePage({ params }: Props) {
 
-    const { id } = params 
+    const { id } = await params 
 
     return <Product id={id} />
 }
